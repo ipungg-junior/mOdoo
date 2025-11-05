@@ -82,8 +82,9 @@ class UpgradeModuleView(View):
         module = get_object_or_404(Module, name=module_name)
         if module.is_installed:
             try:
-                call_command('makemigrations', f'modules.{module_name}')
-                call_command('migrate', f'modules.{module_name}')
+                call_command('makemigrations', f'{module_name}')
+                call_command('migrate', f'{module_name}')
+                update_urlpatterns() 
                 messages.success(request, f'Module {module_name} upgraded successfully.')
             except Exception as e:
                 messages.error(request, f'Failed to upgrade module {module_name}: {str(e)}')
