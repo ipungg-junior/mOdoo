@@ -83,9 +83,9 @@ class ModuleUpdater:
         try:
             module = Module.objects.get(name=module_name)
 
-            # Run migrations
-            call_command('makemigrations', f'{module_name}')
-            call_command('migrate', f'{module_name}')
+            # Run migrations for the app label
+            call_command('makemigrations', module_name)
+            call_command('migrate', module_name)
 
             # Mark as installed
             module.is_installed = True
@@ -141,16 +141,21 @@ class ModuleUpdater:
             module = Module.objects.get(name=module_name)
 
             if not module.is_installed:
+                if request:
+                    messages.warning(request, f'Module {module_name} is not installed.')
                 return False
 
-            # Run migrations
-            call_command('makemigrations', f'{module_name}')
-            call_command('migrate', f'{module_name}')
+            # Run migrations for the app label
+            call_command('makemigrations', module_name)
+            call_command('migrate', module_name)
 
             # Reload all module files and configs
             ModuleUpdater.reload_file(module_name)
             ModuleUpdater.reload_app_config(module_name)
             ModuleUpdater.reload_url_patterns()
+
+            if request:
+                messages.success(request, f'Module {module_name} upgraded and reloaded successfully.')
 
             print(f'Module {module_name} upgraded with runtime reload')
             return True

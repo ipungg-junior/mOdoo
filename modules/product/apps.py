@@ -2,7 +2,8 @@ from django.apps import AppConfig
 
 class ProductConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'modules.product'
+    name = 'product'
+    label = 'product'
 
     def ready(self):
         from django.contrib.auth.models import Group, Permission
