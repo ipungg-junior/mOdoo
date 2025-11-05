@@ -53,8 +53,8 @@ class InstallModuleView(View):
         module = get_object_or_404(Module, name=module_name)
         if not module.is_installed:
             try:
-                call_command('makemigrations', f'modules.{module_name}')
-                call_command('migrate', f'modules.{module_name}')
+                call_command('makemigrations', f'{module_name}')
+                call_command('migrate', f'{module_name}')
                 module.is_installed = True
                 module.save()                
                 update_urlpatterns()
