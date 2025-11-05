@@ -11,13 +11,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 class HomeView(View):
     def get(self, request):
-        return render(request, 'engine/home.html')
+        return render(request, 'home.html')
 
 class LoginView(View):
     def get(self, request):
         if request.user.is_authenticated:
             return redirect('module_list')
-        return render(request, 'engine/login.html')
+        return render(request, 'login.html')
 
     def post(self, request):
         username = request.POST.get('username')
@@ -45,7 +45,7 @@ class ModuleListView(View):
                 if os.path.isdir(module_path) and os.path.exists(module_path / '__init__.py'):
                     module_obj, _ = Module.objects.get_or_create(name=module_name)
                     modules.append(module_obj)
-        return render(request, 'engine/module_list.html', {'modules': modules})
+        return render(request, 'module_list.html', {'modules': modules})
 
 class InstallModuleView(View):
     def get(self, request, module_name):
