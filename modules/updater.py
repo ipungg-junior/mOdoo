@@ -6,6 +6,7 @@ from django.core.management import call_command
 from django.contrib import messages
 from django.apps import apps
 from django.conf import settings
+from django.template import engines
 from engine.models import Module
 from mOdoo.urls import get_dynamic_urlpatterns
 
@@ -43,19 +44,46 @@ class ModuleUpdater:
 
     @staticmethod
     def reload_url_patterns():
-        
+
         try:
             # Reload base urls module
             if 'mOdoo.urls' in sys.modules:
                 importlib.reload(sys.modules['mOdoo.urls'])
 
             # Force URL resolver to reload
-            resolver = get_resolver()            
+            resolver = get_resolver()
             resolver.url_patterns = get_dynamic_urlpatterns()
             print('URL patterns reloaded successfully')
             return True
         except Exception as e:
             print(f'Error reloading URL patterns: {e}')
+            return False
+
+    @staticmethod
+    def reload_templates():
+        """
+        Clear Django template cache to reload templates
+        """
+        try:
+            from django.template import engines
+            from django.template.utils import get_templatetags
+
+            # Clear template caches for all engines
+            for engine in engines.all():
+                if hasattr(engine, 'cache'):
+                    engine.cache.clear()
+                if hasattr(engine, 'template_loaders'):
+                    for loader in engine.template_loaders:
+                        if hasattr(loader, 'cache'):
+                            loader.cache.clear()
+
+            # Clear template tag libraries cache
+            get_templatetags.cache_clear()
+
+            print('Template caches cleared successfully')
+            return True
+        except Exception as e:
+            print(f'Error clearing template caches: {e}')
             return False
 
     @staticmethod
@@ -95,6 +123,7 @@ class ModuleUpdater:
             ModuleUpdater.reload_file(module_name)
             ModuleUpdater.reload_app_config(module_name)
             ModuleUpdater.reload_url_patterns()
+            ModuleUpdater.reload_templates()
 
             if request:
                 messages.success(request, f'Module {module_name} installed and reloaded successfully.')
@@ -153,6 +182,7 @@ class ModuleUpdater:
             ModuleUpdater.reload_file(module_name)
             ModuleUpdater.reload_app_config(module_name)
             ModuleUpdater.reload_url_patterns()
+            ModuleUpdater.reload_templates()
 
             if request:
                 messages.success(request, f'Module {module_name} upgraded and reloaded successfully.')
@@ -169,7 +199,7 @@ class ModuleUpdater:
 
     @staticmethod
     def reload_all_modules():
-        
+
         try:
             installed_modules = Module.objects.filter(is_installed=True)
             for module in installed_modules:
@@ -177,6 +207,7 @@ class ModuleUpdater:
                 ModuleUpdater.reload_app_config(module.name)
 
             ModuleUpdater.reload_url_patterns()
+            ModuleUpdater.reload_templates()
             print('All modules reloaded successfully')
             return True
 
