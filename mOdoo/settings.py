@@ -125,6 +125,10 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# Authentication settings
+LOGIN_URL = '/module/login/'
+LOGOUT_REDIRECT_URL = '/module/login/'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 

@@ -1,14 +1,35 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.core.management import call_command
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.core.management import call_command
 from .models import Module
 import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-@login_required
+def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('module_list')
+
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('module_list')
+        else:
+            messages.error(request, 'Invalid username or password.')
+
+    return render(request, 'login.html')
+
+def logout_view(request):
+    logout(request)
+    return redirect('login')
+
+
 def module_list(request):
     modules = []
     modules_dir = BASE_DIR / 'modules'
@@ -18,7 +39,7 @@ def module_list(request):
             if os.path.isdir(module_path) and os.path.exists(module_path / '__init__.py'):
                 module_obj, created = Module.objects.get_or_create(name=module_name)
                 modules.append(module_obj)
-    return render(request, 'core/module_list.html', {'modules': modules})
+    return render(request, 'module_list.html', {'modules': modules})
 
 @login_required
 def install_module(request, module_name):
