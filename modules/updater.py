@@ -17,7 +17,6 @@ class ModuleUpdater:
         modules_to_reload = [
             f'modules.{module_name}',
             f'modules.{module_name}.views',
-            f'modules.{module_name}.models',
             f'modules.{module_name}.forms',
             f'modules.{module_name}.urls',
             f'modules.{module_name}.apps',
@@ -27,7 +26,6 @@ class ModuleUpdater:
         for module_path in modules_to_reload:
             try:
                 if module_path in sys.modules:
-                    # Kalo module sudah diimport, reload
                     importlib.reload(sys.modules[module_path])
                     reloaded.append(module_path)
                     print(f'Reloaded: {module_path}')
