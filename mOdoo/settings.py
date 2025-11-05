@@ -133,3 +133,8 @@ LOGOUT_REDIRECT_URL = '/module/login/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Disable auto-reloader for manual reload control
+USE_I18N = False
+USE_L10N = False
+USE_TZ = False  
