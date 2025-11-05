@@ -3,10 +3,18 @@ from django.contrib import admin
 from django.urls import path, include
 from django.apps import apps
 from django.conf import settings
+from django.urls.resolvers import get_resolver
 import os
+import importlib
+import sys
 from pathlib import Path
 
+# Simpen last urlpatterns (after install module)
+_current_urlpatterns = None
+
 def get_dynamic_urlpatterns():
+    global _current_urlpatterns
+
     urlpatterns = [
         path('admin/', admin.site.urls),
         path('', include('engine.urls')),
@@ -22,7 +30,7 @@ def get_dynamic_urlpatterns():
                 except ImportError:
                     pass
         except:
-            # Database not ready yet, scan modules directory 
+            # Database not ready yet, scan modules directory
             BASE_DIR = Path(__file__).resolve().parent.parent
             modules_dir = BASE_DIR / 'modules'
             if modules_dir.exists():
@@ -34,6 +42,18 @@ def get_dynamic_urlpatterns():
                         except ImportError:
                             pass
 
+    _current_urlpatterns = urlpatterns
     return urlpatterns
+
+def update_urlpatterns():
+    global _current_urlpatterns
+
+    # Mulai ulang runtime breeee
+    if 'mOdoo.urls' in sys.modules:
+        importlib.reload(sys.modules['mOdoo.urls'])
+        
+    _current_urlpatterns = get_dynamic_urlpatterns()
+    resolver = get_resolver()
+    resolver.url_patterns = _current_urlpatterns
 
 urlpatterns = get_dynamic_urlpatterns()

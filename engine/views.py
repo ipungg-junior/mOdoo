@@ -3,6 +3,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.core.management import call_command
 from django.views import View
+from mOdoo.urls import update_urlpatterns
 from .models import Module
 import os
 from pathlib import Path
@@ -55,7 +56,8 @@ class InstallModuleView(View):
                 call_command('makemigrations', f'modules.{module_name}')
                 call_command('migrate', f'modules.{module_name}')
                 module.is_installed = True
-                module.save()
+                module.save()                
+                update_urlpatterns()
                 messages.success(request, f'Module {module_name} installed successfully.')
             except Exception as e:
                 messages.error(request, f'Failed to install module {module_name}: {str(e)}')
@@ -69,6 +71,7 @@ class UninstallModuleView(View):
         if module.is_installed:
             module.is_installed = False
             module.save()
+            update_urlpatterns()
             messages.success(request, f'Module {module_name} uninstalled successfully.')
         else:
             messages.warning(request, f'Module {module_name} is not installed.')
