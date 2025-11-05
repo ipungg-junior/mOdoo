@@ -2,10 +2,10 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('login/', views.login_view, name='login'),
-    path('logout/', views.logout_view, name='logout'),
-    path('', views.module_list, name='module_list'),
-    path('install/<str:module_name>/', views.install_module, name='install_module'),
-    path('uninstall/<str:module_name>/', views.uninstall_module, name='uninstall_module'),
-    path('upgrade/<str:module_name>/', views.upgrade_module, name='upgrade_module'),
+    path('login/', views.LoginView.as_view(), name='login'),
+    path('logout/', views.LogoutView.as_view(), name='logout'),
+    path('', views.ModuleListView.as_view(), name='module_list'),
+    path('install/<str:module_name>/', views.InstallModuleView.as_view(), name='install_module'),
+    path('uninstall/<str:module_name>/', views.UninstallModuleView.as_view(), name='uninstall_module'),
+    path('upgrade/<str:module_name>/', views.UpgradeModuleView.as_view(), name='upgrade_module'),
 ]
