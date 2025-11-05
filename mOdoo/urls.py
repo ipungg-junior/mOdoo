@@ -26,7 +26,19 @@ def get_dynamic_urlpatterns():
             installed_modules = Module.objects.filter(is_installed=True)
             for module in installed_modules:
                 try:
+                    # Mulai ulang runtime url breeee
+                    if f'modules.{module.name}.urls' in sys.modules:
+                        importlib.reload(sys.modules[f'modules.{module.name}.urls'])
+                    else:
+                        importlib.import_module(f'modules.{module.name}.urls')
+                        
+                    if f'modules.{module.name}.views' in sys.modules:
+                        importlib.reload(sys.modules[f'modules.{module.name}.views'])
+                    else:
+                        importlib.import_module(f'modules.{module.name}.views')
+                    
                     urlpatterns.append(path(f'{module.name}/', include(f'modules.{module.name}.urls')))
+                    print(f'Loaded URLs for module: {module.name}')
                 except ImportError:
                     pass
         except:
@@ -38,7 +50,19 @@ def get_dynamic_urlpatterns():
                     module_path = modules_dir / module_name
                     if os.path.isdir(module_path) and os.path.exists(module_path / '__init__.py'):
                         try:
+                            # Mulai ulang runtime breeee
+                            if f'modules.{module.name}.urls' in sys.modules:
+                                importlib.reload(sys.modules[f'modules.{module.name}.urls'])
+                            else:
+                                importlib.import_module(f'modules.{module.name}.urls')
+                                
+                            if f'modules.{module.name}.views' in sys.modules:
+                                importlib.reload(sys.modules[f'modules.{module.name}.views'])
+                            else:
+                                importlib.import_module(f'modules.{module.name}.views')
+                            
                             urlpatterns.append(path(f'{module_name}/', include(f'modules.{module_name}.urls')))
+                            print(f'Loaded URLs for module from dir: {module_name}')
                         except ImportError:
                             pass
 
