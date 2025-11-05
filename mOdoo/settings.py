@@ -37,7 +37,16 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'core',
 ]
+
+# Scan modules directory
+import os
+MODULES_DIR = BASE_DIR / 'modules'
+for module_name in os.listdir(MODULES_DIR):
+    module_path = MODULES_DIR / module_name
+    if os.path.isdir(module_path) and os.path.exists(module_path / '__init__.py'):
+        INSTALLED_APPS.append(f'modules.{module_name}')
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
