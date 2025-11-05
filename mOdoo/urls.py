@@ -3,18 +3,10 @@ from django.contrib import admin
 from django.urls import path, include
 from django.apps import apps
 from django.conf import settings
-from django.urls.resolvers import get_resolver
 import os
-import importlib
-import sys
 from pathlib import Path
 
-# Simpen last urlpatterns (after install module)
-_current_urlpatterns = None
-
 def get_dynamic_urlpatterns():
-    global _current_urlpatterns
-
     urlpatterns = [
         path('admin/', admin.site.urls),
         path('', include('engine.urls')),
@@ -26,19 +18,7 @@ def get_dynamic_urlpatterns():
             installed_modules = Module.objects.filter(is_installed=True)
             for module in installed_modules:
                 try:
-                    # Mulai ulang runtime url breeee
-                    if f'modules.{module.name}.urls' in sys.modules:
-                        importlib.reload(sys.modules[f'modules.{module.name}.urls'])
-                    else:
-                        importlib.import_module(f'modules.{module.name}.urls')
-                        
-                    if f'modules.{module.name}.views' in sys.modules:
-                        importlib.reload(sys.modules[f'modules.{module.name}.views'])
-                    else:
-                        importlib.import_module(f'modules.{module.name}.views')
-                    
                     urlpatterns.append(path(f'{module.name}/', include(f'modules.{module.name}.urls')))
-                    print(f'Loaded URLs for module: {module.name}')
                 except ImportError:
                     pass
         except:
@@ -50,34 +30,10 @@ def get_dynamic_urlpatterns():
                     module_path = modules_dir / module_name
                     if os.path.isdir(module_path) and os.path.exists(module_path / '__init__.py'):
                         try:
-                            # Mulai ulang runtime breeee
-                            if f'modules.{module.name}.urls' in sys.modules:
-                                importlib.reload(sys.modules[f'modules.{module.name}.urls'])
-                            else:
-                                importlib.import_module(f'modules.{module.name}.urls')
-                                
-                            if f'modules.{module.name}.views' in sys.modules:
-                                importlib.reload(sys.modules[f'modules.{module.name}.views'])
-                            else:
-                                importlib.import_module(f'modules.{module.name}.views')
-                            
                             urlpatterns.append(path(f'{module_name}/', include(f'modules.{module_name}.urls')))
-                            print(f'Loaded URLs for module from dir: {module_name}')
                         except ImportError:
                             pass
 
-    _current_urlpatterns = urlpatterns
     return urlpatterns
-
-def update_urlpatterns():
-    global _current_urlpatterns
-
-    # Mulai ulang runtime breeee
-    if 'mOdoo.urls' in sys.modules:
-        importlib.reload(sys.modules['mOdoo.urls'])
-        
-    _current_urlpatterns = get_dynamic_urlpatterns()
-    resolver = get_resolver()
-    resolver.url_patterns = _current_urlpatterns
 
 urlpatterns = get_dynamic_urlpatterns()

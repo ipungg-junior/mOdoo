@@ -1,12 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from django.core.management import call_command
 from django.views import View
-from mOdoo.urls import update_urlpatterns
 from .models import Module
 import os
 from pathlib import Path
+from modules.updater import ModuleUpdater
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -50,44 +49,15 @@ class ModuleListView(View):
 
 class InstallModuleView(View):
     def get(self, request, module_name):
-        module = get_object_or_404(Module, name=module_name)
-        if not module.is_installed:
-            try:
-                call_command('makemigrations', f'{module_name}')
-                call_command('migrate', f'{module_name}')
-                module.is_installed = True
-                module.save()                
-                update_urlpatterns()
-                messages.success(request, f'Module {module_name} installed successfully.')
-            except Exception as e:
-                messages.error(request, f'Failed to install module {module_name}: {str(e)}')
-        else:
-            messages.warning(request, f'Module {module_name} is already installed.')
+        success = ModuleUpdater.install_module(module_name, request)
         return redirect('module_list')
 
 class UninstallModuleView(View):
     def get(self, request, module_name):
-        module = get_object_or_404(Module, name=module_name)
-        if module.is_installed:
-            module.is_installed = False
-            module.save()
-            update_urlpatterns()
-            messages.success(request, f'Module {module_name} uninstalled successfully.')
-        else:
-            messages.warning(request, f'Module {module_name} is not installed.')
+        success = ModuleUpdater.uninstall_module(module_name, request)
         return redirect('module_list')
 
 class UpgradeModuleView(View):
     def get(self, request, module_name):
-        module = get_object_or_404(Module, name=module_name)
-        if module.is_installed:
-            try:
-                call_command('makemigrations', f'{module_name}')
-                call_command('migrate', f'{module_name}')
-                update_urlpatterns() 
-                messages.success(request, f'Module {module_name} upgraded successfully.')
-            except Exception as e:
-                messages.error(request, f'Failed to upgrade module {module_name}: {str(e)}')
-        else:
-            messages.warning(request, f'Module {module_name} is not installed.')
+        success = ModuleUpdater.upgrade_module(module_name, request)
         return redirect('module_list')
