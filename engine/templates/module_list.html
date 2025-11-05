@@ -9,9 +9,10 @@
 </head>
 
 <body>
+    {% if user.is_authenticated %}
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand" href="{% url 'module_list' %}">mOdoo</a>
+            <a class="navbar-brand" href="{% url 'home' %}">mOdoo</a>
             <div class="navbar-nav ms-auto">
                 <span class="navbar-text me-3">Welcome, {{ user.username }}!</span>
                 <a href="{% url 'logout' %}" class="btn btn-outline-light btn-sm">Logout</a>
@@ -52,6 +53,50 @@
             </tbody>
         </table>
     </div>
+    {% else %}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'home' %}">mOdoo</a>
+            <div class="navbar-nav ms-auto">
+                <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm">Login</a>
+            </div>
+        </div>
+    </nav>
+    <div class="container mt-5">
+        <div class="alert alert-info" role="alert">
+            <h4 class="alert-heading">Authentication Required</h4>
+            <p>You need to be logged in to manage modules. Please log in to access the module management system.</p>
+            <hr>
+            <p class="mb-0">
+                <a href="{% url 'login' %}" class="btn btn-primary">Login Now</a>
+                <a href="{% url 'home' %}" class="btn btn-secondary ms-2">Back to Home</a>
+            </p>
+        </div>
+        <div class="row mt-4">
+            <div class="col-12">
+                <h3>Available Modules</h3>
+                <p class="text-muted">Login to install and manage these modules:</p>
+                <div class="list-group">
+                    {% for module in modules %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ module.name|title }}</strong>
+                            <span class="badge {% if module.is_installed %}bg-success{% else %}bg-secondary{% endif %} ms-2">
+                                {% if module.is_installed %}Installed{% else %}Not Installed{% endif %}
+                            </span>
+                        </div>
+                        {% if module.is_installed %}
+                        <small class="text-success">✓ Available</small>
+                        {% else %}
+                        <small class="text-muted">Login required</small>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
