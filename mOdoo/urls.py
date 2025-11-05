@@ -9,7 +9,7 @@ from pathlib import Path
 def get_dynamic_urlpatterns():
     urlpatterns = [
         path('admin/', admin.site.urls),
-        path('module/', include('engine.urls')),
+        path('', include('engine.urls')),
     ]
 
     if apps.is_installed('engine') and 'engine' in settings.INSTALLED_APPS:

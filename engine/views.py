@@ -9,6 +9,10 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+class HomeView(View):
+    def get(self, request):
+        return render(request, 'engine/home.html')
+
 class LoginView(View):
     def get(self, request):
         if request.user.is_authenticated:
