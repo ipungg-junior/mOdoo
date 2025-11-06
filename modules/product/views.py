@@ -3,13 +3,16 @@ from django.contrib import messages
 from django.views import View
 from .models import Product
 from .forms import ProductForm
+from django.contrib.auth.mixins import PermissionRequiredMixin
 
-class ProductListView(View):
+class ProductListView(PermissionRequiredMixin, View):
+    permission_required = 'product.view_product'
     def get(self, request):
         products = Product.objects.all()
         return render(request, 'product_list.html', {'products': products})
 
-class ProductCreateView(View):
+class ProductCreateView(PermissionRequiredMixin, View):
+    permission_required = 'product.add_product'
     def get(self, request):
         form = ProductForm()
         return render(request, 'product_form.html', {'form': form, 'title': 'Create Product'})
@@ -22,11 +25,12 @@ class ProductCreateView(View):
             return redirect('product_list')
         return render(request, 'product_form.html', {'form': form, 'title': 'Create Product'})
 
-class ProductUpdateView(View):
+class ProductUpdateView(PermissionRequiredMixin, View):
+    permission_required = ['product.change_product']
     def get(self, request, pk):
         product = get_object_or_404(Product, pk=pk)
         form = ProductForm(instance=product)
-        return render(request, 'product_form.html', {'form': form, 'title': 'Update Product'})
+        return render(request, 'product_form.html', {'form': form, 'title': 'Change Product'})
 
     def post(self, request, pk):
         product = get_object_or_404(Product, pk=pk)
@@ -37,7 +41,8 @@ class ProductUpdateView(View):
             return redirect('product_list')
         return render(request, 'product_form.html', {'form': form, 'title': 'Update Product'})
 
-class ProductDeleteView(View):
+class ProductDeleteView(PermissionRequiredMixin, View):
+    permission_required = 'product.delete_product'
     def get(self, request, pk):
         product = get_object_or_404(Product, pk=pk)
         return render(request, 'product_confirm_delete.html', {'product': product})
