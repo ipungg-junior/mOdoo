@@ -37,14 +37,16 @@ class ProductConfig(AppConfig):
 
         # Create groups and assign permissions
         manager_group, _ = Group.objects.get_or_create(name='manager')
-        manager_group.permissions.set(permissions)
+        for p in permissions:
+            manager_group.permissions.add(p.id)
+        manager_group.save()
 
         user_group, _ = Group.objects.get_or_create(name='user')
-        user_group.permissions.set([
-            permissions[0],  # view
-            permissions[1],  # add
-            permissions[2],  # change
-        ])
+        user_list = [permissions[0], permissions[1], permissions[2]]  # view, add, change
+        for p in user_list:
+            user_group.permissions.add(p.id)
+        user_group.save()
 
         public_group, _ = Group.objects.get_or_create(name='public')
-        public_group.permissions.set([permissions[0]])  # view only
+        public_group.permissions.add(permissions[0].id)  # view only
+        public_group.save()
