@@ -26,6 +26,7 @@
                 <tr>
                     <th>Module Name</th>
                     <th>Status</th>
+                    <th>Module Page</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -38,6 +39,13 @@
                         <span class="badge bg-success">Installed</span>
                         {% else %}
                         <span class="badge bg-secondary">Not Installed</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if module.is_installed %}
+                        <a href="/{{ module.name }}/" class="btn btn-info btn-sm">Open Module</a>
+                        {% else %}
+                        <span class="text-muted">Install to access</span>
                         {% endif %}
                     </td>
                     <td>
@@ -85,11 +93,14 @@
                                 {% if module.is_installed %}Installed{% else %}Not Installed{% endif %}
                             </span>
                         </div>
-                        {% if module.is_installed %}
-                        <small class="text-success">✓ Available</small>
-                        {% else %}
-                        <small class="text-muted">Login required</small>
-                        {% endif %}
+                        <div>
+                            {% if module.is_installed %}
+                            <a href="/{{ module.name }}/" class="btn btn-info btn-sm me-2">Open Module</a>
+                            <small class="text-success">✓ Available</small>
+                            {% else %}
+                            <small class="text-muted">Install to access</small>
+                            {% endif %}
+                        </div>
                     </div>
                     {% endfor %}
                 </div>
