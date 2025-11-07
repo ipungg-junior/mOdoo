@@ -6,6 +6,7 @@ from .forms import ProductForm
 from django.contrib.auth.mixins import PermissionRequiredMixin
 
 class ProductListView(PermissionRequiredMixin, View):
+    group_required = 'group_access_product'
     permission_required = 'product.view_product'
     def get(self, request):
         products = Product.objects.all()
