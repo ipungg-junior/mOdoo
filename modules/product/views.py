@@ -21,7 +21,9 @@ class ProductCreateView(PermissionRequiredMixin, View):
     def post(self, request):
         form = ProductForm(request.POST)
         if form.is_valid():
-            form.save()
+            product = form.save(commit=False)
+            product.created_by = request.user
+            product.save()
             messages.success(request, 'Product created successfully.')
             return redirect('product_list')
         return render(request, 'product_form.html', {'form': form, 'title': 'Create Product'})
@@ -37,7 +39,9 @@ class ProductUpdateView(PermissionRequiredMixin, View):
         product = get_object_or_404(Product, pk=pk)
         form = ProductForm(request.POST, instance=product)
         if form.is_valid():
-            form.save()
+            product = form.save(commit=False)
+            product.created_by = request.user  # Update the creator on edit
+            product.save()
             messages.success(request, 'Product updated successfully.')
             return redirect('product_list')
         return render(request, 'product_form.html', {'form': form, 'title': 'Update Product'})
