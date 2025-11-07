@@ -6,6 +6,7 @@ from .models import Module
 import os
 from pathlib import Path
 from modules.updater import ModuleUpdater
+from django.core.exceptions import PermissionDenied
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -53,13 +54,19 @@ class ModuleListView(View):
 
 class InstallModuleView(View):
     def get(self, request, module_name):
-        success = ModuleUpdater.install_module(module_name, request)
-        return redirect('module_list')
+        if request.user.is_superuser:
+            success = ModuleUpdater.install_module(module_name, request)
+            return redirect('module_list')
+        else:
+            raise PermissionDenied
 
 class UninstallModuleView(View):
     def get(self, request, module_name):
-        success = ModuleUpdater.uninstall_module(module_name, request)
-        return redirect('module_list')
+        if request.user.is_superuser:
+            success = ModuleUpdater.uninstall_module(module_name, request)
+            return redirect('module_list')
+        else:
+            raise PermissionDenied
 
 class UpgradeModuleView(View):
     def get(self, request, module_name):
