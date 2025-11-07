@@ -7,6 +7,7 @@ from django.contrib import messages
 from django.apps import apps
 from django.conf import settings
 from django.template import engines
+from django.core.cache import cache
 from engine.models import Module
 from mOdoo.urls import get_dynamic_urlpatterns
 
@@ -64,40 +65,17 @@ class ModuleUpdater:
     def reload_templates():
         
         try:
-            from django.template import engines
-            from django.template.loaders.filesystem import Loader as FilesystemLoader
-            from django.template.loaders.app_directories import Loader as AppDirectoriesLoader
-            from django.core.cache import cache
-
-            # Clear Django's general cache
+            
+            for engine in engines.all():
+                if hasattr(engine, 'reset'):
+                    engine.reset()
+                    print(f"Engine '{engine.name}' cache cleared.")
+            
+            # Clear the general cache (for {% cache %} tags)
             cache.clear()
 
-            # Clear template caches for all engines
-            for engine in engines.all():
-                if hasattr(engine, 'cache'):
-                    engine.cache.clear()
-
-                # Clear template loader caches
-                if hasattr(engine, 'template_loaders'):
-                    for loader in engine.template_loaders:
-                        if hasattr(loader, 'cache'):
-                            loader.cache.clear()
-                        if hasattr(loader, 'reset'):
-                            loader.reset()
-                        # Force template rediscovery for filesystem and app directories loaders
-                        if isinstance(loader, (FilesystemLoader, AppDirectoriesLoader)):
-                            if hasattr(loader, '_cached_templates'):
-                                loader._cached_templates = {}
-                            if hasattr(loader, '_template_cache'):
-                                loader._template_cache = {}
-
-            # Force template rediscovery by clearing template source caches
-            from django.template.base import Template
-            if hasattr(Template, 'template_cache'):
-                Template.template_cache.clear()
-
-            print('Template caches cleared successfully')
             return True
+
         except Exception as e:
             print(f'Error clearing template caches: {e}')
             return False
@@ -134,8 +112,9 @@ class ModuleUpdater:
             # Reload everything
             ModuleUpdater.reload_file(module_name)
             ModuleUpdater.reload_app_config(module_name)
+            ModuleUpdater.reload_templates()
             ModuleUpdater.reload_url_patterns()
-            ModuleUpdater.reload_module_templates(module_name)
+            
             
             # Run migrations for the app label
             call_command('makemigrations', module_name)
@@ -188,8 +167,8 @@ class ModuleUpdater:
             # Reload all module files and configs
             ModuleUpdater.reload_file(module_name)
             ModuleUpdater.reload_app_config(module_name)
+            ModuleUpdater.reload_templates()
             ModuleUpdater.reload_url_patterns()
-            ModuleUpdater.reload_module_templates(module_name)
 
             # Run migrations for the app label
             call_command('makemigrations', module_name)
@@ -221,33 +200,4 @@ class ModuleUpdater:
 
         except Exception as e:
             print(f'Error reloading all modules: {e}')
-            return False
-
-    @staticmethod
-    def reload_module_templates(module_name):
-        
-        try:
-            # Clear template caches
-            ModuleUpdater.reload_templates()
-
-            # Force template re-discovery by clearing origin cache
-            from django.template.loaders.app_directories import Loader as AppLoader
-
-            for engine in engines.all():
-                if hasattr(engine, 'template_loaders'):
-                    for loader in engine.template_loaders:
-                        if isinstance(loader, AppLoader):
-                            # Clear the origin cache which stores template locations
-                            if hasattr(loader, 'origin_cache'):
-                                loader.origin_cache.clear()
-                            # Reset template cache
-                            if hasattr(loader, 'template_cache'):
-                                loader.template_cache.clear()
-                        if hasattr(loader, 'reset'):
-                            loader.reset()
-
-            print(f'Templates reloaded for module: {module_name}')
-            return True
-        except Exception as e:
-            print(f'Error reloading templates for {module_name}: {e}')
             return False
