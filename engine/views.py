@@ -45,6 +45,8 @@ class ModuleListView(View):
                 if os.path.isdir(module_path) and os.path.exists(module_path / '__init__.py'):
                     module_obj, _ = Module.objects.get_or_create(name=module_name)
                     # Check if user has permission to access this module
+                    if module_obj.is_installed == False:
+                        modules.append(module_obj)
                     if request.user.has_perm(f'engine.access_{module_name}'):
                         modules.append(module_obj)
         return render(request, 'module_list.html', {'modules': modules})
