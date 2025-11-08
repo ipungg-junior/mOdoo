@@ -89,17 +89,9 @@
                     <div class="list-group-item d-flex justify-content-between align-items-center">
                         <div>
                             <strong>{{ module.name|title }}</strong>
-                            <span class="badge {% if module.is_installed %}bg-success{% else %}bg-secondary{% endif %} ms-2">
-                                {% if module.is_installed %}Installed{% else %}Not Installed{% endif %}
-                            </span>
                         </div>
                         <div>
-                            {% if module.is_installed %}
-                            <a href="/{{ module.name }}/" class="btn btn-info btn-sm me-2">Open Module</a>
                             <small class="text-success">✓ Available</small>
-                            {% else %}
-                            <small class="text-muted">Install to access</small>
-                            {% endif %}
                         </div>
                     </div>
                     {% endfor %}
