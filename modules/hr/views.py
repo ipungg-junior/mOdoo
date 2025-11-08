@@ -7,20 +7,20 @@ from django.contrib.auth.models import User
 
 class EmployeeListView(PermissionRequiredMixin, View):
     permission_required = ['hr.view_employee']
-    group_required = ['group_access_hr']
+    group_required = 'group_access_hr'
 
     def get(self, request):
-        if not request.user.groups.filter(name__in=self.group_required).exists():
+        if not request.user.groups.filter(name__icontains=self.group_required):
             raise PermissionDenied
         employees = Employee.objects.select_related('user').all()
         return render(request, 'hr_list.html', {'employees': employees})
 
 class SyncEmployeesView(PermissionRequiredMixin, View):
     permission_required = ['hr.add_employee']
-    group_required = ['group_access_hr']
+    group_required = 'group_access_hr'
 
     def get(self, request):
-        if not request.user.groups.filter(name__in=self.group_required).exists():
+        if not request.user.groups.filter(name__icontains=self.group_required):
             raise PermissionDenied
 
         # Sync all users to employees if they don't exist
