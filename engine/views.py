@@ -40,16 +40,21 @@ class ModuleListView(View):
     def get(self, request):
         modules = []
         modules_dir = BASE_DIR / 'modules'
+
         if modules_dir.exists():
             for module_name in os.listdir(modules_dir):
                 module_path = modules_dir / module_name
-                if os.path.isdir(module_path) and os.path.exists(module_path / '__init__.py'):
+                if os.path.isdir(module_path) and (module_path / '__init__.py').exists():
                     module_obj, _ = Module.objects.get_or_create(name=module_name)
-                    # Check if user has permission to access this module
-                    if module_obj.is_installed == False:
+
+                    if request.user.is_authenticated:
+                        # Jika user terotentikasi, cek izin akses
+                        if request.user.has_perm(f'engine.access_{module_name}'):
+                            modules.append(module_obj)
+                    else:
+                        # Jika tidak terotentikasi, tampilkan semua modul
                         modules.append(module_obj)
-                    if request.user.has_perm(f'engine.access_{module_name}'):
-                        modules.append(module_obj)
+
         return render(request, 'module_list.html', {'modules': modules})
 
 class InstallModuleView(View):
