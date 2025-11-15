@@ -2,9 +2,9 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('', views.ProductListView.as_view(), name='product_list'),
-    path('create/', views.ProductCreateView.as_view(), name='product_create'),
-    path('create-category/', views.CategoryCreateView.as_view(), name='category_create'),
-    path('update/<int:pk>/', views.ProductUpdateView.as_view(), name='product_update'),
-    path('delete/<int:pk>/', views.ProductDeleteView.as_view(), name='product_delete'),
+    # Main product management page
+    path('', views.ProductPageView.as_view(), name='product_list'),
+    # API endpoints for data operations
+    path('api/product/', views.APIView.as_view(), name='product_api', context='product_api'),
+    path('api/category/', views.APIView.as_view(), name='category_api', context='category_api'),
 ]

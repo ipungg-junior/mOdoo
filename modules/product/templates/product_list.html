@@ -4,8 +4,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Product List</title>
+    <title>Product Management</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .status-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+    </style>
 </head>
 
 <body>
@@ -18,35 +31,559 @@
             </div>
         </div>
     </nav>
+
+    <!-- Status Messages -->
+    <div id="statusMessages" class="status-message"></div>
+
     <div class="container mt-5">
-        <h1>Product List</h1>
-        <a href="{% url 'category_create' %}" class="btn btn-primary mb-3">Add Category</a>
-        <a href="{% url 'product_create' %}" class="btn btn-primary mb-3">Add Product</a>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Category</th>
-                    <th>Price</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for product in products %}
-                <tr>
-                    <td>{{ product.name }}</td>
-                    <td>{{ product.category.name }}</td>
-                    <td>{{ product.price }}</td>
-                    <td>
-                        <a href="{% url 'product_update' product.pk %}" class="btn btn-warning btn-sm">Edit</a>
-                        <a href="{% url 'product_delete' product.pk %}" class="btn btn-danger btn-sm">Delete</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Product Management</h1>
+            <div>
+                <button id="loadCategoriesBtn" class="btn btn-info me-2">Load Categories</button>
+                <button id="loadProductsBtn" class="btn btn-info me-2">Load Products</button>
+                <button id="addCategoryBtn" class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#categoryModal">Add Category</button>
+                <button id="addProductBtn" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#productModal">Add Product</button>
+            </div>
+        </div>
+
+        <!-- Categories Section -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Categories</h5>
+            </div>
+            <div class="card-body">
+                <div id="categoriesTable" class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="categoriesBody">
+                            <tr>
+                                <td colspan="4" class="text-center">Click "Load Categories" to load data</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Section -->
+        <div class="card">
+            <div class="card-header">
+                <h5>Products</h5>
+            </div>
+            <div class="card-body">
+                <div id="productsTable" class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsBody">
+                            <tr>
+                                <td colspan="6" class="text-center">Click "Load Products" to load data</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <!-- Category Modal -->
+    <div class="modal fade" id="categoryModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="categoryModalTitle">Add Category</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="categoryForm">
+                        <input type="hidden" id="categoryId" name="id">
+                        <div class="mb-3">
+                            <label for="categoryName" class="form-label">Name *</label>
+                            <input type="text" class="form-control" id="categoryName" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="categoryDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="categoryDescription" name="description" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveCategoryBtn">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Modal -->
+    <div class="modal fade" id="productModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="productModalTitle">Add Product</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="productForm">
+                        <input type="hidden" id="productId" name="id">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="productName" class="form-label">Name *</label>
+                                    <input type="text" class="form-control" id="productName" name="name" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="productPrice" class="form-label">Price *</label>
+                                    <input type="number" step="0.01" class="form-control" id="productPrice" name="price" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="productDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="productDescription" name="description" rows="3"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="productCategory" class="form-label">Category</label>
+                                    <select class="form-control" id="productCategory" name="category_id">
+                                        <option value="">Select Category</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="productStatus" class="form-label">Status</label>
+                                    <select class="form-control" id="productStatus" name="is_active">
+                                        <option value="true">Active</option>
+                                        <option value="false">Inactive</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveProductBtn">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // API Base URLs
+        const PRODUCT_API_BASE = '{% url "product_api" %}';
+        const CATEGORY_API_BASE = '{% url "category_api" %}';
+
+        // Utility functions
+        function showMessage(message, type = 'success') {
+            const messagesDiv = document.getElementById('statusMessages');
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+            messagesDiv.innerHTML = `
+                <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            setTimeout(() => messagesDiv.innerHTML = '', 5000);
+        }
+
+        // Removed old apiRequest function - now using direct fetch calls
+
+        // Load Categories
+        async function loadCategories() {
+            const btn = document.getElementById('loadCategoriesBtn');
+            btn.classList.add('loading');
+            btn.textContent = 'Loading...';
+
+            try {
+                const response = await fetch(CATEGORY_API_BASE, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+                    },
+                    body: JSON.stringify({ action: 'list' })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    renderCategories(result.data);
+                    showMessage('Categories loaded successfully');
+                } else {
+                    showMessage(result.message, 'error');
+                }
+            } catch (error) {
+                showMessage('Failed to load categories', 'error');
+            }
+
+            btn.classList.remove('loading');
+            btn.textContent = 'Load Categories';
+        }
+
+        // Load Products
+        async function loadProducts() {
+            const btn = document.getElementById('loadProductsBtn');
+            btn.classList.add('loading');
+            btn.textContent = 'Loading...';
+
+            try {
+                const response = await fetch(PRODUCT_API_BASE, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+                    },
+                    body: JSON.stringify({ action: 'list' })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    renderProducts(result.data);
+                    showMessage('Products loaded successfully');
+                } else {
+                    showMessage(result.message, 'error');
+                }
+            } catch (error) {
+                showMessage('Failed to load products', 'error');
+            }
+
+            btn.classList.remove('loading');
+            btn.textContent = 'Load Products';
+        }
+
+        // Render Categories
+        function renderCategories(categories) {
+            const tbody = document.getElementById('categoriesBody');
+            tbody.innerHTML = '';
+
+            if (categories.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center">No categories found</td></tr>';
+                return;
+            }
+
+            categories.forEach(category => {
+                const row = `
+                    <tr>
+                        <td>${category.name}</td>
+                        <td>${category.description || ''}</td>
+                        <td>${new Date(category.created_at).toLocaleDateString()}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm me-1" onclick="editCategory(${category.id}, '${category.name}', '${category.description || ''}')">Edit</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteCategory(${category.id}, '${category.name}')">Delete</button>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+
+            // Update product category dropdown
+            updateCategoryDropdown(categories);
+        }
+
+        // Render Products
+        function renderProducts(products) {
+            const tbody = document.getElementById('productsBody');
+            tbody.innerHTML = '';
+
+            if (products.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">No products found</td></tr>';
+                return;
+            }
+
+            products.forEach(product => {
+                const categoryName = product.category ? product.category.name : 'No Category';
+                const statusBadge = product.is_active ?
+                    '<span class="badge bg-success">Active</span>' :
+                    '<span class="badge bg-secondary">Inactive</span>';
+
+                const row = `
+                    <tr>
+                        <td>${product.name}</td>
+                        <td>${product.description || ''}</td>
+                        <td>${categoryName}</td>
+                        <td>$${product.price}</td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm me-1" onclick="editProduct(${product.id})">Edit</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteProduct(${product.id}, '${product.name}')">Delete</button>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        // Update category dropdown in product form
+        function updateCategoryDropdown(categories) {
+            const select = document.getElementById('productCategory');
+            select.innerHTML = '<option value="">Select Category</option>';
+
+            categories.forEach(category => {
+                select.innerHTML += `<option value="${category.id}">${category.name}</option>`;
+            });
+        }
+
+        // Category operations
+        async function saveCategory() {
+            const id = document.getElementById('categoryId').value;
+            const name = document.getElementById('categoryName').value;
+            const description = document.getElementById('categoryDescription').value;
+
+            if (!name.trim()) {
+                showMessage('Category name is required', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('saveCategoryBtn');
+            btn.classList.add('loading');
+            btn.textContent = 'Saving...';
+
+            const action = id ? 'update' : 'create';
+            const data = { action, name, description };
+            if (id) data.id = parseInt(id);
+
+            try {
+                const response = await fetch(CATEGORY_API_BASE, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showMessage(result.message);
+                    bootstrap.Modal.getInstance(document.getElementById('categoryModal')).hide();
+                    resetCategoryForm();
+                    loadCategories(); // Reload categories
+                } else {
+                    showMessage(result.message, 'error');
+                }
+            } catch (error) {
+                showMessage('Failed to save category', 'error');
+            }
+
+            btn.classList.remove('loading');
+            btn.textContent = 'Save';
+        }
+
+        function editCategory(id, name, description) {
+            document.getElementById('categoryId').value = id;
+            document.getElementById('categoryName').value = name;
+            document.getElementById('categoryDescription').value = description;
+            document.getElementById('categoryModalTitle').textContent = 'Edit Category';
+
+            new bootstrap.Modal(document.getElementById('categoryModal')).show();
+        }
+
+        async function deleteCategory(id, name) {
+            if (!confirm(`Are you sure you want to delete category "${name}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(CATEGORY_API_BASE, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+                    },
+                    body: JSON.stringify({ action: 'delete', id: parseInt(id) })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showMessage(result.message);
+                    loadCategories();
+                    loadProducts(); // Reload products as category might be referenced
+                } else {
+                    showMessage(result.message, 'error');
+                }
+            } catch (error) {
+                showMessage('Failed to delete category', 'error');
+            }
+        }
+
+        function resetCategoryForm() {
+            document.getElementById('categoryForm').reset();
+            document.getElementById('categoryId').value = '';
+            document.getElementById('categoryModalTitle').textContent = 'Add Category';
+        }
+
+        // Product operations
+        async function saveProduct() {
+            const id = document.getElementById('productId').value;
+            const name = document.getElementById('productName').value;
+            const price = document.getElementById('productPrice').value;
+            const description = document.getElementById('productDescription').value;
+            const categoryId = document.getElementById('productCategory').value;
+            const isActive = document.getElementById('productStatus').value === 'true';
+
+            if (!name.trim() || !price) {
+                showMessage('Name and price are required', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('saveProductBtn');
+            btn.classList.add('loading');
+            btn.textContent = 'Saving...';
+
+            const action = id ? 'update' : 'create';
+            const data = {
+                action,
+                name,
+                price: parseFloat(price),
+                description,
+                category_id: categoryId ? parseInt(categoryId) : null,
+                is_active: isActive
+            };
+            if (id) data.id = parseInt(id);
+
+            try {
+                const response = await fetch(PRODUCT_API_BASE, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showMessage(result.message);
+                    bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
+                    resetProductForm();
+                    loadProducts(); // Reload products
+                } else {
+                    showMessage(result.message, 'error');
+                }
+            } catch (error) {
+                showMessage('Failed to save product', 'error');
+            }
+
+            btn.classList.remove('loading');
+            btn.textContent = 'Save';
+        }
+
+        async function editProduct(id) {
+            // First get product data
+            try {
+                const response = await fetch(PRODUCT_API_BASE, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+                    },
+                    body: JSON.stringify({ action: 'list' })
+                });
+
+                const result = await response.json();
+
+                if (!result.success) {
+                    showMessage('Failed to load product data', 'error');
+                    return;
+                }
+
+                const product = result.data.find(p => p.id === id);
+                if (!product) {
+                    showMessage('Product not found', 'error');
+                    return;
+                }
+
+                // Populate form
+                document.getElementById('productId').value = product.id;
+                document.getElementById('productName').value = product.name;
+                document.getElementById('productPrice').value = product.price;
+                document.getElementById('productDescription').value = product.description || '';
+                document.getElementById('productCategory').value = product.category ? product.category.id : '';
+                document.getElementById('productStatus').value = product.is_active ? 'true' : 'false';
+                document.getElementById('productModalTitle').textContent = 'Edit Product';
+
+                new bootstrap.Modal(document.getElementById('productModal')).show();
+            } catch (error) {
+                showMessage('Failed to load product data', 'error');
+            }
+        }
+
+        async function deleteProduct(id, name) {
+            if (!confirm(`Are you sure you want to delete product "${name}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(PRODUCT_API_BASE, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+                    },
+                    body: JSON.stringify({ action: 'delete', id: parseInt(id) })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showMessage(result.message);
+                    loadProducts();
+                } else {
+                    showMessage(result.message, 'error');
+                }
+            } catch (error) {
+                showMessage('Failed to delete product', 'error');
+            }
+        }
+
+        function resetProductForm() {
+            document.getElementById('productForm').reset();
+            document.getElementById('productId').value = '';
+            document.getElementById('productModalTitle').textContent = 'Add Product';
+        }
+
+        // Event listeners
+        document.getElementById('loadCategoriesBtn').addEventListener('click', loadCategories);
+        document.getElementById('loadProductsBtn').addEventListener('click', loadProducts);
+        document.getElementById('saveCategoryBtn').addEventListener('click', saveCategory);
+        document.getElementById('saveProductBtn').addEventListener('click', saveProduct);
+
+        // Reset forms when modals are hidden
+        document.getElementById('categoryModal').addEventListener('hidden.bs.modal', resetCategoryForm);
+        document.getElementById('productModal').addEventListener('hidden.bs.modal', resetProductForm);
+
+        // Load initial data
+        document.addEventListener('DOMContentLoaded', function () {
+            loadCategories();
+            loadProducts();
+        });
+    </script>
 </body>
 
 </html>
