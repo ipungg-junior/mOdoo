@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.views import View
 from .models import Product
-from .forms import ProductForm
+from .forms import ProductForm, CategoryForm
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import Permission
@@ -31,11 +31,28 @@ class ProductCreateView(PermissionRequiredMixin, View):
         form = ProductForm(request.POST)
         if form.is_valid():
             product = form.save(commit=False)
-            product.created_by = request.user
             product.save()
-            messages.success(request, 'Product created successfully.')
             return redirect('product_list')
         return render(request, 'product_form.html', {'form': form, 'title': 'Create Product'})
+    
+class CategoryCreateView(PermissionRequiredMixin, View):
+    group_required = 'group_access_product'
+    permission_required = 'product.add_product'
+    def get(self, request):
+        if not request.user.groups.filter(name__icontains=self.group_required):
+            raise PermissionDenied
+        form = CategoryForm()
+        return render(request, 'product_form_category.html', {'form': form, 'title': 'Create Category'})
+
+    def post(self, request):
+        if not request.user.groups.filter(name__icontains=self.group_required):
+            raise PermissionDenied
+        form = CategoryForm(request.POST)
+        if form.is_valid():
+            category = form.save(commit=False)
+            category.save()
+            return redirect('product_list')
+        return render(request, 'product_form_category.html', {'form': form, 'title': 'Create Category'})
 
 class ProductUpdateView(PermissionRequiredMixin, View):
     group_required = 'group_access_product'
