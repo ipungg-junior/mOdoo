@@ -1,0 +1,13 @@
+mOdoo/__pycache__/
+engine/__pycache__/*.pyc
+engine/__pycache__/*
+engine/migrations/*
+modules/__pycache__/
+
+# Module migrations and cache
+modules/hr/__pycache__/
+modules/product/__pycache__/
+modules/other_module/__pycache__/
+modules/hr/migrations/
+modules/product/migrations/
+modules/other_module/migrations/
