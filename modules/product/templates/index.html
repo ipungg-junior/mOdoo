@@ -134,17 +134,8 @@
 <!-- Products Table -->
 <h2 class="text-xl font-semibold mt-8 mb-4">Products Management</h2>
 <div class="flex gap-2 mb-4">
-    <button id="loadCategoriesBtn" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
-        Load Categories
-    </button>
     <button id="loadProductsBtn" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors">
         Load Products
-    </button>
-    <button id="addCategoryBtn" class="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition-colors">
-        Add Category
-    </button>
-    <button id="addProductBtn" class="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors">
-        Add Product
     </button>
 </div>
 
@@ -202,38 +193,6 @@
             <li><a href="#" class="hover:underline">Leave Application →</a></li>
             <li><a href="#" class="hover:underline">Compensatory Leave Request →</a></li>
         </ul>
-    </div>
-</div>
-
-<!-- Category Modal -->
-<div id="categoryModal" class="modal-overlay hidden">
-    <div class="modal-content w-full max-w-md mx-4">
-        <div class="flex items-center justify-between p-4 border-b">
-            <h3 class="text-lg font-semibold" id="categoryModalTitle">Add Category</h3>
-            <button id="closeCategoryModal" class="text-gray-400 hover:text-gray-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
-        </div>
-        <div class="p-4">
-            <form id="categoryForm">
-                <input type="hidden" id="categoryId" name="id">
-                <div class="mb-4">
-                    <label for="categoryName" class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-                    <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" id="categoryName" name="name" required>
-                </div>
-                <div class="mb-4">
-                    <label for="categoryDescription" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                    <textarea class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" id="categoryDescription" name="description"
-                        rows="3"></textarea>
-                </div>
-            </form>
-        </div>
-        <div class="flex justify-end gap-2 p-4 border-t bg-gray-50">
-            <button id="cancelCategoryBtn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
-            <button id="saveCategoryBtn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700">Save</button>
-        </div>
     </div>
 </div>
 
@@ -321,37 +280,6 @@
         document.body.style.overflow = 'auto';
     }
 
-    // Load Categories
-    async function loadCategories() {
-        const btn = document.getElementById('loadCategoriesBtn');
-        btn.classList.add('opacity-50', 'pointer-events-none');
-        btn.textContent = 'Loading...';
-
-        try {
-            const response = await fetch(CATEGORY_API_BASE, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
-                },
-                body: JSON.stringify({ action: 'list' })
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                showMessage('Categories loaded successfully');
-            } else {
-                showMessage(result.error, 'error');
-            }
-        } catch (error) {
-            showMessage('Failed to load categories', 'error');
-        }
-
-        btn.classList.remove('opacity-50', 'pointer-events-none');
-        btn.textContent = 'Load Categories';
-    }
-
     // Load Products
     async function loadProducts() {
         const btn = document.getElementById('loadProductsBtn');
@@ -360,7 +288,7 @@
 
         try {
             const response = await fetch(PRODUCT_API_BASE, {
-                method: 'GET',
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
@@ -377,7 +305,7 @@
                 showMessage(result.error, 'error');
             }
         } catch (error) {
-            showMessage('Failed to load products', 'error');
+            showMessage('Failed to load products', error);
         }
 
         btn.classList.remove('opacity-50', 'pointer-events-none');
@@ -416,87 +344,6 @@
         });
     }
 
-    // Category operations
-    async function saveCategory() {
-        const id = document.getElementById('categoryId').value;
-        const name = document.getElementById('categoryName').value;
-        const description = document.getElementById('categoryDescription').value;
-
-        if (!name.trim()) {
-            showMessage('Category name is required', 'error');
-            return;
-        }
-
-        const btn = document.getElementById('saveCategoryBtn');
-        btn.classList.add('opacity-50', 'pointer-events-none');
-        btn.textContent = 'Saving...';
-
-        const action = id ? 'update' : 'create';
-        const data = { action, name, description };
-        if (id) data.id = parseInt(id);
-
-        try {
-            const response = await fetch(CATEGORY_API_BASE, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
-                },
-                body: JSON.stringify(data)
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                showMessage(result.message);
-                hideModal('categoryModal');
-                resetCategoryForm();
-            } else {
-                showMessage(result.error, 'error');
-            }
-        } catch (error) {
-            showMessage('Failed to save category', 'error');
-        }
-
-        btn.classList.remove('opacity-50', 'pointer-events-none');
-        btn.textContent = 'Save';
-    }
-
-    function editCategory(id, name, description) {
-        document.getElementById('categoryId').value = id;
-        document.getElementById('categoryName').value = name;
-        document.getElementById('categoryDescription').value = description;
-        document.getElementById('categoryModalTitle').textContent = 'Edit Category';
-
-        showModal('categoryModal');
-    }
-
-    async function deleteCategory(id, name) {
-        if (!confirm(`Are you sure you want to delete category "${name}"?`)) {
-            return;
-        }
-
-        try {
-            const response = await fetch(CATEGORY_API_BASE, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
-                },
-                body: JSON.stringify({ action: 'delete', id: parseInt(id) })
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                showMessage(result.message);
-            } else {
-                showMessage(result.error, 'error');
-            }
-        } catch (error) {
-            showMessage('Failed to delete category', 'error');
-        }
-    }
 
     function resetCategoryForm() {
         document.getElementById('categoryForm').reset();
@@ -554,7 +401,7 @@
                 showMessage(result.error, 'error');
             }
         } catch (error) {
-            showMessage('Failed to save product', 'error');
+            showMessage('Failed to save product', error);
         }
 
         btn.classList.remove('opacity-50', 'pointer-events-none');
@@ -565,7 +412,7 @@
         // First get product data
         try {
             const response = await fetch(PRODUCT_API_BASE, {
-                method: 'GET',
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
@@ -597,7 +444,7 @@
 
             showModal('productModal');
         } catch (error) {
-            showMessage('Failed to load product data', 'error');
+            showMessage('Failed to load product data', error);
         }
     }
 
@@ -625,7 +472,7 @@
                 showMessage(result.error, 'error');
             }
         } catch (error) {
-            showMessage('Failed to delete product', 'error');
+            showMessage('Failed to delete product', error);
         }
     }
 
@@ -666,25 +513,13 @@
     }
 
     // Event listeners
-    document.getElementById('loadCategoriesBtn').addEventListener('click', loadCategories);
     document.getElementById('loadProductsBtn').addEventListener('click', loadProducts);
-    document.getElementById('saveCategoryBtn').addEventListener('click', saveCategory);
     document.getElementById('saveProductBtn').addEventListener('click', saveProduct);
 
     // Modal button listeners
-    document.getElementById('addCategoryBtn').addEventListener('click', () => showModal('categoryModal'));
-    document.getElementById('addProductBtn').addEventListener('click', () => showModal('productModal'));
-
-    document.getElementById('closeCategoryModal').addEventListener('click', () => hideModal('categoryModal'));
     document.getElementById('closeProductModal').addEventListener('click', () => hideModal('productModal'));
-
-    document.getElementById('cancelCategoryBtn').addEventListener('click', () => hideModal('categoryModal'));
     document.getElementById('cancelProductBtn').addEventListener('click', () => hideModal('productModal'));
 
-    // Click outside modal to close
-    document.getElementById('categoryModal').addEventListener('click', (e) => {
-        if (e.target.id === 'categoryModal') hideModal('categoryModal');
-    });
     document.getElementById('productModal').addEventListener('click', (e) => {
         if (e.target.id === 'productModal') hideModal('productModal');
     });
