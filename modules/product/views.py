@@ -75,4 +75,4 @@ class ProductPageView(PermissionRequiredMixin, View):
 
     def get(self, request):
         """Render the main product management page"""
-        return render(request, 'product_list.html')
+        return render(request, 'index.html')
