@@ -12,7 +12,7 @@ class CategoryService:
     def process_get(request, json_request):
         """Handle GET requests for category operations"""
         action = json_request.get('action')
-
+        
         if action == 'list':
             return CategoryService.list_categories(request)
         else:
@@ -23,7 +23,9 @@ class CategoryService:
         """Handle POST requests for category operations"""
         action = json_request.get('action')
 
-        if action == 'create':
+        if action == 'list':
+            return CategoryService.list_categories(request)
+        elif action == 'create':
             return CategoryService.create_category(request, json_request)
         elif action == 'update':
             return CategoryService.update_category(request, json_request)
@@ -165,7 +167,9 @@ class ProductService:
         """Handle POST requests for product operations"""
         action = json_request.get('action')
 
-        if action == 'create':
+        if action == 'list':
+            return ProductService.list_products(request)
+        elif action == 'create':
             return ProductService.create_product(request, json_request)
         elif action == 'update':
             return ProductService.update_product(request, json_request)
@@ -179,7 +183,6 @@ class ProductService:
         """List all products with category information"""
         products = Product.objects.select_related('category').all()
         product_data = []
-
         for product in products:
             product_data.append({
                 'id': product.id,
