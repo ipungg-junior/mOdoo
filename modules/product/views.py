@@ -7,7 +7,7 @@ from django.core.exceptions import PermissionDenied
 from .services import ProductService, CategoryService
 
 
-class APIView(PermissionRequiredMixin, View):
+class APIView(View):
     """
     Unified API view for handling all product and category operations
     """
