@@ -22,6 +22,7 @@
 </head>
 
 <body>
+    {% csrf_token %}
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="{% url 'module_list' %}">mOdoo</a>
@@ -192,8 +193,8 @@
 
     <script>
         // API Base URLs
-        const PRODUCT_API_BASE = 'http://160.19.167.28:8001/product/api/product/';
-        const CATEGORY_API_BASE = 'http://160.19.167.28:8001/product/api/category/';
+        const PRODUCT_API_BASE = '{% url "product_api" %}';
+        const CATEGORY_API_BASE = '{% url "category_api" %}';
 
         // Utility functions
         function showMessage(message, type = 'success') {
@@ -218,7 +219,7 @@
 
             try {
                 const response = await fetch(CATEGORY_API_BASE, {
-                    method: 'GET',
+                    method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
@@ -235,7 +236,7 @@
                     showMessage(result.message, 'error');
                 }
             } catch (error) {
-                showMessage('Failed to load categories', 'error');
+                showMessage(error);
             }
 
             btn.classList.remove('loading');
@@ -250,7 +251,7 @@
 
             try {
                 const response = await fetch(PRODUCT_API_BASE, {
-                    method: 'GET',
+                    method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
@@ -267,7 +268,7 @@
                     showMessage(result.message, 'error');
                 }
             } catch (error) {
-                showMessage('Failed to load products', 'error');
+                showMessage(error);
             }
 
             btn.classList.remove('loading');
@@ -386,7 +387,7 @@
                     showMessage(result.message, 'error');
                 }
             } catch (error) {
-                showMessage('Failed to save category', 'error');
+                showMessage('Failed to save category', error);
             }
 
             btn.classList.remove('loading');
