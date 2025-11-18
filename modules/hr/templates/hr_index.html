@@ -1,0 +1,547 @@
+{% extends 'base_template.html' %}
+{% load static %}
+
+{% block head_js %}
+<style>
+    .status-message {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+    }
+
+    /* Custom modal styles for Tailwind */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 50;
+    }
+
+    .modal-content {
+        background: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        max-width: 90vw;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    .alert {
+        padding: 0.75rem 1rem;
+        border-radius: 0.375rem;
+        margin-bottom: 1rem;
+    }
+
+    .alert-success {
+        background-color: #d1fae5;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+    }
+
+    .alert-danger {
+        background-color: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fca5a5;
+    }
+</style>
+{% endblock %}
+
+{% block top_nav %}
+<!-- Status Messages -->
+<div id="statusMessages" class="status-message"></div>
+<!-- TOP NAV -->
+<header class="fixed top-0 left-0 right-0 h-14 border-b bg-white flex items-center px-4 justify-between z-40">
+    <div class="flex items-center gap-3">
+        <button id="menuBtn" class="lg:hidden p-2 rounded-md hover:bg-gray-100">
+            ☰
+        </button>
+        <h1 class="font-semibold text-lg">HR</h1>
+    </div>
+
+    <div class="flex items-center gap-4">
+        <input type="text" placeholder="Search or type a command" class="hidden md:block w-64 px-4 py-1.5 rounded-md border text-sm focus:ring-1 focus:ring-gray-300" />
+        <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-white">
+            JD
+        </div>
+        <button id="logoutBtn" class="p-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors" title="Logout">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="color:#f7f7f7;">
+                <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <path d="M16 17l5-5-5-5" />
+                    <path d="M21 12H9" />
+                </g>
+            </svg></button>
+    </div>
+</header>
+{% endblock %}
+
+{% block side_nav %}
+<div class="p-4">
+    <div class="text-xs uppercase text-gray-500">HR Navigation</div>
+
+    <nav class="mt-3 space-y-1 text-sm">
+        <a href="" class="flex items-center px-3 py-2 rounded-md hover:bg-gray-100">
+            <span class="mr-2"><i class="fas fa-home"></i></span> Home
+        </a>
+
+        <details class="group">
+            <summary class="cursor-pointer flex items-center px-3 py-2 hover:bg-gray-200 rounded-md select-none">
+                <span class="mr-2"><i class="fas fa-calculator"></i></span> Recruitment <span class="ml-auto"><i class="fas fa-chevron-down"></i></span>
+            </summary>
+            <div class="pl-8 mt-1 space-y-2 text-gray-700">
+                <a href="#" class="block hover:text-black">Check Recruitment</a>
+            </div>
+        </details>
+
+        <details class="group">
+            <summary class="cursor-pointer flex items-center px-3 py-2 hover:bg-gray-200 rounded-md select-none">
+                <span class="mr-2"><i class="fas fa-users"></i></span> Employee <span class="ml-auto"><i class="fas fa-chevron-down"></i></span>
+            </summary>
+            <div class="pl-8 mt-1 space-y-2 text-gray-700">
+                <a href="#" class="block hover:text-black">List Employee</a>
+            </div>
+        </details>
+
+        <details class="group mt-3">
+            <summary class="cursor-pointer flex items-center px-3 py-2 hover:bg-gray-200 rounded-md select-none">
+                <span class="mr-2"><i class="fas fa-cubes"></i></span> Back To Main Menu
+            </summary>
+        </details>
+    </nav>
+</div>
+{% endblock %}
+
+{% block main_content %}
+
+<!-- Shortcuts -->
+<h2 class="text-xl font-semibold">Your Shortcuts</h2>
+
+<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-2 mt-3 text-sm">
+    <a class="p-3 rounded-md border hover:bg-gray-50 flex justify-between" href="#">
+        Employee <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">1 Active</span>
+    </a>
+    <a class="p-3 rounded-md border hover:bg-gray-50" href="#">Leave Application →</a>
+    <a class="p-3 rounded-md border hover:bg-gray-50" href="#">HR Dashboard →</a>
+    <a class="p-3 rounded-md border hover:bg-gray-50" href="#">Employee Lifecycle Dashboard →</a>
+    <a class="p-3 rounded-md border hover:bg-gray-50" href="#">Attendance Dashboard →</a>
+    <a class="p-3 rounded-md border hover:bg-gray-50" href="#">Recruitment Dashboard →</a>
+</div>
+
+
+<!-- Products Table -->
+<h2 class="text-xl font-semibold mt-8 mb-4">Employee <button id="loadProductsBtn" class="p-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors" title="Load Products">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+            </path>
+        </svg></h2>
+<div class="flex gap-2 mb-4">
+
+</div>
+
+<div class="overflow-x-auto bg-white rounded-lg shadow-sm">
+    <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+            <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee Name</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+            </tr>
+        </thead>
+        <tbody id="productsTableBody" class="bg-white divide-y divide-gray-200">
+            <tr>
+                <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                    Click "Load Employee" to load data
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Product Modal -->
+<div id="productModal" class="modal-overlay hidden">
+    <div class="modal-content w-full max-w-2xl mx-4">
+        <div class="flex items-center justify-between p-4 border-b">
+            <h3 class="text-lg font-semibold" id="productModalTitle">Add Product</h3>
+            <button id="closeProductModal" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="p-4">
+            <form id="productForm">
+                <input type="hidden" id="productId" name="id">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="productName" class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" id="productName" name="name" required>
+                    </div>
+                    <div>
+                        <label for="productPrice" class="block text-sm font-medium text-gray-700 mb-1">Price *</label>
+                        <input type="number" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" id="productPrice" name="price"
+                            required>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label for="productDescription" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" id="productDescription" name="description"
+                        rows="3"></textarea>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="productCategory" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                        <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" id="productCategory" name="category_id">
+                            <option value="">Select Category</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="productStatus" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                        <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" id="productStatus" name="is_active">
+                            <option value="true">Active</option>
+                            <option value="false">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="flex justify-end gap-2 p-4 border-t bg-gray-50">
+            <button id="cancelProductBtn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+            <button id="saveProductBtn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- API and UI Scripts -->
+<script>
+    // API Base URLs
+    const PRODUCT_API_BASE = '{% url "product_api" %}';
+
+    // Utility functions
+    function showMessage(message, type = 'success') {
+        const messagesDiv = document.getElementById('statusMessages');
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        messagesDiv.innerHTML = `
+            <div class="alert ${alertClass}" role="alert">
+                ${message}
+                <button type="button" class="ml-4 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()">×</button>
+            </div>
+        `;
+        setTimeout(() => messagesDiv.innerHTML = '', 5000);
+    }
+
+    // Modal functions
+    function showModal(modalId) {
+        document.getElementById(modalId).classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function hideModal(modalId) {
+        document.getElementById(modalId).classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+
+    // Load categories into dropdown
+    async function loadCategoriesForDropdown() {
+        try {
+            const response = await fetch(CATEGORY_API_BASE, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+                },
+                body: JSON.stringify({ action: 'list' })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                const categorySelect = document.getElementById('productCategory');
+                categorySelect.innerHTML = '<option value="">Select Category</option>';
+
+                result.data.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category.id;
+                    option.textContent = category.name;
+                    categorySelect.appendChild(option);
+                });
+            } else {
+                console.error('Failed to load categories:', result.error);
+            }
+        } catch (error) {
+            console.error('Error loading categories:', error);
+        }
+    }
+
+    // Load Products
+    async function loadProducts() {
+        const btn = document.getElementById('loadProductsBtn');
+        const originalHTML = btn.innerHTML;
+        btn.classList.add('opacity-50', 'pointer-events-none');
+        btn.innerHTML = `
+            <svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+        `;
+
+        try {
+            const response = await fetch(PRODUCT_API_BASE, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+                },
+                body: JSON.stringify({ action: 'list' })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                renderProducts(result.data);
+                showMessage('Products loaded successfully');
+            } else {
+                showMessage(result.error, 'error');
+            }
+        } catch (error) {
+            showMessage('Failed to load products', 'error');
+        }
+
+        btn.classList.remove('opacity-50', 'pointer-events-none');
+        btn.innerHTML = originalHTML;
+    }
+
+    // Render Products
+    function renderProducts(products) {
+        const tbody = document.getElementById('productsTableBody');
+        tbody.innerHTML = '';
+
+        if (products.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">No products found</td></tr>';
+            return;
+        }
+
+        products.forEach(product => {
+            const categoryName = product.category ? product.category.name : 'No Category';
+            const statusBadge = product.is_active ?
+                '<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Active</span>' :
+                '<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Inactive</span>';
+
+            const row = `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${product.name}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${categoryName}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${product.price}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${statusBadge}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button class="text-indigo-600 hover:text-indigo-900 mr-2" onclick="editProduct(${product.id})">Edit</button>
+                        <button class="text-red-600 hover:text-red-900" onclick="deleteProduct(${product.id}, '${product.name}')">Delete</button>
+                    </td>
+                </tr>
+            `;
+            tbody.innerHTML += row;
+        });
+    }
+
+
+    function resetCategoryForm() {
+        document.getElementById('categoryForm').reset();
+        document.getElementById('categoryId').value = '';
+        document.getElementById('categoryModalTitle').textContent = 'Add Category';
+    }
+
+    // Product operations
+    async function saveProduct() {
+        const id = document.getElementById('productId').value;
+        const name = document.getElementById('productName').value;
+        const price = document.getElementById('productPrice').value;
+        const description = document.getElementById('productDescription').value;
+        const categoryId = document.getElementById('productCategory').value;
+        const isActive = document.getElementById('productStatus').value === 'true';
+
+        if (!name.trim() || !price) {
+            showMessage('Name and price are required', 'error');
+            return;
+        }
+
+        const btn = document.getElementById('saveProductBtn');
+        btn.classList.add('opacity-50', 'pointer-events-none');
+        btn.textContent = 'Saving...';
+
+        const action = id ? 'update' : 'create';
+        const data = {
+            action,
+            name,
+            price: parseFloat(price),
+            description,
+            category_id: categoryId ? parseInt(categoryId) : null,
+            is_active: isActive
+        };
+        if (id) data.id = parseInt(id);
+
+        try {
+            const response = await fetch(PRODUCT_API_BASE, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showMessage(result.message);
+                hideModal('productModal');
+                resetProductForm();
+                loadProducts(); // Reload products
+            } else {
+                showMessage(result.error, 'error');
+            }
+        } catch (error) {
+            showMessage('Failed to save product', error);
+        }
+
+        btn.classList.remove('opacity-50', 'pointer-events-none');
+        btn.textContent = 'Save';
+    }
+
+    async function editProduct(id) {
+        // First load categories, then get product data
+        await loadCategoriesForDropdown();
+
+        try {
+            const response = await fetch(PRODUCT_API_BASE, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+                },
+                body: JSON.stringify({ action: 'list' })
+            });
+
+            const result = await response.json();
+
+            if (!result.success) {
+                showMessage('Failed to load product data', 'error');
+                return;
+            }
+
+            const product = result.data.find(p => p.id === id);
+            if (!product) {
+                showMessage('Product not found', 'error');
+                return;
+            }
+
+            // Populate form
+            document.getElementById('productId').value = product.id;
+            document.getElementById('productName').value = product.name;
+            document.getElementById('productPrice').value = product.price;
+            document.getElementById('productDescription').value = product.description || '';
+            document.getElementById('productCategory').value = product.category ? product.category.id : '';
+            document.getElementById('productStatus').value = product.is_active ? 'true' : 'false';
+            document.getElementById('productModalTitle').textContent = 'Edit Product';
+
+            showModal('productModal');
+        } catch (error) {
+            showMessage('Failed to load product data', 'error');
+        }
+    }
+
+    // Add new product function
+    async function addProduct() {
+        // Load categories first, then reset form and show modal
+        await loadCategoriesForDropdown();
+        resetProductForm();
+        document.getElementById('productModalTitle').textContent = 'Add Product';
+        showModal('productModal');
+    }
+
+    async function deleteProduct(id, name) {
+        if (!confirm(`Are you sure you want to delete product "${name}"?`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(PRODUCT_API_BASE, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+                },
+                body: JSON.stringify({ action: 'delete', id: parseInt(id) })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showMessage(result.message);
+                loadProducts();
+            } else {
+                showMessage(result.error, 'error');
+            }
+        } catch (error) {
+            showMessage('Failed to delete product', error);
+        }
+    }
+
+    function resetProductForm() {
+        document.getElementById('productForm').reset();
+        document.getElementById('productId').value = '';
+        document.getElementById('productModalTitle').textContent = 'Add Product';
+    }
+
+    // Chart initialization (keeping your existing chart)
+    const ctx = document.getElementById('myChart')?.getContext('2d');
+    if (ctx) {
+        const myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Sample Points',
+                    data: [10, 20, 15, 25, 30, 22],
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    },
+                    title: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+
+    // Event listeners
+    document.getElementById('loadProductsBtn').addEventListener('click', loadProducts);
+    document.getElementById('addProductBtn').addEventListener('click', addProduct);
+    document.getElementById('saveProductBtn').addEventListener('click', saveProduct);
+
+    // Modal button listeners
+    document.getElementById('closeProductModal').addEventListener('click', () => hideModal('productModal'));
+    document.getElementById('cancelProductBtn').addEventListener('click', () => hideModal('productModal'));
+
+    document.getElementById('productModal').addEventListener('click', (e) => {
+        if (e.target.id === 'productModal') hideModal('productModal');
+    });
+
+</script>
+{% endblock %}
