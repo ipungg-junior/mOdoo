@@ -1,0 +1,67 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mOdoo {{ sub_title }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    {% block head_js %}
+    {% endblock %}
+</head>
+
+<body class="bg-gray-50 text-gray-800">
+    {% csrf_token %}
+    {% block top_nav %}
+    {% endblock %}
+
+
+    <!-- WRAPPER -->
+    <div class="flex">
+
+        <!-- SIDEBAR -->
+        <aside id="sidebar" class="bg-white w-60 border-r h-screen fixed lg:relative top-0 left-0 z-30 transition-transform -translate-x-full lg:translate-x-0 overflow-y-auto pt-12">
+            {% block side_nav %}
+
+            {% endblock %}
+        </aside>
+
+        <!-- OVERLAY for mobile -->
+        <div id="overlay" class="fixed inset-0 bg-black/40 hidden lg:hidden z-20"></div>
+
+
+        <!-- MAIN CONTENT -->
+        <main class="flex-1 p-6 lg:ml-0 pt-16 lg:pt-16 lg:ml-0 lg:pl-0 w-full lg:w-auto ml-0 lg:ml-10 overflow-y-auto h-[calc(100vh-2rem)]">
+
+            <div class="bg-white p-6 rounded-xl shadow-sm border">
+
+                {% block main_content %}
+                {% endblock %}
+
+            </div>
+        </main>
+    </div>
+
+    <!-- SCRIPT mobile sidebar -->
+    <script>
+        const sidebar = document.getElementById("sidebar");
+        const overlay = document.getElementById("overlay");
+        const menuBtn = document.getElementById("menuBtn");
+
+        menuBtn.onclick = () => {
+            sidebar.classList.remove("-translate-x-full");
+            overlay.classList.remove("hidden");
+        };
+
+        overlay.onclick = () => {
+            sidebar.classList.add("-translate-x-full");
+            overlay.classList.add("hidden");
+        };
+    </script>
+</body>
+
+</html>
+
+</html>

@@ -13,7 +13,7 @@ class EmployeeListView(PermissionRequiredMixin, View):
         if not request.user.groups.filter(name__icontains=self.group_required):
             raise PermissionDenied
         employees = Employee.objects.select_related('user').all()
-        return render(request, 'hr_list.html', {'employees': employees})
+        return render(request, 'hr_index.html', {'employees': employees})
 
 class SyncEmployeesView(PermissionRequiredMixin, View):
     permission_required = ['hr.add_employee']
