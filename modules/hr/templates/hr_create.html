@@ -65,8 +65,8 @@
     <div class="text-xs uppercase text-gray-500">HR Navigation</div>
 
     <nav class="mt-3 space-y-2 text-sm">
-        <a href="{% url 'employee_list' %}" class="flex items-center px-3 py-2 rounded-md hover:bg-gray-100">
-            <span class="mr-2"><i class="fas fa-home"></i></span> Employee List
+        <a href="{% url 'employee_index_page' %}" class="flex items-center px-3 py-2 rounded-md hover:bg-gray-100">
+            <span class="mr-2"><i class="fas fa-home"></i></span> Home
         </a>
 
         <details class="group">
@@ -78,13 +78,13 @@
             </div>
         </details>
 
-        <details class="group" open>
-            <summary class="cursor-pointer flex items-center px-3 py-2 bg-gray-200 rounded-md select-none">
+        <details class="group">
+            <summary class="cursor-pointer flex items-center px-3 py-2 hover:bg-gray-200 rounded-md select-none">
                 <span class="mr-2"><i class="fas fa-users"></i></span> Employee <span class="ml-auto"><i class="fas fa-chevron-down"></i></span>
             </summary>
             <div class="pl-8 mt-1 space-y-2 text-gray-700">
-                <a href="{% url 'employee_list' %}" class="block hover:text-black">List Employee</a>
-                <a href="{% url 'employee_create' %}" class="block text-blue-600 font-medium">Create Employee</a>
+                <a href="{% url 'employee_index_page' %}" class="block hover:text-black">List Employee</a>
+                <a href="{% url 'employee_create_page' %}" class="block hover:text-black">Create Employee</a>
             </div>
         </details>
 

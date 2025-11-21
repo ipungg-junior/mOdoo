@@ -8,7 +8,7 @@ from django.contrib.auth.models import User
 from .services import EmployeeService
 import json
 
-class EmployeeListView(PermissionRequiredMixin, View):
+class EmployeeIndex(PermissionRequiredMixin, View):
     permission_required = ['hr.view_employee']
     group_required = 'group_access_hr'
 
@@ -17,6 +17,17 @@ class EmployeeListView(PermissionRequiredMixin, View):
             raise PermissionDenied
         employees = Employee.objects.select_related('user').all()
         return render(request, 'hr_index.html', {'employees': employees})
+    
+
+class EmployeeCreatePage(PermissionRequiredMixin, View):
+    permission_required = ['hr.view_employee', 'hr.create_employee']
+    group_required = 'group_access_hr'
+
+    def get(self, request):
+        if not request.user.groups.filter(name__icontains=self.group_required):
+            raise PermissionDenied
+        employees = Employee.objects.select_related('user').all()
+        return render(request, 'hr_create.html', {'employees': employees})
 
 
 class APIView(View):
