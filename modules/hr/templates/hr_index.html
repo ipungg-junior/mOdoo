@@ -288,18 +288,24 @@
         `;
 
         try {
-            const response = await fetch(`${EMPLOYEE_API_BASE}?action=list_employee&page=${page}&page_size=${pageSize}`, {
-                method: 'GET',
+            const response = await fetch(EMPLOYEE_API_BASE, {
+                method: 'POST',
                 headers: {
+                    'Content-Type': 'application/json',
                     'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
-                }
+                },
+                body: JSON.stringify({
+                    action: 'list_employee',
+                    page: page,
+                    page_size: pageSize
+                })
             });
 
             const result = await response.json();
 
             if (result.success) {
-                renderEmployees(result.data);
-                updatePagination(result.pagination);
+                renderEmployees(result.data.employees);
+                updatePagination(result.data.pagination);
                 showMessage('Employees loaded successfully');
 
                 // Show pagination controls
@@ -308,7 +314,8 @@
                 showMessage(result.message, 'error');
             }
         } catch (error) {
-            showMessage('Failed to load employees', 'error');
+            showMessage('Failed to load employees', error);
+            console.log('Error loading employees:', error);
         }
 
         btn.classList.remove('opacity-50', 'pointer-events-none');
@@ -339,7 +346,7 @@
                 '<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Inactive</span>';
 
             const row = `
-                <tr class="hover:bg-gray-50">
+                <tr class="hover:bg-gray-100">
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${username}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${fullName}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${email}</td>
