@@ -18,50 +18,32 @@ class EmployeeListView(PermissionRequiredMixin, View):
         employees = Employee.objects.select_related('user').all()
         return render(request, 'hr_index.html', {'employees': employees})
 
-class SyncEmployeesView(PermissionRequiredMixin, View):
-    permission_required = ['hr.add_employee']
-    group_required = 'group_access_hr'
 
-    def get(self, request):
-        if not request.user.groups.filter(name__icontains=self.group_required):
-            raise PermissionDenied
-
-        # Sync all users to employees if they don't exist
-        synced_count = 0
-        for user in User.objects.all():
-            employee, created = Employee.objects.get_or_create(
-                user=user,
-                defaults={
-                    'position': 'Employee',
-                    'hire_date': user.date_joined.date()
-                }
-            )
-            if created:
-                synced_count += 1
-
-        return redirect('list_view')
-    
 class APIView(View):
     """
-    Unified API view for handling all hr operations
+    Unified API view for handling all hr operations through single endpoint
     """
     group_required = 'group_access_hr'
     context = ''
 
     def get(self, request):
         """Handle GET requests"""
-        return EmployeeService.process_get(request, request.GET)
+        return JsonResponse({'success': False, 'message': 'Invalid HTTP Method'}, status=400)
 
     def post(self, request):
         """
         Handle POST requests - process JSON actions
         """
         try:
+            # Check permissions for API access
+            if not request.user.groups.filter(name__icontains=self.group_required):
+                raise PermissionDenied
+
             # Parse JSON data from request body
             json_request = json.loads(request.body.decode('utf-8'))
-            
+
             if self.context == 'employee_api':
-                # Employee Service handling request
+            # Employee Service handling request
                 return EmployeeService.process_post(request, json_request)
             else:
                 # Return 400 Bad request
