@@ -26,8 +26,8 @@ class EmployeeCreatePage(PermissionRequiredMixin, View):
     def get(self, request):
         if not request.user.groups.filter(name__icontains=self.group_required):
             raise PermissionDenied
-        employees = Employee.objects.select_related('user').all()
-        return render(request, 'hr_create.html', {'employees': employees})
+        # No longer passing users - they will be fetched via JavaScript API
+        return render(request, 'hr_create.html')
 
 
 class APIView(View):

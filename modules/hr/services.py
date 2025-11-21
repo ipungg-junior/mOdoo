@@ -34,6 +34,8 @@ class EmployeeService:
             return EmployeeService.update_employee(request, json_request)
         elif action == 'delete_employee':
             return EmployeeService.delete_employee(request, json_request)
+        elif action == 'get_positions':
+            return EmployeeService.get_positions(request, json_request)
         else:
             return JsonResponse({'success': False, 'message': f'Unknown POST action: {action}'}, status=400)
 
@@ -50,7 +52,7 @@ class EmployeeService:
         if page_size not in [5, 10, 25, 50]:
             page_size = 10
 
-        employees = Employee.objects.select_related('user').all().order_by('user__username')
+        employees = Employee.objects.select_related('position').all().order_by('firstname', 'lastname')
         paginator = Paginator(employees, page_size)
 
         try:
@@ -65,18 +67,15 @@ class EmployeeService:
             for employee in page_obj:
                 employee_data.append({
                     'id': employee.id,
-                    'user': {
-                        'id': employee.user.id,
-                        'username': employee.user.username,
-                        'email': employee.user.email,
-                        'first_name': employee.user.first_name,
-                        'last_name': employee.user.last_name,
-                        'get_full_name': employee.user.get_full_name() or employee.user.username,
-                        'is_active': employee.user.is_active
-                    },
-                    'position': employee.position,
-                    'hire_date': str(employee.hire_date),
-                    'is_active': employee.user.is_active
+                    'firstname': employee.firstname,
+                    'lastname': employee.lastname,
+                    'fullname': f"{employee.firstname} {employee.lastname}",
+                    'position': {
+                        'id': employee.position.id if employee.position else None,
+                        'name': employee.position.name if employee.position else 'No Position',
+                        'description': employee.position.description if employee.position else None
+                    } if employee.position else None,
+                    'hire_date': str(employee.hire_date)
                 })
 
             return JsonResponse({
@@ -102,23 +101,22 @@ class EmployeeService:
     @staticmethod
     def create_employee(request, data):
         """Create a new employee"""
-        user_id = data.get('user_id')
-        position = data.get('position')
+        firstname = data.get('firstname')
+        lastname = data.get('lastname')
+        position_id = data.get('position_id')
         hire_date = data.get('hire_date')
 
-        if not user_id or not position or not hire_date:
-            return JsonResponse({'success': False, 'message': 'User ID, position, and hire date are required'}, status=400)
+        if not firstname or not lastname or not position_id or not hire_date:
+            return JsonResponse({'success': False, 'message': 'First name, last name, position ID, and hire date are required'}, status=400)
 
         try:
-            # Check if user exists
-            user = User.objects.get(id=user_id)
-
-            # Check if employee already exists for this user
-            if Employee.objects.filter(user=user).exists():
-                return JsonResponse({'success': False, 'message': 'Employee already exists for this user'}, status=400)
+            # Check if position exists
+            from .models import MasterPosition
+            position = MasterPosition.objects.get(id=position_id)
 
             employee = Employee(
-                user=user,
+                firstname=firstname,
+                lastname=lastname,
                 position=position,
                 hire_date=hire_date
             )
@@ -131,23 +129,20 @@ class EmployeeService:
                 'message': 'Employee created successfully',
                 'data': {
                     'id': employee.id,
-                    'user': {
-                        'id': employee.user.id,
-                        'username': employee.user.username,
-                        'email': employee.user.email,
-                        'first_name': employee.user.first_name,
-                        'last_name': employee.user.last_name,
-                        'get_full_name': employee.user.get_full_name() or employee.user.username,
-                        'is_active': employee.user.is_active
+                    'firstname': employee.firstname,
+                    'lastname': employee.lastname,
+                    'fullname': f"{employee.firstname} {employee.lastname}",
+                    'position': {
+                        'id': employee.position.id,
+                        'name': employee.position.name,
+                        'description': employee.position.description
                     },
-                    'position': employee.position,
-                    'hire_date': str(employee.hire_date),
-                    'is_active': employee.user.is_active
+                    'hire_date': str(employee.hire_date)
                 }
             })
 
-        except User.DoesNotExist:
-            return JsonResponse({'success': False, 'message': 'User not found'}, status=404)
+        except MasterPosition.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Position not found'}, status=404)
         except ValidationError as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
 
@@ -195,6 +190,32 @@ class EmployeeService:
 
         except Employee.DoesNotExist:
             return JsonResponse({'success': False, 'message': 'Employee not found'}, status=404)
+
+
+    @staticmethod
+    def get_positions(request, data):
+        """Get all available positions"""
+        try:
+            from .models import MasterPosition
+            positions = MasterPosition.objects.all().order_by('name')
+
+            position_data = []
+            for position in positions:
+                position_data.append({
+                    'id': position.id,
+                    'name': position.name,
+                    'description': position.description
+                })
+
+            return JsonResponse({
+                'success': True,
+                'data': {
+                    'positions': position_data
+                }
+            })
+
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
         except ValidationError as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
 

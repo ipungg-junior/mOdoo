@@ -13,8 +13,10 @@ class MasterPosition(models.Model):
 
 class Employee(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    firstname = models.CharField(max_length=100)
+    lastname = models.CharField(max_length=100)
     position = models.ForeignKey(MasterPosition, on_delete=models.CASCADE, null=True, blank=True)
     hire_date = models.DateField()
 
     def __str__(self):
-        return f"{self.user.get_full_name() or self.user.username} - {self.position}"
+        return f"{self.firstname} {self.lastname} - {self.position.name if self.position else 'No Position'}"
