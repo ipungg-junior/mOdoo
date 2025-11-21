@@ -263,6 +263,10 @@
     let totalPages = 1;
     let totalItems = 0;
 
+    // Cooldown state for load button
+    let lastLoadTime = 0;
+    const LOAD_COOLDOWN = 2500; // 2.5 seconds
+
     // Utility functions
     function showMessage(message, type = 'success') {
         const messagesDiv = document.getElementById('statusMessages');
@@ -279,6 +283,17 @@
     // Load Employees with pagination
     async function loadEmployees(page = 1, pageSize = currentPageSize) {
         const btn = document.getElementById('loadEmployee');
+        const currentTime = Date.now();
+
+        // Check cooldown to prevent brute force requests
+        if (currentTime - lastLoadTime < LOAD_COOLDOWN) {
+            const remainingTime = Math.ceil((LOAD_COOLDOWN - (currentTime - lastLoadTime)) / 1000);
+            showMessage(`Please wait ${remainingTime} second(s) before loading again`, 'error');
+            return;
+        }
+
+        lastLoadTime = currentTime;
+
         const originalHTML = btn.innerHTML;
         btn.classList.add('opacity-50', 'pointer-events-none');
         btn.innerHTML = `
