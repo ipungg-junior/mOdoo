@@ -1,58 +1,415 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends 'base_template.html' %}
+{% load static %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Employee List</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
+{% block head_js %}
+<style>
+    .status-message {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+    }
 
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'module_list' %}">mOdoo</a>
-            <div class="navbar-nav ms-auto">
-                <span class="navbar-text me-3">Welcome, {{ user.username }}!</span>
-                <a href="{% url 'logout' %}" class="btn btn-outline-light btn-sm">Logout</a>
-            </div>
-        </div>
-    </nav>
-    <div class="container mt-5">
-        <h1>Employee List</h1>
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <a href="{% url 'sync_employees' %}" class="btn btn-info me-2">Sync</a>
-            </div>
-        </div>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Username</th>
-                    <th>Full Name</th>
-                    <th>Email</th>
-                    <th>Position</th>
-                    <th>Hire Date</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for employee in employees %}
-                <tr>
-                    <td>{{ employee.user.username }}</td>
-                    <td>{{ employee.user.get_full_name|default:employee.user.username }}</td>
-                    <td>{{ employee.user.email }}</td>
-                    <td>{{ employee.position }}</td>
-                    <td>{{ employee.hire_date|date:"M d, Y" }}</td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="6" class="text-center">No employees found.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    /* Custom modal styles for Tailwind */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 50;
+    }
+
+    .modal-content {
+        background: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        max-width: 90vw;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    .alert {
+        padding: 0.75rem 1rem;
+        border-radius: 0.375rem;
+        margin-bottom: 1rem;
+    }
+
+    .alert-success {
+        background-color: #d1fae5;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+    }
+
+    .alert-danger {
+        background-color: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fca5a5;
+    }
+</style>
+{% endblock %}
+
+{% block top_nav %}
+<!-- Status Messages -->
+<div id="statusMessages" class="status-message"></div>
+<!-- TOP NAV -->
+<header class="fixed top-0 left-0 right-0 h-14 border-b bg-white flex items-center px-4 justify-between z-40">
+    <div class="flex items-center gap-3">
+        <button id="menuBtn" class="lg:hidden p-2 rounded-md hover:bg-gray-100">
+            ☰
+        </button>
+        <h1 class="font-semibold text-lg">HR</h1>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
 
-</html>
+    <div class="flex items-center gap-4">
+        <input type="text" placeholder="Search or type a command" class="hidden md:block w-64 px-4 py-1.5 rounded-md border text-sm focus:ring-1 focus:ring-gray-300" />
+        <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-white">
+            JD
+        </div>
+        <button id="logoutBtn" class="p-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors" title="Logout">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="color:#f7f7f7;">
+                <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <path d="M16 17l5-5-5-5" />
+                    <path d="M21 12H9" />
+                </g>
+            </svg></button>
+    </div>
+</header>
+{% endblock %}
+
+{% block side_nav %}
+<div class="p-4">
+    <div class="text-xs uppercase text-gray-500">HR Navigation</div>
+
+    <nav class="mt-3 space-y-2 text-sm">
+        <a href="{% url 'hr_index_page' %}" class="flex items-center px-3 py-2 rounded-md hover:bg-gray-100">
+            <span class="mr-2"><i class="fas fa-home"></i></span> Home
+        </a>
+
+        <details class="group">
+            <summary class="cursor-pointer flex items-center px-3 py-2 hover:bg-gray-200 rounded-md select-none">
+                <span class="mr-2"><i class="fas fa-calculator"></i></span> Recruitment <span class="ml-auto"><i class="fas fa-chevron-down"></i></span>
+            </summary>
+            <div class="pl-8 mt-1 space-y-2 text-gray-700">
+                <a href="#" class="block hover:text-black">Check Recruitment</a>
+            </div>
+        </details>
+
+        <details class="group">
+            <summary class="cursor-pointer flex items-center px-3 py-2 hover:bg-gray-200 rounded-md select-none">
+                <span class="mr-2"><i class="fas fa-users"></i></span> Employee <span class="ml-auto"><i class="fas fa-chevron-down"></i></span>
+            </summary>
+            <div class="pl-8 mt-1 space-y-2 text-gray-700">
+                <a href="{% url 'employee_list_page' %}" class="block hover:text-black">List Employee</a>
+                <a href="{% url 'employee_create_page' %}" class="block hover:text-black">Create Employee</a>
+            </div>
+        </details>
+
+        <a href="{% url 'module_list' %}" class="cursor-pointer flex items-center px-3 py-2 hover:bg-gray-200 rounded-md select-none" style="margin-top: 2em !important;">
+            <span class="mr-2"><i class="fas fa-cubes"></i></span> Back To Main Menu
+        </a>
+    </nav>
+</div>
+{% endblock %}
+
+{% block main_content %}
+
+<!-- Products Table -->
+<h2 class="text-xl font-semibold mt-8 mb-4">Employee <button id="loadEmployee" class="p-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors" title="Load Products">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+            </path>
+        </svg></h2>
+<div class="flex gap-2 mb-4">
+
+</div>
+
+<div class="overflow-x-auto bg-white rounded-lg shadow-sm">
+    <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+            <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">First Name</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Name</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Position</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hire Date</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+            </tr>
+        </thead>
+        <tbody id="employeeSummary" class="bg-white divide-y divide-gray-200">
+            <tr>
+                <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                    Click "Load Employee" to load data
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination Controls -->
+<div id="paginationControls" class="mt-4 flex items-center justify-between" style="display: none;">
+    <div class="flex items-center gap-2">
+        <span class="text-sm text-gray-700">Rows per page:</span>
+        <select id="pageSize" class="px-2 py-1 border border-gray-300 rounded text-sm">
+            <option value="5">5</option>
+            <option value="10" selected>10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+        </select>
+    </div>
+    <div class="flex items-center gap-2">
+        <span id="paginationInfo" class="text-sm text-gray-700">0-0 of 0</span>
+        <div class="flex gap-1">
+            <button id="prevPage" class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+            </button>
+            <button id="nextPage" class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Product Modal -->
+<div id="productModal" class="modal-overlay hidden">
+    <div class="modal-content w-full max-w-2xl mx-4">
+        <div class="flex items-center justify-between p-4 border-b">
+            <h3 class="text-lg font-semibold" id="productModalTitle">Add Product</h3>
+            <button id="closeProductModal" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="p-4">
+            <form id="productForm">
+                <input type="hidden" id="productId" name="id">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="productName" class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" id="productName" name="name" required>
+                    </div>
+                    <div>
+                        <label for="productPrice" class="block text-sm font-medium text-gray-700 mb-1">Price *</label>
+                        <input type="number" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" id="productPrice" name="price"
+                            required>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label for="productDescription" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" id="productDescription" name="description"
+                        rows="3"></textarea>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="productCategory" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                        <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" id="productCategory" name="category_id">
+                            <option value="">Select Category</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="productStatus" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                        <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" id="productStatus" name="is_active">
+                            <option value="true">Active</option>
+                            <option value="false">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="flex justify-end gap-2 p-4 border-t bg-gray-50">
+            <button id="cancelProductBtn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+            <button id="saveProductBtn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- API and UI Scripts -->
+<script>
+    // API Base URLs - HR specific
+    const EMPLOYEE_API_BASE = '{% url "employee_api" %}';
+
+    // Pagination state
+    let currentPage = 1;
+    let currentPageSize = 10;
+    let totalPages = 1;
+    let totalItems = 0;
+
+    // Cooldown state for load button
+    let lastLoadTime = 0;
+    const LOAD_COOLDOWN = 2500; // 2.5 seconds
+
+    // Utility functions
+    function showMessage(message, type = 'success') {
+        const messagesDiv = document.getElementById('statusMessages');
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        messagesDiv.innerHTML = `
+            <div class="alert ${alertClass}" role="alert">
+                ${message}
+                <button type="button" class="ml-4 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()">×</button>
+            </div>
+        `;
+        setTimeout(() => messagesDiv.innerHTML = '', 5000);
+    }
+
+    // Load Employees with pagination
+    async function loadEmployees(page = 1, pageSize = currentPageSize) {
+        const btn = document.getElementById('loadEmployee');
+        const currentTime = Date.now();
+
+        // Check cooldown to prevent brute force requests
+        if (currentTime - lastLoadTime < LOAD_COOLDOWN) {
+            const remainingTime = Math.ceil((LOAD_COOLDOWN - (currentTime - lastLoadTime)) / 1000);
+            showMessage(`Please wait ${remainingTime} second(s) before loading again`, 'error');
+            return;
+        }
+
+        lastLoadTime = currentTime;
+
+        const originalHTML = btn.innerHTML;
+        btn.classList.add('opacity-50', 'pointer-events-none');
+        btn.innerHTML = `
+            <svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+        `;
+
+        try {
+            const response = await fetch(EMPLOYEE_API_BASE, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+                },
+                body: JSON.stringify({
+                    action: 'list_employee',
+                    page: page,
+                    page_size: pageSize
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                renderEmployees(result.data.employees);
+                updatePagination(result.data.pagination);
+                showMessage('Employees loaded successfully');
+
+                // Show pagination controls
+                document.getElementById('paginationControls').style.display = 'flex';
+            } else {
+                showMessage(result.message, 'error');
+            }
+        } catch (error) {
+            showMessage('Failed to load employees', error);
+            console.log('Error loading employees:', error);
+        }
+
+        btn.classList.remove('opacity-50', 'pointer-events-none');
+        btn.innerHTML = originalHTML;
+    }
+
+    // Render Employees with all fields
+    function renderEmployees(employees) {
+        const tbody = document.getElementById('employeeSummary');
+        tbody.innerHTML = '';
+
+        if (employees.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">No employees found</td></tr>';
+            return;
+        }
+
+        employees.forEach(employee => {
+            const firstname = employee.firstname || 'N/A';
+            const lastname = employee.lastname || 'N/A';
+            const email = employee.email || `N/A`;
+            const position = employee.position ? employee.position.name : 'No Position';
+            const hireDate = employee.hire_date || 'N/A';
+
+            const statusBadge = '<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Active</span>';
+
+            const row = `
+                <tr class="hover:bg-gray-100">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${firstname}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${lastname}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${email}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${position}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${hireDate}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${statusBadge}</td>
+                </tr>
+            `;
+            tbody.innerHTML += row;
+        });
+    }
+
+    // Update pagination controls
+    function updatePagination(pagination) {
+        currentPage = pagination.current_page;
+        totalPages = pagination.total_pages;
+        totalItems = pagination.total_items;
+        currentPageSize = pagination.page_size;
+
+        // Update pagination info
+        const startIndex = pagination.start_index;
+        const endIndex = pagination.end_index;
+        document.getElementById('paginationInfo').textContent = `${startIndex}-${endIndex} of ${totalItems}`;
+
+        // Update page size selector
+        document.getElementById('pageSize').value = currentPageSize;
+
+        // Update navigation buttons
+        const prevBtn = document.getElementById('prevPage');
+        const nextBtn = document.getElementById('nextPage');
+
+        prevBtn.disabled = !pagination.has_previous;
+        nextBtn.disabled = !pagination.has_next;
+
+        prevBtn.classList.toggle('disabled:opacity-50', !pagination.has_previous);
+        nextBtn.classList.toggle('disabled:opacity-50', !pagination.has_next);
+    }
+
+    // Handle page size change
+    function handlePageSizeChange() {
+        const newPageSize = parseInt(document.getElementById('pageSize').value);
+        currentPageSize = newPageSize;
+        loadEmployees(1, newPageSize); // Reset to first page
+    }
+
+    // Handle pagination navigation
+    function handlePrevPage() {
+        if (currentPage > 1) {
+            loadEmployees(currentPage - 1, currentPageSize);
+        }
+    }
+
+    function handleNextPage() {
+        if (currentPage < totalPages) {
+            loadEmployees(currentPage + 1, currentPageSize);
+        }
+    }
+
+    function logoutAccount() {
+        window.location.href = '{% url "logout" %}';
+    }
+
+    // Event listeners
+    document.getElementById('loadEmployee').addEventListener('click', () => loadEmployees());
+    document.getElementById('pageSize').addEventListener('change', handlePageSizeChange);
+    document.getElementById('prevPage').addEventListener('click', handlePrevPage);
+    document.getElementById('nextPage').addEventListener('click', handleNextPage);
+
+</script>
+{% endblock %}
