@@ -13,8 +13,8 @@ class MasterPosition(models.Model):
 
 class Employee(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
-    firstname = models.CharField(max_length=100)
-    lastname = models.CharField(max_length=100)
+    firstname = models.CharField(max_length=100, null=True, blank=True)
+    lastname = models.CharField(max_length=100, null=True, blank=True)
     position = models.ForeignKey(MasterPosition, on_delete=models.CASCADE, null=True, blank=True)
     hire_date = models.DateField()
 
