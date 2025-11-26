@@ -292,7 +292,7 @@
             tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-4 text-center text-gray-500">No employees found</td></tr>';
             return;
         }
-
+        var employeeCount = 1 + (currentPage - 1) * currentPageSize;
         employees.forEach(employee => {
             const firstname = employee.firstname || 'N/A';
             const lastname = employee.lastname || 'N/A';
@@ -303,7 +303,7 @@
 
             const row = `
                 <tr class="hover:bg-gray-100">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"></td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${employeeCount}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${firstname}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${lastname}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${position}</td>
@@ -312,6 +312,7 @@
                 </tr>
             `;
             tbody.innerHTML += row;
+            employeeCount++;
         });
     }
 
