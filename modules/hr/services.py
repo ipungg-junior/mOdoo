@@ -150,7 +150,9 @@ class EmployeeService:
     def update_employee(request, data):
         """Update an existing employee"""
         employee_id = data.get('id')
-        position = data.get('position')
+        firstname = data.get('firstname')
+        lastname = data.get('lastname')
+        position_id = data.get('position_id')
         hire_date = data.get('hire_date')
 
         if not employee_id:
@@ -160,7 +162,13 @@ class EmployeeService:
             employee = Employee.objects.get(id=employee_id)
 
             # Update fields if provided
-            if position is not None:
+            if firstname is not None:
+                employee.firstname = firstname
+            if lastname is not None:
+                employee.lastname = lastname
+            if position_id is not None:
+                from .models import MasterPosition
+                position = MasterPosition.objects.get(id=position_id)
                 employee.position = position
             if hire_date is not None:
                 employee.hire_date = hire_date
@@ -173,23 +181,24 @@ class EmployeeService:
                 'message': 'Employee updated successfully',
                 'data': {
                     'id': employee.id,
-                    'user': {
-                        'id': employee.user.id,
-                        'username': employee.user.username,
-                        'email': employee.user.email,
-                        'first_name': employee.user.first_name,
-                        'last_name': employee.user.last_name,
-                        'get_full_name': employee.user.get_full_name() or employee.user.username,
-                        'is_active': employee.user.is_active
-                    },
-                    'position': employee.position,
-                    'hire_date': str(employee.hire_date),
-                    'is_active': employee.user.is_active
+                    'firstname': employee.firstname,
+                    'lastname': employee.lastname,
+                    'fullname': f"{employee.firstname} {employee.lastname}",
+                    'position': {
+                        'id': employee.position.id if employee.position else None,
+                        'name': employee.position.name if employee.position else 'No Position',
+                        'description': employee.position.description if employee.position else None
+                    } if employee.position else None,
+                    'hire_date': str(employee.hire_date)
                 }
             })
 
         except Employee.DoesNotExist:
             return JsonResponse({'success': False, 'message': 'Employee not found'}, status=404)
+        except MasterPosition.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Position not found'}, status=404)
+        except ValidationError as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
 
 
     @staticmethod
