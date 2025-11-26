@@ -40,6 +40,15 @@ class EmployeeListPage(PermissionRequiredMixin, View):
         # No longer passing users - they will be fetched via JavaScript API
         return render(request, 'hr_list.html')
 
+class EmployeePositionPage(PermissionRequiredMixin, View):
+    permission_required = ['hr.view_employee']
+    group_required = 'group_access_hr'
+
+    def get(self, request):
+        if not request.user.groups.filter(name__icontains=self.group_required):
+            raise PermissionDenied
+        return render(request, 'hr_position.html')
+
 
 class APIView(View):
     """

@@ -1,0 +1,414 @@
+{% extends 'base_template.html' %}
+{% load static %}
+
+{% block head_js %}
+<style>
+    .status-message {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+    }
+
+    /* Custom modal styles for Tailwind */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 50;
+    }
+
+    .modal-content {
+        background: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        max-width: 90vw;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    .alert {
+        padding: 0.75rem 1rem;
+        border-radius: 0.375rem;
+        margin-bottom: 1rem;
+    }
+
+    .alert-success {
+        background-color: #d1fae5;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+    }
+
+    .alert-danger {
+        background-color: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fca5a5;
+    }
+</style>
+{% endblock %}
+
+{% block top_nav %}
+<!-- Status Messages -->
+<div id="statusMessages" class="status-message"></div>
+<!-- TOP NAV -->
+<header class="fixed top-0 left-0 right-0 h-14 border-b bg-white flex items-center px-4 justify-between z-40">
+    <div class="flex items-center gap-3">
+        <button id="menuBtn" class="lg:hidden p-2 rounded-md hover:bg-gray-100">
+            ☰
+        </button>
+        <h1 class="font-semibold text-lg">HR - Employee Positions</h1>
+    </div>
+
+    <div class="flex items-center gap-4">
+        <input type="text" placeholder="Search or type a command" class="hidden md:block w-64 px-4 py-1.5 rounded-md border text-sm focus:ring-1 focus:ring-gray-300" />
+        <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-white">
+            {{ user.username|slice:":2"|upper }}
+        </div>
+        <button id="logoutBtn" class="p-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors" title="Logout">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="color:#f7f7f7;">
+                <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <path d="M16 17l5-5-5-5" />
+                    <path d="M21 12H9" />
+                </g>
+            </svg></button>
+    </div>
+</header>
+{% endblock %}
+
+{% block side_nav %}
+{% include 'base_hr_sidenav.html' %}
+{% endblock %}
+
+{% block main_content %}
+
+<!-- Title-->
+<div class="flex justify-between align-items-center mb-4">
+    <h2 class="text-xl font-semibold">Employee Position Management</h2>
+    {% if perms.hr.add_employee %}
+    <button onclick="addPosition()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+        Add Position
+    </button>
+    {% endif %}
+</div>
+
+<!-- Position Table -->
+<div class="overflow-x-auto bg-white rounded-lg shadow-sm">
+    <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+            <tr>
+                <th class="px-1 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><button id="loadPositionsBtn"
+                        class="p-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors" title="Load Positions">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                            </path>
+                        </svg></button></th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Position Name</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created At</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+        </thead>
+        <tbody id="positionsTableBody" class="bg-white divide-y divide-gray-200">
+            <tr>
+                <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                    Click "Load Positions" to load data
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Position Modal -->
+<div id="positionModal" class="modal-overlay hidden">
+    <div class="modal-content w-full max-w-2xl mx-4">
+        <div class="flex items-center justify-between p-4 border-b">
+            <h3 class="text-lg font-semibold" id="positionModalTitle">Add Position</h3>
+            <button id="closePositionModal" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="p-4">
+            <form id="positionForm">
+                <input type="hidden" id="positionId" name="id">
+                <div class="mb-4">
+                    <label for="positionName" class="block text-sm font-medium text-gray-700 mb-1">Position Name *</label>
+                    <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" id="positionName" name="name" required>
+                </div>
+                <div class="mb-4">
+                    <label for="positionDescription" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" id="positionDescription" name="description"
+                        rows="3"></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="flex justify-end gap-2 p-4 border-t bg-gray-50">
+            <button id="cancelPositionBtn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+            <button id="savePositionBtn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- API and UI Scripts -->
+<script>
+    // API Base URL
+    const EMPLOYEE_API_BASE = '{% url "employee_api" %}';
+
+    // Utility functions
+    function showMessage(message, type = 'success') {
+        const messagesDiv = document.getElementById('statusMessages');
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        messagesDiv.innerHTML = `
+            <div class="alert ${alertClass}" role="alert">
+                ${message}
+                <button type="button" class="ml-4 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()">×</button>
+            </div>
+        `;
+        setTimeout(() => messagesDiv.innerHTML = '', 5000);
+    }
+
+    // Modal functions
+    function showModal(modalId) {
+        document.getElementById(modalId).classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function hideModal(modalId) {
+        document.getElementById(modalId).classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+
+    // Load Positions
+    async function loadPositions() {
+        const btn = document.getElementById('loadPositionsBtn');
+        const originalHTML = btn.innerHTML;
+        btn.classList.add('opacity-50', 'pointer-events-none');
+        btn.innerHTML = `
+            <svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+        `;
+
+        try {
+            const response = await fetch(EMPLOYEE_API_BASE, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+                },
+                body: JSON.stringify({ action: 'get_positions' })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                renderPositions(result.data.positions);
+                showMessage('Positions loaded successfully');
+            } else {
+                showMessage(result.error, 'error');
+            }
+        } catch (error) {
+            showMessage('Failed to load positions', 'error');
+        }
+
+        btn.classList.remove('opacity-50', 'pointer-events-none');
+        btn.innerHTML = originalHTML;
+    }
+
+    // Render Positions
+    function renderPositions(positions) {
+        const tbody = document.getElementById('positionsTableBody');
+        tbody.innerHTML = '';
+
+        if (positions.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">No positions found</td></tr>';
+            return;
+        }
+
+        positions.forEach(position => {
+            const createdAt = position.created_at ? new Date(position.created_at).toLocaleDateString() : 'N/A';
+            const description = position.description || 'No description';
+
+            const row = `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-1 py-4 whitespace-nowrap text-sm text-gray-500"></td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${position.name}</td>
+                    <td class="px-6 py-4 text-sm text-gray-500">${description}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${createdAt}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button class="text-indigo-600 hover:text-indigo-900 mr-2" onclick="editPosition(${position.id})">Edit</button>
+                        <button class="text-red-600 hover:text-red-900" onclick="deletePosition(${position.id}, '${position.name}')">Delete</button>
+                    </td>
+                </tr>
+            `;
+            tbody.innerHTML += row;
+        });
+    }
+
+    // Position CRUD operations
+    async function savePosition() {
+        const id = document.getElementById('positionId').value;
+        const name = document.getElementById('positionName').value.trim();
+        const description = document.getElementById('positionDescription').value.trim();
+
+        if (!name) {
+            showMessage('Position name is required', 'error');
+            return;
+        }
+
+        const btn = document.getElementById('savePositionBtn');
+        btn.classList.add('opacity-50', 'pointer-events-none');
+        btn.textContent = 'Saving...';
+
+        const action = id ? 'update_position' : 'create_position';
+        const data = {
+            action,
+            name,
+            description
+        };
+        if (id) data.id = parseInt(id);
+
+        try {
+            const response = await fetch(EMPLOYEE_API_BASE, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showMessage(result.message);
+                hideModal('positionModal');
+                resetPositionForm();
+                loadPositions(); // Reload positions
+            } else {
+                showMessage(result.error, 'error');
+            }
+        } catch (error) {
+            showMessage('Failed to save position', 'error');
+        }
+
+        btn.classList.remove('opacity-50', 'pointer-events-none');
+        btn.textContent = 'Save';
+    }
+
+    async function editPosition(id) {
+        // Get all positions to find the one to edit
+        try {
+            const response = await fetch(EMPLOYEE_API_BASE, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+                },
+                body: JSON.stringify({ action: 'get_positions' })
+            });
+
+            const result = await response.json();
+
+            if (!result.success) {
+                showMessage('Failed to load position data', 'error');
+                return;
+            }
+
+            const position = result.data.positions.find(p => p.id === id);
+            if (!position) {
+                showMessage('Position not found', 'error');
+                return;
+            }
+
+            // Populate form
+            document.getElementById('positionId').value = position.id;
+            document.getElementById('positionName').value = position.name;
+            document.getElementById('positionDescription').value = position.description || '';
+            document.getElementById('positionModalTitle').textContent = 'Edit Position';
+
+            showModal('positionModal');
+        } catch (error) {
+            showMessage('Failed to load position data', 'error');
+        }
+    }
+
+    async function addPosition() {
+        resetPositionForm();
+        document.getElementById('positionModalTitle').textContent = 'Add Position';
+        showModal('positionModal');
+    }
+
+    async function deletePosition(id, name) {
+        if (!confirm(`Are you sure you want to delete position "${name}"? This action cannot be undone.`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(EMPLOYEE_API_BASE, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+                },
+                body: JSON.stringify({ action: 'delete_position', id: parseInt(id) })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showMessage(result.message);
+                loadPositions();
+            } else {
+                showMessage(result.error, 'error');
+            }
+        } catch (error) {
+            showMessage('Failed to delete position', 'error');
+        }
+    }
+
+    function resetPositionForm() {
+        document.getElementById('positionForm').reset();
+        document.getElementById('positionId').value = '';
+        document.getElementById('positionModalTitle').textContent = 'Add Position';
+    }
+
+    function logoutAccount() {
+        window.location.href = '{% url "logout" %}';
+    }
+
+    // Event listeners
+    document.getElementById('loadPositionsBtn').addEventListener('click', loadPositions);
+    document.getElementById('savePositionBtn').addEventListener('click', savePosition);
+
+    // Modal button listeners
+    document.getElementById('closePositionModal').addEventListener('click', () => hideModal('positionModal'));
+    document.getElementById('cancelPositionBtn').addEventListener('click', () => hideModal('positionModal'));
+
+    document.getElementById('logoutBtn').addEventListener('click', logoutAccount);
+
+    document.getElementById('positionModal').addEventListener('click', (e) => {
+        if (e.target.id === 'positionModal') hideModal('positionModal');
+    });
+
+    // Auto-load positions on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        loadPositions();
+    });
+
+</script>
+
+{% endblock %}
