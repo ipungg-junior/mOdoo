@@ -138,20 +138,20 @@
 </div>
 
 
-<!-- Products Table -->
-<h2 class="text-xl font-semibold mt-8 mb-4">Employee <button id="loadEmployee" class="p-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors" title="Load Products">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
-            </path>
-        </svg></h2>
-<div class="flex gap-2 mb-4">
-
-</div>
+<!-- Employee Table -->
+<h2 class="text-xl font-semibold mt-8 mb-4">Employee</h2>
 
 <div class="overflow-x-auto bg-white rounded-lg shadow-sm">
     <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
             <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><button id="loadEmployee"
+                        class="p-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors" title="Load Products">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                            </path>
+                        </svg></button></th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">First Name</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Name</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Position</th>
@@ -303,6 +303,7 @@
 
             const row = `
                 <tr class="hover:bg-gray-100">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"></td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${firstname}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${lastname}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${position}</td>
