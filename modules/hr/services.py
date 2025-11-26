@@ -52,7 +52,7 @@ class EmployeeService:
         if page_size not in [5, 10, 25, 50]:
             page_size = 10
 
-        employees = Employee.objects.select_related('position').all().order_by('firstname', 'lastname')
+        employees = Employee.objects.select_related('position').all().order_by('id')
         paginator = Paginator(employees, page_size)
 
         try:
