@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from django.contrib import messages
 from .models import Employee
 from django.contrib.auth.models import User
+from django.contrib.auth.mixins import PermissionRequiredMixin
 
 
 class EmployeeService:
@@ -101,6 +102,9 @@ class EmployeeService:
     @staticmethod
     def create_employee(request, data):
         """Create a new employee"""
+        if (request.user.has_perm('hr.create_employee') is False):
+            return JsonResponse({'success': False, 'message': 'You do not have permission to create an employee.'}, status=403)
+            
         firstname = data.get('firstname')
         lastname = data.get('lastname')
         position_id = data.get('position_id')
@@ -148,6 +152,9 @@ class EmployeeService:
 
     @staticmethod
     def update_employee(request, data):
+        if (request.user.has_perm('hr.change_employee') is False):
+            return JsonResponse({'success': False, 'message': 'You do not have permission to update an employee.'}, status=403)
+        
         """Update an existing employee"""
         employee_id = data.get('id')
         firstname = data.get('firstname')
@@ -230,6 +237,10 @@ class EmployeeService:
 
     @staticmethod
     def delete_employee(request, data):
+        
+        if (request.user.has_perm('hr.delete_employee') is False):
+            return JsonResponse({'success': False, 'message': 'You do not have permission to delete an employee.'}, status=403)
+        
         """Delete an employee"""
         employee_id = data.get('id')
 
