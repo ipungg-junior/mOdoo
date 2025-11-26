@@ -524,9 +524,9 @@
         const lastname = document.getElementById('employeeLastname').value.trim();
         const positionId = document.getElementById('employeePosition').value;
         const hireDate = document.getElementById('employeeHireDate').value;
-
-        if (!firstname || !lastname || !positionId || !hireDate) {
-            showMessage('All fields are required', 'error');
+        console.log({ id, firstname, lastname, positionId, hireDate });
+        if (!firstname || !lastname || !hireDate) {
+            showMessage('Please fill in all required fields', 'error');
             return;
         }
 
