@@ -2,7 +2,7 @@ import json
 from django.http import JsonResponse
 from django.core.exceptions import ValidationError
 from django.contrib import messages
-from .models import Employee
+from .models import Employee, MasterPosition
 from django.contrib.auth.models import User
 from django.contrib.auth.mixins import PermissionRequiredMixin
 
@@ -37,6 +37,12 @@ class EmployeeService:
             return EmployeeService.delete_employee(request, json_request)
         elif action == 'get_positions':
             return EmployeeService.get_positions(request, json_request)
+        elif action == 'create_position':
+            return EmployeeService.create_position(request, json_request)
+        elif action == 'update_position':
+            return EmployeeService.update_position(request, json_request)
+        elif action == 'delete_position':
+            return EmployeeService.delete_position(request, json_request)
         else:
             return JsonResponse({'success': False, 'message': f'Unknown POST action: {action}'}, status=400)
 
@@ -202,6 +208,110 @@ class EmployeeService:
 
         except Employee.DoesNotExist:
             return JsonResponse({'success': False, 'message': 'Employee not found'}, status=404)
+
+    @staticmethod
+    def create_position(request, data):
+        """Create a new position"""
+        if not request.user.has_perm('hr.add_employee'):
+            return JsonResponse({'success': False, 'message': 'You do not have permission to create positions.'}, status=403)
+
+        name = data.get('name')
+        description = data.get('description', '')
+
+        if not name:
+            return JsonResponse({'success': False, 'message': 'Position name is required'}, status=400)
+
+        try:            
+            position = MasterPosition(
+                name=name,
+                description=description
+            )
+
+            position.full_clean()  # Validate
+            position.save()
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Position created successfully',
+                'data': {
+                    'id': position.id,
+                    'name': position.name,
+                    'description': position.description
+                }
+            })
+
+        except ValidationError as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+    @staticmethod
+    def update_position(request, data):
+        """Update an existing position"""
+        if not request.user.has_perm('hr.change_employee'):
+            return JsonResponse({'success': False, 'message': 'You do not have permission to update positions.'}, status=403)
+
+        position_id = data.get('id')
+        name = data.get('name')
+        description = data.get('description')
+
+        if not position_id:
+            return JsonResponse({'success': False, 'message': 'Position ID is required'}, status=400)
+
+        try:
+            position = MasterPosition.objects.get(id=position_id)
+
+            if name is not None:
+                position.name = name
+            if description is not None:
+                position.description = description
+
+            position.full_clean()  # Validate
+            position.save()
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Position updated successfully',
+                'data': {
+                    'id': position.id,
+                    'name': position.name,
+                    'description': position.description
+                }
+            })
+
+        except MasterPosition.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Position not found'}, status=404)
+        except ValidationError as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+    @staticmethod
+    def delete_position(request, data):
+        """Delete a position"""
+        if not request.user.has_perm('hr.delete_employee'):
+            return JsonResponse({'success': False, 'message': 'You do not have permission to delete positions.'}, status=403)
+
+        position_id = data.get('id')
+
+        if not position_id:
+            return JsonResponse({'success': False, 'message': 'Position ID is required'}, status=400)
+
+        try:
+            position = MasterPosition.objects.get(id=position_id)
+
+            # Check if position is being used by employees
+            if Employee.objects.filter(position=position).exists():
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Cannot delete position that is being used by employees'
+                }, status=400)
+
+            position.delete()
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Position deleted successfully'
+            })
+
+        except MasterPosition.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Position not found'}, status=404)
         except MasterPosition.DoesNotExist:
             return JsonResponse({'success': False, 'message': 'Position not found'}, status=404)
         except ValidationError as e:
