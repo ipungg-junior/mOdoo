@@ -56,8 +56,10 @@ class APIView(View):
                 return JsonResponse({'success': False, 'message': 'Invalid API context'}, status=400)
 
         except json.JSONDecodeError:
+            print("Invalid JSON data received in POST request")
             return JsonResponse({'success': False, 'message': 'Invalid JSON data'}, status=400)
         except Exception as e:
+            print(f"Error processing POST request: {e}")
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
 
