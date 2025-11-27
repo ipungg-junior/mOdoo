@@ -206,16 +206,28 @@ class ProductService:
     @staticmethod
     def create_product(request, data):
         """Create a new product"""
-        name = data.get('name')
-        price = data.get('price')
-        description = data.get('description', '')
-        category_id = data.get('category_id')
-        is_active = data.get('is_active', True)
+        # Handle both JSON and FormData
+        if hasattr(data, 'get'):  # JSON/FormData
+            name = data.get('name')
+            price = data.get('price')
+            description = data.get('description', '')
+            category_id = data.get('category_id')
+            is_active = data.get('is_active', True)
+        else:  # Direct dictionary
+            name = data.get('name')
+            price = data.get('price')
+            description = data.get('description', '')
+            category_id = data.get('category_id')
+            is_active = data.get('is_active', True)
 
         if not name or price is None:
             return JsonResponse({'success': False, 'message': 'Name and price are required'}, status=400)
 
         try:
+            # Convert price to float if it's a string
+            if isinstance(price, str):
+                price = float(price)
+
             product = Product(
                 name=name,
                 description=description,
@@ -251,6 +263,8 @@ class ProductService:
 
         except ValidationError as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
+        except ValueError as e:
+            return JsonResponse({'success': False, 'message': f'Invalid price format: {str(e)}'}, status=400)
 
     @staticmethod
     def update_product(request, data):
