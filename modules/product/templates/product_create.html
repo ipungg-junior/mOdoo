@@ -187,24 +187,6 @@
                 </div>
             </div>
 
-            <!-- File Upload Section -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Product Image
-                </label>
-                <div id="fileUploadArea" class="file-upload-area">
-                    <div id="uploadContent">
-                        <svg class="w-12 h-12 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                        </svg>
-                        <p class="text-gray-600">Click to upload or drag and drop</p>
-                        <p class="text-sm text-gray-500 mt-1">PNG, JPG, GIF up to 10MB</p>
-                    </div>
-                    <input type="file" id="productImage" name="image" accept="image/*" class="hidden">
-                </div>
-                <img id="imagePreview" class="file-preview hidden" alt="Product preview">
-            </div>
-
             <div class="flex gap-4 pt-4">
                 <button type="submit" id="submitBtn"
                     class="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
@@ -228,9 +210,6 @@
     // API Base URLs
     const PRODUCT_API_BASE = '{% url "product_api" %}';
     const CATEGORY_API_BASE = '{% url "category_api" %}';
-
-    // File handling
-    let selectedFile = null;
 
     // Utility functions
     function showMessage(message, type = 'success') {
@@ -277,77 +256,6 @@
         }
     }
 
-    // File upload handling
-    function setupFileUpload() {
-        const fileInput = document.getElementById('productImage');
-        const uploadArea = document.getElementById('fileUploadArea');
-        const uploadContent = document.getElementById('uploadContent');
-        const imagePreview = document.getElementById('imagePreview');
-
-        // Click to upload
-        uploadArea.addEventListener('click', () => {
-            fileInput.click();
-        });
-
-        // File input change
-        fileInput.addEventListener('change', (e) => {
-            handleFileSelect(e.target.files[0]);
-        });
-
-        // Drag and drop
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.classList.add('dragover');
-        });
-
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.classList.remove('dragover');
-        });
-
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.classList.remove('dragover');
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                handleFileSelect(files[0]);
-            }
-        });
-
-        function handleFileSelect(file) {
-            if (file && file.type.startsWith('image/')) {
-                selectedFile = file;
-
-                // Show preview
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    imagePreview.src = e.target.result;
-                    imagePreview.classList.remove('hidden');
-                    uploadContent.innerHTML = `
-                        <p class="text-green-600 font-medium">${file.name}</p>
-                        <p class="text-sm text-gray-500">${(file.size / 1024 / 1024).toFixed(2)} MB</p>
-                        <button type="button" onclick="removeFile()" class="text-red-500 text-sm hover:text-red-700">Remove</button>
-                    `;
-                };
-                reader.readAsDataURL(file);
-            } else {
-                showMessage('Please select a valid image file', 'error');
-            }
-        }
-    }
-
-    function removeFile() {
-        selectedFile = null;
-        document.getElementById('productImage').value = '';
-        document.getElementById('imagePreview').classList.add('hidden');
-        document.getElementById('uploadContent').innerHTML = `
-            <svg class="w-12 h-12 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-            </svg>
-            <p class="text-gray-600">Click to upload or drag and drop</p>
-            <p class="text-sm text-gray-500 mt-1">PNG, JPG, GIF up to 10MB</p>
-        `;
-    }
-
     // Form submission handler
     async function handleFormSubmit(event) {
         event.preventDefault();
@@ -366,35 +274,24 @@
             </span>
         `;
 
-        // Collect form data
-        const formData = new FormData();
-        formData.append('action', 'create');
-        formData.append('name', document.getElementById('productName').value.trim());
-        formData.append('price', document.getElementById('productPrice').value);
-        formData.append('description', document.getElementById('productDescription').value.trim());
-        formData.append('category_id', document.getElementById('productCategory').value);
-        formData.append('is_active', document.getElementById('productStatus').value);
 
-        // Add image if selected
-        if (selectedFile) {
-            formData.append('image', selectedFile);
-        }
-
-        // Validate required fields
-        if (!formData.get('name') || !formData.get('price')) {
-            showMessage('Name and price are required', 'error');
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = originalHTML;
-            return;
+        data = {
+            action: 'create',
+            name: document.getElementById('productName').value.trim(),
+            price: document.getElementById('productPrice').value,
+            description: document.getElementById('productDescription').value.trim(),
+            category_id: document.getElementById('productCategory').value,
+            is_active: document.getElementById('productStatus').value
         }
 
         try {
             const response = await fetch(PRODUCT_API_BASE, {
                 method: 'POST',
                 headers: {
+                    'Content-Type': 'application/json',
                     'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
                 },
-                body: formData
+                body: JSON.stringify(data)
             });
 
             const result = await response.json();
@@ -407,10 +304,10 @@
                     window.location.href = '{% url "product_list" %}';
                 }, 1500);
             } else {
-                showMessage(result.error || 'Failed to create product', 'error');
+                showMessage(result.error, 'error');
             }
         } catch (error) {
-            showMessage('Network error. Please try again.', 'error');
+            showMessage('Network error' + error, 'error');
         } finally {
             // Reset button state
             submitBtn.disabled = false;
@@ -433,15 +330,12 @@
             // Load categories
             await loadCategories();
 
-            // Setup file upload
-            setupFileUpload();
-
             // Hide loading state and show form
             document.getElementById('loadingState').classList.add('hidden');
             document.getElementById('productForm').classList.remove('hidden');
 
         } catch (error) {
-            showMessage('Failed to load form data', 'error');
+            showMessage('Failed : ' + error, 'error');
         }
     }
 
