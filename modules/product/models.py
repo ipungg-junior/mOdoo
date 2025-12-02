@@ -2,8 +2,12 @@ from django.db import models
 from django.contrib.auth.models import User
 from engine.models import MasterDatabase
 
-class MasterDatabaseConfig(models.Model):
-    master_database = models.ForeignKey(MasterDatabase, on_delete=models.SET_NULL, null=True, blank=True)
+class ChoosenDatabase(models.Model):
+    name = models.ForeignKey(MasterDatabase, on_delete=models.SET_NULL, null=True, blank=True)
+
+
+class ChoosenDatabaseConfig(models.Model):
+    db_name = models.ForeignKey(ChoosenDatabase, on_delete=models.SET_NULL, null=True, blank=True)
     config_name = models.CharField(max_length=40)
     config_value = models.TextField()
 
