@@ -77,7 +77,9 @@ class ProductPageView(PermissionRequiredMixin, View):
 
     def get(self, request):
         """Render the main product management page"""
-        return render(request, 'index.html')
+        # Get total amount of products
+        total_amount = ProductService.get_product_total_amount(request)
+        return render(request, 'index.html', context={'total_amount': total_amount})
 
 
 class ProductCreatePageView(PermissionRequiredMixin, View):

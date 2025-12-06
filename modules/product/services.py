@@ -179,6 +179,18 @@ class ProductService:
             return JsonResponse({'success': False, 'message': f'Unknown POST action: {action}'}, status=400)
 
     @staticmethod
+    def get_product_total_amount(request):
+        """Get total amount of products"""
+        all_products = Product.objects.all()
+        total_amount = 0
+        for product in all_products:
+            if product.qty == None or product.qty == 0:
+                pass
+            else:
+                total_amount += product.qty * product.price
+        return total_amount
+
+    @staticmethod
     def list_products(request):
         """List all products with category information"""
         products = Product.objects.select_related('category').all()
@@ -187,6 +199,7 @@ class ProductService:
             product_data.append({
                 'id': product.id,
                 'name': product.name,
+                'qty': product.qty,
                 'description': product.description,
                 'category': {
                     'id': product.category.id if product.category else None,
@@ -210,6 +223,7 @@ class ProductService:
         # Handle both JSON and FormData
         if hasattr(data, 'get'):  # JSON/FormData
             name = data.get('name')
+            qty = data.get('qty')
             price = data.get('price')
             description = data.get('description', '')
             category_id = data.get('category_id')
@@ -229,6 +243,7 @@ class ProductService:
 
             product = Product(
                 name=name,
+                qty=qty,
                 description=description,
                 price=price,
                 is_active=is_active
@@ -250,6 +265,7 @@ class ProductService:
                 'data': {
                     'id': product.id,
                     'name': product.name,
+                    'qty': product.qty,
                     'description': product.description,
                     'category': {
                         'id': product.category.id if product.category else None,
@@ -272,6 +288,7 @@ class ProductService:
         """Update an existing product"""
         product_id = data.get('id')
         name = data.get('name')
+        qty = data.get('qty')
         price = data.get('price')
         description = data.get('description')
         category_id = data.get('category_id')
@@ -288,6 +305,8 @@ class ProductService:
                 product.name = name
             if price is not None:
                 product.price = price
+            if qty is not None:
+                product.qty = qty
             if description is not None:
                 product.description = description
             if is_active is not None:
@@ -313,6 +332,7 @@ class ProductService:
                 'data': {
                     'id': product.id,
                     'name': product.name,
+                    'qty': product.qty,
                     'description': product.description,
                     'category': {
                         'id': product.category.id if product.category else None,
