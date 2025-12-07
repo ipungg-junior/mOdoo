@@ -235,6 +235,9 @@ class ProductService:
 
         if not name or price is None:
             return JsonResponse({'success': False, 'message': 'Name and price are required'}, status=400)
+        
+        if qty is None:
+            qty = 0
 
         try:
             # Convert price to float if it's a string
@@ -255,6 +258,8 @@ class ProductService:
                     product.category = category
                 except Category.DoesNotExist:
                     return JsonResponse({'success': False, 'message': 'Category not found'}, status=400)
+                except ValueError:
+                    return JsonResponse({'success': False, 'message': 'Invalid category ID'}, status=400)
 
             product.full_clean()  # Validate
             product.save()
