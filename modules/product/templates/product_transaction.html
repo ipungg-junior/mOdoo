@@ -1,0 +1,341 @@
+{% extends 'base_template.html' %}
+{% load static %}
+
+{% block head_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    .status-message {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+    }
+
+    /* Custom modal styles for Tailwind */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 50;
+    }
+
+    .modal-content {
+        background: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        max-width: 90vw;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    .alert {
+        padding: 0.75rem 1rem;
+        border-radius: 0.375rem;
+        margin-bottom: 1rem;
+    }
+
+    .alert-success {
+        background-color: #d1fae5;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+    }
+
+    .alert-danger {
+        background-color: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fca5a5;
+    }
+</style>
+{% endblock %}
+
+{% block top_nav %}
+<!-- Status Messages -->
+<div id="statusMessages" class="status-message"></div>
+<!-- TOP NAV -->
+<header class="fixed top-0 left-0 right-0 h-14 border-b bg-white flex items-center px-4 justify-between z-40">
+    <div class="flex items-center gap-3">
+        <button id="menuBtn" class="lg:hidden p-2 rounded-md hover:bg-gray-100">
+            ☰
+        </button>
+        <h1 class="font-semibold text-lg">Product</h1>
+    </div>
+
+    <div class="flex items-center gap-4">
+        <input type="text" placeholder="Search or type a command" class="hidden md:block w-64 px-4 py-1.5 rounded-md border text-sm focus:ring-1 focus:ring-gray-300" />
+        <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-white">
+            JD
+        </div>
+        <button id="logoutBtn" class="p-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors" title="Logout">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" style="color:#f7f7f7;">
+                <g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <path d="M16 17l5-5-5-5" />
+                    <path d="M21 12H9" />
+                </g>
+            </svg></button>
+    </div>
+</header>
+{% endblock %}
+
+{% block side_nav %}
+{% include 'base_product_sidenav.html' %}
+{% endblock %}
+
+{% block main_content %}
+<!-- Chart -->
+<!-- <div class="bg-white p-6 rounded-xl shadow-sm border mb-6">
+    <h2 class="text-xl font-semibold mb-4">Sample Chart</h2>
+    <canvas id="myChart" style="max-height: 350px;"></canvas>
+</div> -->
+
+<!-- Shortcuts -->
+<!-- <h2 class="text-xl font-semibold">Your Shortcuts</h2>
+
+<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-2 mt-3 text-sm">
+    <a class="p-3 rounded-md border hover:bg-gray-50 flex justify-between" href="#">
+        Employee <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">1 Active</span>
+    </a>
+    <a class="p-3 rounded-md border hover:bg-gray-50" href="#">Leave Application →</a>
+    <a class="p-3 rounded-md border hover:bg-gray-50" href="#">HR Dashboard →</a>
+    <a class="p-3 rounded-md border hover:bg-gray-50" href="#">Employee Lifecycle Dashboard →</a>
+    <a class="p-3 rounded-md border hover:bg-gray-50" href="#">Attendance Dashboard →</a>
+    <a class="p-3 rounded-md border hover:bg-gray-50" href="#">Recruitment Dashboard →</a>
+</div> -->
+
+<!-- Total Transaction -->
+<div class="bg-white p-6 rounded-xl shadow-sm border mb-6 mt-6">
+    <h2 class="text-xl font-semibold mb-4">Total trasaction today</h2>
+    <div class="text-3xl font-bold text-gray-800">Rp. {{ total_transaction_today }}</div>
+</div>
+
+<!-- Btn add transaction -->
+<div class="flex justify-end mb-4">
+    <button id="addTransactionBtn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700">Add Transaction</button>
+</div>
+
+<!-- Transaction Table -->
+<h2 class="text-xl font-semibold mt-8 mb-4">Transaction List</h2>
+
+<div class="overflow-x-auto bg-white rounded-lg shadow-sm">
+    <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+            <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><button id="loadProductsBtn"
+                        class="p-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors" title="Load Products">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                            </path>
+                        </svg></button></th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction ID</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Transaction</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+        </thead>
+        <tbody id="allTransactionTableBody" class="bg-white divide-y divide-gray-200">
+            <tr>
+                <td colspan="4" class="px-6 py-4 text-center text-gray-500">
+                    Click "Load Transaction" to load data
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Transaction Modal -->
+<div id="transactionModal" class="modal-overlay hidden">
+    <div class="modal-content w-full max-w-2xl mx-4">
+        <div class="flex items-center justify-between p-4 border-b">
+            <h3 class="text-lg font-semibold" id="transactionModalTitle">New Transaction</h3>
+            <button id="closeTransactionModal" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="p-4">
+            <form id="transactionForm">
+                <input type="hidden" id="transactionId" name="id">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div>
+                        <label for="transactionName" class="block text-sm font-medium text-gray-700 mb-1">Customer Name *</label>
+                        <input type="text" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" id="transactionName" name="name" required>
+                    </div>
+                    <div>
+                        <label for="productQty" class="block text-sm font-medium text-gray-700 mb-1">Quantity *</label>
+                        <input type="number" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" id="productQty" name="qty">
+                    </div>
+                    <div>
+                        <label for="productName" class="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
+                        <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" id="productName" name="product_id">
+                            <option value="">Select Product</option>
+                        </select>
+                    </div>
+                    <button id="addItem" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700">Add Item</button>
+                </div>
+
+                <!-- Items Table -->
+                <h2 class="text-xl font-semibold mt-8 mb-4">Item List</h2>
+
+                <div class="overflow-x-auto bg-white rounded-lg shadow-sm">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><button id="resetitemsBtn"
+                                        class="p-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors" title="Reset Products">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                                            </path>
+                                        </svg></button></th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemsTableBody" class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td colspan="4" class="px-6 py-4 text-center text-gray-500">
+                                    No items added yet.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="paymentStatus" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                        <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" id="paymentStatus" name="payment_status">
+                            <option value="true">LUNAS</option>
+                            <option value="false">BELUM BAYAR</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="flex justify-end gap-2 p-4 border-t bg-gray-50">
+            <button id="cancelTransactionBtn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
+            <button id="saveTransactionBtn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700">Submit</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // API Base URLs
+    const PRODUCT_API_BASE = '{% url "product_api" %}';
+    const CATEGORY_API_BASE = '{% url "category_api" %}';
+
+
+    // Add Transaction Modal
+    document.getElementById('addTransactionBtn').addEventListener('click', function () {
+        document.getElementById('transactionModal').classList.remove('hidden');
+    });
+
+    // Example JavaScript to handle modal functionality
+    document.getElementById('closeTransactionModal').addEventListener('click', function () {
+        document.getElementById('transactionModal').classList.add('hidden');
+    });
+
+    document.getElementById('cancelTransactionBtn').addEventListener('click', function () {
+        document.getElementById('transactionModal').classList.add('hidden');
+    });
+
+    async function renderProductList(productList) {
+        const productSelect = document.getElementById('productName');
+        productSelect.innerHTML = '<option value="">Select Product</option>';
+
+        productList.forEach(product => {
+            const option = document.createElement('option');
+            option.value = product.id;
+            option.textContent = product.name;
+            productSelect.appendChild(option);
+        });
+    }
+
+    // Utility functions
+    function showMessage(message, type = 'success') {
+        const messagesDiv = document.getElementById('statusMessages');
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        messagesDiv.innerHTML = `
+            <div class="alert ${alertClass}" role="alert">
+                ${message}
+                <button type="button" class="ml-4 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()">×</button>
+            </div>
+        `;
+        setTimeout(() => messagesDiv.innerHTML = '', 5000);
+    }
+
+    // Load Products
+    async function loadProducts() {
+        try {
+            const response = await fetch(PRODUCT_API_BASE, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+                },
+                body: JSON.stringify({ action: 'list' })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                renderProductList(result.data.product_list);
+            } else {
+                showMessage(result.error, 'error');
+            }
+        } catch (error) {
+            showMessage(e, 'error');
+        }
+    }
+
+    // Add item to the transaction
+    document.getElementById('addItem').addEventListener('click', function (event) {
+        event.preventDefault();
+        // Logic to add item to the items table
+        const productId = document.getElementById('productName').value;
+        const qty = document.getElementById('productQty').value;
+        if (!productId || !qty) {
+            alert('Please select a product and enter quantity.');
+            return;
+        }
+        // Fetch product details and add to table (this is a placeholder logic)
+        const productName = document.getElementById('productName').options[document.getElementById('productName').selectedIndex].text;
+        const price = 100; // Placeholder price, replace with actual product price
+        const tableBody = document.getElementById('itemsTableBody');
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+            <td class="px-6 py-4 text-center">
+                <button class="removeItemBtn p-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors" title="Remove Item">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </td>
+            <td class="px-6 py-4">${productName}</td>
+            <td class="px-6 py-4">${qty}</td>
+            <td class="px-6 py-4">${price}</td>
+        `;
+        tableBody.appendChild(newRow);
+
+        // Clear inputs
+        document.getElementById('productName').value = '';
+        document.getElementById('productQty').value = '';
+
+    });
+
+
+</script>
+{% endblock %}

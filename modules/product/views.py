@@ -98,3 +98,19 @@ class ProductCreatePageView(PermissionRequiredMixin, View):
     def get(self, request):
         """Render the create product page"""
         return render(request, 'product_create.html')
+    
+class ProductTransactionPageView(PermissionRequiredMixin, View):
+    """
+    View for creating new products
+    """
+    group_required = 'group_access_product'
+    permission_required = 'product.add_product'
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name__icontains=self.group_required).exists():
+            raise PermissionDenied
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request):
+        """Render the create product page"""
+        return render(request, 'product_transaction.html')
