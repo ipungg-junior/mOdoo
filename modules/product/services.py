@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from django.contrib import messages
 from .models import Product, Category
 from django.contrib.auth.models import User
+from engine.utils import format_rupiah
 
 
 class CategoryService:
@@ -214,8 +215,8 @@ class ProductService:
         return JsonResponse({
             'success': True,
             'data': {
-                'total_amount': ProductService.get_product_total_amount(request),
-                'products': product_data}
+                'total_amount': format_rupiah(ProductService.get_product_total_amount(request)),
+                'product_list': product_data}
         })
 
     @staticmethod

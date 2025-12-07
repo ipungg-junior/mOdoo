@@ -370,8 +370,8 @@
             const result = await response.json();
 
             if (result.success) {
-                updateTotalAmount(result.total_amount);
-                renderProducts(result.data);
+                updateTotalAmount(result.data.total_amount);
+                renderProducts(result.data.product_list);
                 showMessage('Products loaded successfully');
             } else {
                 showMessage(result.error, 'error');
