@@ -206,7 +206,7 @@ class ProductService:
                     'id': product.category.id if product.category else None,
                     'name': product.category.name if product.category else None
                 } if product.category else None,
-                'price': str(product.price),
+                'price': str(format_rupiah(product.price)),
                 'is_active': product.is_active,
                 'created_at': product.created_at.isoformat() if product.created_at else None,
                 'updated_at': product.updated_at.isoformat() if product.updated_at else None,
