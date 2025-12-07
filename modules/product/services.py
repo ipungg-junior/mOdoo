@@ -213,7 +213,9 @@ class ProductService:
 
         return JsonResponse({
             'success': True,
-            'data': product_data
+            'data': {
+                'total_amount': ProductService.get_product_total_amount(request),
+                'products': product_data}
         })
 
     @staticmethod

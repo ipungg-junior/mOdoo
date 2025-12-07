@@ -338,6 +338,14 @@
         }
     }
 
+    // Update total amount display
+    function updateTotalAmount(amount) {
+        const totalAmountDiv = document.querySelector('.bg-white .text-3xl');
+        if (totalAmountDiv) {
+            totalAmountDiv.textContent = `Rp. ${amount}`;
+        }
+    }
+
     // Load Products
     async function loadProducts() {
         const btn = document.getElementById('loadProductsBtn');
@@ -362,6 +370,7 @@
             const result = await response.json();
 
             if (result.success) {
+                updateTotalAmount(result.total_amount);
                 renderProducts(result.data);
                 showMessage('Products loaded successfully');
             } else {
