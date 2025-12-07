@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.exceptions import PermissionDenied
 from .services import ProductService, CategoryService
+from engine.utils import format_rupiah
 
 
 class APIView(View):
@@ -78,7 +79,7 @@ class ProductPageView(PermissionRequiredMixin, View):
     def get(self, request):
         """Render the main product management page"""
         # Get total amount of products
-        total_amount = ProductService.get_product_total_amount(request)
+        total_amount = format_rupiah(ProductService.get_product_total_amount(request))
         return render(request, 'index.html', context={'total_amount': total_amount})
 
 
