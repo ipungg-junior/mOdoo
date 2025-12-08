@@ -512,4 +512,96 @@ class TransactionService:
         except ValueError as e:
             print(e)
             return JsonResponse({'success': False, 'message': f'Invalid data format: {str(e)}'}, status=400)
+
+    @staticmethod
+    def update_transaction(request, data):
+        """Update an existing transaction"""
+        transaction_id = data.get('id')
+        customer_name = data.get('name')
+        payment_status = data.get('payment_status')
+        items = data.get('items', [])
+
+        if not transaction_id:
+            return JsonResponse({'success': False, 'message': 'Transaction ID is required'}, status=400)
+
+        try:
+            transaction = Transaction.objects.get(id=transaction_id)
+
+            # Update fields if provided
+            if customer_name is not None:
+                transaction.customer_name = customer_name
+
+            if payment_status is not None:
+                # convert payment status to boolean
+                if payment_status in ['true', 'True', True, 1, '1']:
+                    transaction.status = 'lunas'
+                else:
+                    transaction.status = 'belum_lunas'
+
+            # Update transaction items if provided
+            if items:
+                # Delete existing items
+                TransactionItem.objects.filter(transaction=transaction).delete()
+
+                # Add new items and calculate total price
+                total_price = 0
+                for item in items:
+                    product_name = item.get('product_name')
+                    quantity = item.get('quantity', 0)
+                    price_per_item = item.get('price_per_item', 0)
+
+                    try:
+                        transaction_item = TransactionItem()
+                        transaction_item.transaction = transaction
+                        transaction_item.product_name = product_name
+                        transaction_item.quantity = int(quantity)
+                        transaction_item.price_per_item = float(price_per_item)
+                        transaction_item.full_clean()  # Validate
+                        transaction_item.save()
+                        total_price += float(price_per_item) * int(quantity)
+                    except Exception as e:
+                        return JsonResponse({'success': False, 'message': f'Error adding item {product_name}: {str(e)}'}, status=400)
+
+                transaction.total_price = total_price
+
+            transaction.full_clean()  # Validate
+            transaction.save()
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Transaction updated successfully',
+                'data': {
+                    'id': transaction.id,
+                    'customer_name': transaction.customer_name,
+                    'status': transaction.get_status_display(),
+                    'status_value': transaction.status,
+                    'total_price': str(format_rupiah(transaction.total_price)),
+                    'transaction_date': transaction.transaction_date.isoformat() if transaction.transaction_date else None,
+                }
+            })
+
+        except Transaction.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Transaction not found'}, status=404)
+        except ValidationError as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+    @staticmethod
+    def delete_transaction(request, data):
+        """Delete a transaction"""
+        transaction_id = data.get('id')
+
+        if not transaction_id:
+            return JsonResponse({'success': False, 'message': 'Transaction ID is required'}, status=400)
+
+        try:
+            transaction = Transaction.objects.get(id=transaction_id)
+            transaction.delete()
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Transaction deleted successfully'
+            })
+
+        except Transaction.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Transaction not found'}, status=404)
         
