@@ -208,6 +208,7 @@ class ProductService:
                     'name': product.category.name if product.category else None
                 } if product.category else None,
                 'price': str(format_rupiah(product.price)),
+                'raw_price': float(product.price),  # Add raw price for calculations
                 'is_active': product.is_active,
                 'created_at': product.created_at.isoformat() if product.created_at else None,
                 'updated_at': product.updated_at.isoformat() if product.updated_at else None,
@@ -418,6 +419,7 @@ class TransactionService:
                     'product_name': item.product_name,
                     'quantity': item.quantity,
                     'price_per_item': str(format_rupiah(item.price_per_item)),
+                    'raw_price_per_item': float(item.price_per_item),  # Add raw price for editing
                     'subtotal': str(format_rupiah(item.price_per_item * item.quantity))
                 })
 

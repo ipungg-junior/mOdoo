@@ -304,7 +304,9 @@
             const result = await response.json();
 
             if (result.success) {
-                renderProductList(result.data.product_list);
+                // Set global productList variable with the loaded products
+                productList = result.data.product_list || [];
+                renderProductList(productList);
             } else {
                 showMessage(result.error || result.message, 'error');
             }
@@ -526,7 +528,7 @@
             existingItems = items.map(item => ({
                 product_name: item.product_name,
                 quantity: item.quantity,
-                price_per_item: parseFloat(item.price_per_item.replace(/[^\d.-]/g, ''))
+                price_per_item: item.raw_price_per_item
             }));
         }
     }
@@ -735,7 +737,7 @@
             product_id: productId,
             product_name: productName,
             quantity: qty,
-            price_per_item: selectedProduct.price
+            price_per_item: selectedProduct.raw_price
         });
 
         // Clear inputs
