@@ -424,7 +424,7 @@ class TransactionService:
             transaction_data.append({
                 'id': transaction.id,
                 'customer_name': transaction.customer_name or 'N/A',
-                'total_price': str(format_rupiah(transaction.total_price)) if transaction.total_price else 'Rp 0',
+                'total_price': str(format_rupiah(transaction.total_price)) if transaction.total_price else '0,00',
                 'status': transaction.get_status_display(),
                 'status_value': transaction.status,
                 'transaction_date': transaction.transaction_date.strftime('%Y-%m-%d %H:%M:%S') if transaction.transaction_date else None,
@@ -479,7 +479,15 @@ class TransactionService:
                     transaction_item.price_per_item = product.price
                     transaction_item.full_clean()  # Validate
                     transaction_item.save()
+                    
+                    # Update product quantity
+                    product.qty -= int(quantity)
+                    product.full_clean()
+                    product.save()
+                    
+                    # Calculate total price
                     total_price += int(product.price) * int(quantity)
+                    
                 except Product.DoesNotExist:
                     return JsonResponse({'success': False, 'message': f'Product with ID {product_id} not found'}, status=400)
                 
