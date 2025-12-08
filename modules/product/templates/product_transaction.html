@@ -215,7 +215,7 @@
 <script>
     // API Base URLs
     const PRODUCT_API_BASE = '{% url "product_api" %}';
-    const CATEGORY_API_BASE = '{% url "category_api" %}';
+    const TRANSACTION_API_BASE = '{% url "product_transaction_api" %}';
 
     // hold state
     var isInputingItem = false;
@@ -286,12 +286,78 @@
         }
     }
 
+    // Delete item from the items table
     function deleteItemTable(itemId) {
         const row = document.getElementById(`item-row-${itemId}`);
         if (row) {
             row.remove();
         }
     }
+
+    // Reset table items
+    function resetItemsTable() {
+        const tableBody = document.getElementById('itemsTableBody');
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="4" class="px-6 py-4 text-center text-gray-500">
+                    No items added yet.
+                </td>
+            </tr>
+        `;
+        productList = [];
+        isInputingItem = false;
+    }
+
+    // reset form
+    function resetForm() {
+        document.getElementById('transactionForm').reset();
+        resetItemsTable();
+    }
+
+    // reset handler
+    document.getElementById('resetitemsBtn').addEventListener('click', function (event) {
+        event.preventDefault();
+        resetItemsTable();
+    });
+
+    // Submit Transaction
+    document.getElementById('saveTransactionBtn').addEventListener('click', async function (event) {
+        event.preventDefault();
+        const transactionName = document.getElementById('transactionName').value;
+        const paymentStatus = document.getElementById('paymentStatus').value;
+        if (productList.length === 0) {
+            alert('Please add at least one item to the transaction.');
+            return;
+        }
+        try {
+            const response = await fetch(TRANSACTION_API_BASE, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+                },
+                body: JSON.stringify({
+                    action: 'create',
+                    name: transactionName,
+                    payment_status: paymentStatus,
+                    items: productList
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showMessage('Transaction saved successfully!', 'success');
+                document.getElementById('transactionModal').classList.add('hidden');
+                // Optionally, refresh the transaction list here
+                resetForm();
+            } else {
+                showMessage(result.error, 'error');
+            }
+        } catch (error) {
+            showMessage(error, 'error');
+        }
+    });
 
     // Add item to the transaction
     document.getElementById('addItem').addEventListener('click', function (event) {
@@ -320,6 +386,9 @@
             `;
         tableBody.appendChild(newRow);
         isInputingItem = true;
+
+        // Store item in a hidden input or a JavaScript array for later submission (not implemented here)
+        productList.push({ product_id: productId, qty: qty });
 
         // Clear inputs
         document.getElementById('productName').value = '';
