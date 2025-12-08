@@ -234,6 +234,9 @@
 
     // Add Transaction Modal
     document.getElementById('addTransactionBtn').addEventListener('click', function () {
+        // Reset form first
+        resetForm();
+        // Load products for the dropdown
         loadProducts();
         // Set current date and time
         const now = new Date();
@@ -244,6 +247,8 @@
         const minutes = String(now.getMinutes()).padStart(2, '0');
         const datetimeLocal = `${year}-${month}-${day}T${hours}:${minutes}`;
         document.getElementById('transactionDateTime').value = datetimeLocal;
+        // Set modal title for new transaction
+        document.getElementById('transactionModalTitle').textContent = 'New Transaction';
 
         document.getElementById('transactionModal').classList.remove('hidden');
     });
@@ -251,10 +256,12 @@
     // Example JavaScript to handle modal functionality
     document.getElementById('closeTransactionModal').addEventListener('click', function () {
         document.getElementById('transactionModal').classList.add('hidden');
+        resetForm(); // Clear all fields when modal is closed
     });
 
     document.getElementById('cancelTransactionBtn').addEventListener('click', function () {
         document.getElementById('transactionModal').classList.add('hidden');
+        resetForm(); // Clear all fields when modal is cancelled
     });
 
     async function renderProductList(productList) {
@@ -456,6 +463,12 @@
             showMessage('Transaction not found', 'error');
             return;
         }
+
+        // Reset form first
+        resetForm();
+
+        // Load products for the dropdown (important for adding new items during edit)
+        loadProducts();
 
         // Populate form with transaction data
         document.getElementById('transactionId').value = transaction.id;
