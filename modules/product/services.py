@@ -517,7 +517,7 @@ class TransactionService:
 
     @staticmethod
     def update_transaction(request, data):
-        """Update an existing transaction"""
+        """Update an existing transaction with proper inventory management"""
         transaction_id = data.get('id')
         customer_name = data.get('name')
         payment_status = data.get('payment_status')
@@ -528,6 +528,10 @@ class TransactionService:
 
         try:
             transaction = Transaction.objects.get(id=transaction_id)
+
+            # Get existing items before updating
+            existing_items = TransactionItem.objects.filter(transaction=transaction)
+            old_items_dict = {item.product_name: {'quantity': item.quantity, 'price': item.price_per_item} for item in existing_items}
 
             # Update fields if provided
             if customer_name is not None:
@@ -542,7 +546,57 @@ class TransactionService:
 
             # Update transaction items if provided
             if items:
-                # Delete existing items
+                # Process inventory adjustments
+                new_items_dict = {}
+                for item in items:
+                    product_name = item.get('product_name')
+                    quantity = int(item.get('quantity', 0))
+                    price_per_item = float(item.get('price_per_item', 0))
+                    new_items_dict[product_name] = {'quantity': quantity, 'price': price_per_item}
+
+                # Adjust inventory based on differences
+                for product_name, new_data in new_items_dict.items():
+                    old_quantity = old_items_dict.get(product_name, {}).get('quantity', 0)
+                    new_quantity = new_data['quantity']
+
+                    if new_quantity != old_quantity:
+                        try:
+                            # Find product by name (assuming product names are unique)
+                            product = Product.objects.get(name=product_name)
+
+                            if new_quantity > old_quantity:
+                                # Quantity increased - subtract difference from stock
+                                difference = new_quantity - old_quantity
+                                if product.qty < difference:
+                                    return JsonResponse({
+                                        'success': False,
+                                        'message': f'Insufficient stock for {product_name}. Available: {product.qty}, Needed: {difference}'
+                                    }, status=400)
+                                product.qty -= difference
+                            else:
+                                # Quantity decreased - add difference back to stock
+                                difference = old_quantity - new_quantity
+                                product.qty += difference
+
+                            product.full_clean()
+                            product.save()
+
+                        except Product.DoesNotExist:
+                            return JsonResponse({'success': False, 'message': f'Product {product_name} not found'}, status=400)
+
+                # Check for removed items (items in old but not in new)
+                for product_name, old_data in old_items_dict.items():
+                    if product_name not in new_items_dict:
+                        try:
+                            # Add back the full quantity to stock
+                            product = Product.objects.get(name=product_name)
+                            product.qty += old_data['quantity']
+                            product.full_clean()
+                            product.save()
+                        except Product.DoesNotExist:
+                            return JsonResponse({'success': False, 'message': f'Product {product_name} not found'}, status=400)
+
+                # Delete existing items and add new ones
                 TransactionItem.objects.filter(transaction=transaction).delete()
 
                 # Add new items and calculate total price
@@ -589,7 +643,7 @@ class TransactionService:
 
     @staticmethod
     def delete_transaction(request, data):
-        """Delete a transaction"""
+        """Delete a transaction and restore inventory"""
         transaction_id = data.get('id')
 
         if not transaction_id:
@@ -597,11 +651,27 @@ class TransactionService:
 
         try:
             transaction = Transaction.objects.get(id=transaction_id)
+
+            # Get all transaction items before deleting
+            transaction_items = TransactionItem.objects.filter(transaction=transaction)
+
+            # Restore inventory for each item
+            for item in transaction_items:
+                try:
+                    product = Product.objects.get(name=item.product_name)
+                    product.qty += item.quantity  # Add back the quantity to stock
+                    product.full_clean()
+                    product.save()
+                except Product.DoesNotExist:
+                    # Log warning but continue - product might have been deleted
+                    print(f"Warning: Product {item.product_name} not found when restoring inventory")
+
+            # Delete the transaction (this will cascade delete transaction items)
             transaction.delete()
 
             return JsonResponse({
                 'success': True,
-                'message': 'Transaction deleted successfully'
+                'message': 'Transaction deleted successfully and inventory restored'
             })
 
         except Transaction.DoesNotExist:
