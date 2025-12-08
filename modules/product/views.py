@@ -105,10 +105,10 @@ class ProductCreatePageView(PermissionRequiredMixin, View):
     
 class ProductTransactionPageView(PermissionRequiredMixin, View):
     """
-    View for creating new products
+    View for transaction management page
     """
     group_required = 'group_access_product'
-    permission_required = 'product.add_product'
+    permission_required = 'product.view_product'
 
     def dispatch(self, request, *args, **kwargs):
         if not request.user.groups.filter(name__icontains=self.group_required).exists():
@@ -116,5 +116,17 @@ class ProductTransactionPageView(PermissionRequiredMixin, View):
         return super().dispatch(request, *args, **kwargs)
 
     def get(self, request):
-        """Render the create product page"""
-        return render(request, 'product_transaction.html')
+        """Render the transaction management page"""
+        # Calculate total transaction today for display
+        from django.utils import timezone
+        from django.db.models import Sum
+        from .models import Transaction
+
+        today = timezone.now().date()
+        total_today = Transaction.objects.filter(
+            transaction_date__date=today
+        ).aggregate(total=Sum('total_price'))['total'] or 0
+
+        return render(request, 'product_transaction.html', {
+            'total_transaction_today': format_rupiah(total_today)
+        })

@@ -2,6 +2,7 @@ import json
 from django.http import JsonResponse
 from django.core.exceptions import ValidationError
 from django.contrib import messages
+from django.db.models import Sum
 from .models import Product, Category, Transaction, TransactionItem
 from django.contrib.auth.models import User
 from engine.utils import format_rupiah
@@ -378,14 +379,14 @@ class ProductService:
         
 
 class TransactionService:
-    
+
     @staticmethod
     def process_post(request, json_request):
         """Handle POST requests for product operations"""
         action = json_request.get('action')
 
         if action == 'list':
-            return TransactionService.list_ptransaction(request)
+            return TransactionService.list_transaction(request)
         elif action == 'create':
             return TransactionService.create_transaction(request, json_request)
         elif action == 'update':
@@ -394,7 +395,51 @@ class TransactionService:
             return TransactionService.delete_transaction(request, json_request)
         else:
             return JsonResponse({'success': False, 'message': f'Unknown POST action: {action}'}, status=400)
-        
+
+    @staticmethod
+    def list_transaction(request):
+        """List all transactions with their items"""
+        transactions = Transaction.objects.select_related().all().order_by('-transaction_date')
+        transaction_data = []
+
+        # Calculate total transaction today
+        from django.utils import timezone
+        today = timezone.now().date()
+        total_today = Transaction.objects.filter(
+            transaction_date__date=today
+        ).aggregate(total=Sum('total_price'))['total'] or 0
+
+        for transaction in transactions:
+            # Get transaction items
+            items = TransactionItem.objects.filter(transaction=transaction)
+            items_data = []
+            for item in items:
+                items_data.append({
+                    'product_name': item.product_name,
+                    'quantity': item.quantity,
+                    'price_per_item': str(format_rupiah(item.price_per_item)),
+                    'subtotal': str(format_rupiah(item.price_per_item * item.quantity))
+                })
+
+            transaction_data.append({
+                'id': transaction.id,
+                'customer_name': transaction.customer_name or 'N/A',
+                'total_price': str(format_rupiah(transaction.total_price)) if transaction.total_price else 'Rp 0',
+                'status': transaction.get_status_display(),
+                'status_value': transaction.status,
+                'transaction_date': transaction.transaction_date.strftime('%Y-%m-%d %H:%M:%S') if transaction.transaction_date else None,
+                'items': items_data,
+                'items_count': len(items_data)
+            })
+
+        return JsonResponse({
+            'success': True,
+            'data': {
+                'transactions': transaction_data,
+                'total_transaction_today': str(format_rupiah(total_today))
+            }
+        })
+
     @staticmethod
     def create_transaction(request, data):
         """Create a new transaction"""
