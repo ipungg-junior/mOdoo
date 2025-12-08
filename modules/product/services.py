@@ -2,7 +2,7 @@ import json
 from django.http import JsonResponse
 from django.core.exceptions import ValidationError
 from django.contrib import messages
-from .models import Product, Category
+from .models import Product, Category, Transaction, TransactionItem
 from django.contrib.auth.models import User
 from engine.utils import format_rupiah
 
@@ -375,3 +375,88 @@ class ProductService:
 
         except Product.DoesNotExist:
             return JsonResponse({'success': False, 'message': 'Product not found'}, status=404)
+        
+
+class TransactionService:
+    
+    @staticmethod
+    def process_post(request, json_request):
+        """Handle POST requests for product operations"""
+        action = json_request.get('action')
+
+        if action == 'list':
+            return TransactionService.list_ptransaction(request)
+        elif action == 'create':
+            return TransactionService.create_transaction(request, json_request)
+        elif action == 'update':
+            return TransactionService.update_transaction(request, json_request)
+        elif action == 'delete':
+            return TransactionService.delete_transaction(request, json_request)
+        else:
+            return JsonResponse({'success': False, 'message': f'Unknown POST action: {action}'}, status=400)
+        
+    @staticmethod
+    def create_transaction(request, data):
+        """Create a new transaction"""
+        all_items = data.get('items', [])
+        name = data.get('name', '')
+        payment_status = data.get('payment_status', 'false')
+        
+        if not all_items:
+            return JsonResponse({'success': False, 'message': 'Transaction items are required'}, status=400)
+        
+        try:
+            total_price = 0
+            
+            # convert payment status to boolean
+            if payment_status in ['true', 'True', True, 1, '1']:
+                payment_status = 'lunas'
+            else:
+                payment_status = 'belum_lunas'
+                
+            transaction = Transaction(
+                customer_name=name,
+                status=payment_status
+            )
+            transaction.full_clean()  # Validate
+            transaction.save()
+
+            for item in all_items:
+                product_id = item.get('product_id')
+                quantity = item.get('qty', 0)
+
+                try:
+                    product = Product.objects.get(id=product_id)
+                    transaction_item = TransactionItem()
+                    transaction_item.transaction = transaction
+                    transaction_item.product_name = product.name
+                    transaction_item.quantity = int(quantity)
+                    transaction_item.price_per_item = product.price
+                    transaction_item.full_clean()  # Validate
+                    transaction_item.save()
+                    total_price += int(product.price) * int(quantity)
+                except Product.DoesNotExist:
+                    return JsonResponse({'success': False, 'message': f'Product with ID {product_id} not found'}, status=400)
+                
+            transaction.total_price = total_price
+            transaction.save()
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Transaction created successfully',
+                'data': {'transaction': {
+                    'id': transaction.id,
+                    'customer_name': transaction.customer_name,
+                    'status': transaction.status,
+                    'total_price': str(format_rupiah(transaction.total_price)),
+                    'transaction_date': transaction.transaction_date.isoformat() if transaction.transaction_date else None,
+                }}
+            })
+            
+        except ValidationError as e:
+            print(e)
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+        except ValueError as e:
+            print(e)
+            return JsonResponse({'success': False, 'message': f'Invalid data format: {str(e)}'}, status=400)
+        

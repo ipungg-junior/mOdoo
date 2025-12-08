@@ -4,7 +4,7 @@ from django.views import View
 from django.http import JsonResponse
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.exceptions import PermissionDenied
-from .services import ProductService, CategoryService
+from .services import ProductService, CategoryService, TransactionService
 from engine.utils import format_rupiah
 
 
@@ -52,6 +52,9 @@ class APIView(View):
             elif self.context == 'product_api':
                 # Product Service handling request
                 return ProductService.process_post(request, json_request)
+            elif self.context == 'product_transaction_api':
+                # Transaction Service handling request
+                return TransactionService.process_post(request, json_request)
             else:
                 # Return 400 Bad request
                 return JsonResponse({'success': False, 'message': 'Invalid API context'}, status=400)
@@ -98,6 +101,7 @@ class ProductCreatePageView(PermissionRequiredMixin, View):
     def get(self, request):
         """Render the create product page"""
         return render(request, 'product_create.html')
+    
     
 class ProductTransactionPageView(PermissionRequiredMixin, View):
     """
