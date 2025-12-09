@@ -4,7 +4,7 @@ from django.views import View
 from django.http import JsonResponse
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.exceptions import PermissionDenied
-from .services import ProductService, CategoryService
+from .services import ProductService, CategoryService, TransactionService
 from engine.utils import format_rupiah
 
 
@@ -52,6 +52,9 @@ class APIView(View):
             elif self.context == 'product_api':
                 # Product Service handling request
                 return ProductService.process_post(request, json_request)
+            elif self.context == 'product_transaction_api':
+                # Transaction Service handling request
+                return TransactionService.process_post(request, json_request)
             else:
                 # Return 400 Bad request
                 return JsonResponse({'success': False, 'message': 'Invalid API context'}, status=400)
@@ -98,3 +101,32 @@ class ProductCreatePageView(PermissionRequiredMixin, View):
     def get(self, request):
         """Render the create product page"""
         return render(request, 'product_create.html')
+    
+    
+class ProductTransactionPageView(PermissionRequiredMixin, View):
+    """
+    View for transaction management page
+    """
+    group_required = 'group_access_product'
+    permission_required = 'product.view_product'
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name__icontains=self.group_required).exists():
+            raise PermissionDenied
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request):
+        """Render the transaction management page"""
+        # Calculate total transaction today for display
+        from django.utils import timezone
+        from django.db.models import Sum
+        from .models import Transaction
+
+        today = timezone.now().date()
+        total_today = Transaction.objects.filter(
+            transaction_date__date=today
+        ).aggregate(total=Sum('total_price'))['total'] or 0
+
+        return render(request, 'product_transaction.html', {
+            'total_transaction_today': format_rupiah(total_today)
+        })

@@ -2,7 +2,8 @@ import json
 from django.http import JsonResponse
 from django.core.exceptions import ValidationError
 from django.contrib import messages
-from .models import Product, Category
+from django.db.models import Sum
+from .models import Product, Category, Transaction, TransactionItem
 from django.contrib.auth.models import User
 from engine.utils import format_rupiah
 
@@ -207,6 +208,7 @@ class ProductService:
                     'name': product.category.name if product.category else None
                 } if product.category else None,
                 'price': str(format_rupiah(product.price)),
+                'raw_price': float(product.price),  # Add raw price for calculations
                 'is_active': product.is_active,
                 'created_at': product.created_at.isoformat() if product.created_at else None,
                 'updated_at': product.updated_at.isoformat() if product.updated_at else None,
@@ -375,3 +377,305 @@ class ProductService:
 
         except Product.DoesNotExist:
             return JsonResponse({'success': False, 'message': 'Product not found'}, status=404)
+        
+
+class TransactionService:
+
+    @staticmethod
+    def process_post(request, json_request):
+        """Handle POST requests for product operations"""
+        action = json_request.get('action')
+
+        if action == 'list':
+            return TransactionService.list_transaction(request)
+        elif action == 'create':
+            return TransactionService.create_transaction(request, json_request)
+        elif action == 'update':
+            return TransactionService.update_transaction(request, json_request)
+        elif action == 'delete':
+            return TransactionService.delete_transaction(request, json_request)
+        else:
+            return JsonResponse({'success': False, 'message': f'Unknown POST action: {action}'}, status=400)
+
+    @staticmethod
+    def list_transaction(request):
+        """List all transactions with their items"""
+        transactions = Transaction.objects.select_related().all().order_by('-transaction_date')
+        transaction_data = []
+
+        # Calculate total transaction today
+        from django.utils import timezone
+        today = timezone.now().date()
+        total_today = Transaction.objects.filter(
+            transaction_date__date=today
+        ).aggregate(total=Sum('total_price'))['total'] or 0
+
+        for transaction in transactions:
+            # Get transaction items
+            items = TransactionItem.objects.filter(transaction=transaction)
+            items_data = []
+            for item in items:
+                items_data.append({
+                    'product_name': item.product_name,
+                    'quantity': item.quantity,
+                    'price_per_item': str(format_rupiah(item.price_per_item)),
+                    'raw_price_per_item': float(item.price_per_item),  # Add raw price for editing
+                    'subtotal': str(format_rupiah(item.price_per_item * item.quantity))
+                })
+
+            transaction_data.append({
+                'id': transaction.id,
+                'customer_name': transaction.customer_name or 'N/A',
+                'total_price': str(format_rupiah(transaction.total_price)) if transaction.total_price else '0,00',
+                'status': transaction.get_status_display(),
+                'status_value': transaction.status,
+                'transaction_date': transaction.transaction_date.strftime('%Y-%m-%d %H:%M:%S') if transaction.transaction_date else None,
+                'items': items_data,
+                'items_count': len(items_data)
+            })
+
+        return JsonResponse({
+            'success': True,
+            'data': {
+                'transactions': transaction_data,
+                'total_transaction_today': str(format_rupiah(total_today))
+            }
+        })
+
+    @staticmethod
+    def create_transaction(request, data):
+        """Create a new transaction"""
+        all_items = data.get('items', [])
+        name = data.get('name', '')
+        payment_status = data.get('payment_status', 'false')
+        
+        print(f'Creating transaction for {name} with items: {all_items} and payment status: {payment_status}')
+        
+        if not all_items:
+            return JsonResponse({'success': False, 'message': 'Transaction items are required'}, status=400)
+        
+        try:
+            total_price = 0
+            
+            # convert payment status to boolean
+            if payment_status in ['true', 'True', True, 1, '1']:
+                payment_status = 'lunas'
+            else:
+                payment_status = 'belum_lunas'
+                
+            transaction = Transaction(
+                customer_name=name,
+                status=payment_status
+            )
+            transaction.full_clean()  # Validate
+            transaction.save()
+
+            for item in all_items:
+                product_id = item.get('product_id')
+                quantity = item.get('qty', 0)
+
+                try:
+                    product = Product.objects.get(id=product_id)
+                    transaction_item = TransactionItem()
+                    transaction_item.transaction = transaction
+                    transaction_item.product_name = product.name
+                    transaction_item.quantity = int(quantity)
+                    transaction_item.price_per_item = product.price
+                    transaction_item.full_clean()  # Validate
+                    transaction_item.save()
+                    
+                    # Update product quantity
+                    product.qty -= int(quantity)
+                    product.full_clean()
+                    product.save()
+                    
+                    # Calculate total price
+                    total_price += int(product.price) * int(quantity)
+                    
+                except Product.DoesNotExist:
+                    return JsonResponse({'success': False, 'message': f'Product with ID {product_id} not found'}, status=400)
+                
+            transaction.total_price = total_price
+            transaction.save()
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Transaction created successfully',
+                'data': {'transaction': {
+                    'id': transaction.id,
+                    'customer_name': transaction.customer_name,
+                    'status': transaction.status,
+                    'total_price': str(format_rupiah(transaction.total_price)),
+                    'transaction_date': transaction.transaction_date.isoformat() if transaction.transaction_date else None,
+                }}
+            })
+            
+        except ValidationError as e:
+            print(e)
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+        except ValueError as e:
+            print(e)
+            return JsonResponse({'success': False, 'message': f'Invalid data format: {str(e)}'}, status=400)
+
+    @staticmethod
+    def update_transaction(request, data):
+        """Update an existing transaction with proper inventory management"""
+        transaction_id = data.get('id')
+        customer_name = data.get('name')
+        payment_status = data.get('payment_status')
+        items = data.get('items', [])
+
+        if not transaction_id:
+            return JsonResponse({'success': False, 'message': 'Transaction ID is required'}, status=400)
+
+        try:
+            transaction = Transaction.objects.get(id=transaction_id)
+
+            # Get existing items before updating
+            existing_items = TransactionItem.objects.filter(transaction=transaction)
+            old_items_dict = {item.product_name: {'quantity': item.quantity, 'price': item.price_per_item} for item in existing_items}
+
+            # Update fields if provided
+            if customer_name is not None:
+                transaction.customer_name = customer_name
+
+            if payment_status is not None:
+                # convert payment status to boolean
+                if payment_status in ['true', 'True', True, 1, '1']:
+                    transaction.status = 'lunas'
+                else:
+                    transaction.status = 'belum_lunas'
+
+            # Update transaction items if provided
+            if items:
+                # Process inventory adjustments
+                new_items_dict = {}
+                for item in items:
+                    product_name = item.get('product_name')
+                    quantity = int(item.get('quantity', 0))
+                    price_per_item = float(item.get('price_per_item', 0))
+                    new_items_dict[product_name] = {'quantity': quantity, 'price': price_per_item}
+
+                # Adjust inventory based on differences
+                for product_name, new_data in new_items_dict.items():
+                    old_quantity = old_items_dict.get(product_name, {}).get('quantity', 0)
+                    new_quantity = new_data['quantity']
+
+                    if new_quantity != old_quantity:
+                        try:
+                            # Find product by name (assuming product names are unique)
+                            product = Product.objects.get(name=product_name)
+
+                            if new_quantity > old_quantity:
+                                # Quantity increased - subtract difference from stock
+                                difference = new_quantity - old_quantity
+                                if product.qty < difference:
+                                    return JsonResponse({
+                                        'success': False,
+                                        'message': f'Insufficient stock for {product_name}. Available: {product.qty}, Needed: {difference}'
+                                    }, status=400)
+                                product.qty -= difference
+                            else:
+                                # Quantity decreased - add difference back to stock
+                                difference = old_quantity - new_quantity
+                                product.qty += difference
+
+                            product.full_clean()
+                            product.save()
+
+                        except Product.DoesNotExist:
+                            return JsonResponse({'success': False, 'message': f'Product {product_name} not found'}, status=400)
+
+                # Check for removed items (items in old but not in new)
+                for product_name, old_data in old_items_dict.items():
+                    if product_name not in new_items_dict:
+                        try:
+                            # Add back the full quantity to stock
+                            product = Product.objects.get(name=product_name)
+                            product.qty += old_data['quantity']
+                            product.full_clean()
+                            product.save()
+                        except Product.DoesNotExist:
+                            return JsonResponse({'success': False, 'message': f'Product {product_name} not found'}, status=400)
+
+                # Delete existing items and add new ones
+                TransactionItem.objects.filter(transaction=transaction).delete()
+
+                # Add new items and calculate total price
+                total_price = 0
+                for item in items:
+                    product_name = item.get('product_name')
+                    quantity = item.get('quantity', 0)
+                    price_per_item = item.get('price_per_item', 0)
+
+                    try:
+                        transaction_item = TransactionItem()
+                        transaction_item.transaction = transaction
+                        transaction_item.product_name = product_name
+                        transaction_item.quantity = int(quantity)
+                        transaction_item.price_per_item = float(price_per_item)
+                        transaction_item.full_clean()  # Validate
+                        transaction_item.save()
+                        total_price += float(price_per_item) * int(quantity)
+                    except Exception as e:
+                        return JsonResponse({'success': False, 'message': f'Error adding item {product_name}: {str(e)}'}, status=400)
+
+                transaction.total_price = total_price
+
+            transaction.full_clean()  # Validate
+            transaction.save()
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Transaction updated successfully',
+                'data': {
+                    'id': transaction.id,
+                    'customer_name': transaction.customer_name,
+                    'status': transaction.get_status_display(),
+                    'status_value': transaction.status,
+                    'total_price': str(format_rupiah(transaction.total_price)),
+                    'transaction_date': transaction.transaction_date.isoformat() if transaction.transaction_date else None,
+                }
+            })
+
+        except Transaction.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Transaction not found'}, status=404)
+        except ValidationError as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+    @staticmethod
+    def delete_transaction(request, data):
+        """Delete a transaction and restore inventory"""
+        transaction_id = data.get('id')
+
+        if not transaction_id:
+            return JsonResponse({'success': False, 'message': 'Transaction ID is required'}, status=400)
+
+        try:
+            transaction = Transaction.objects.get(id=transaction_id)
+
+            # Get all transaction items before deleting
+            transaction_items = TransactionItem.objects.filter(transaction=transaction)
+
+            # Restore inventory for each item
+            for item in transaction_items:
+                try:
+                    product = Product.objects.get(name=item.product_name)
+                    product.qty += item.quantity  # Add back the quantity to stock
+                    product.full_clean()
+                    product.save()
+                except Product.DoesNotExist:
+                    # Log warning but continue - product might have been deleted
+                    print(f"Warning: Product {item.product_name} not found when restoring inventory")
+
+            # Delete the transaction (this will cascade delete transaction items)
+            transaction.delete()
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Transaction deleted successfully and inventory restored'
+            })
+
+        except Transaction.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Transaction not found'}, status=404)
+        
