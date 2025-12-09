@@ -359,7 +359,7 @@
         }
 
         tableBody.innerHTML = '';
-
+        var counterIndex = 1;
         transactions.forEach(transaction => {
             const statusClass = transaction.status_value === 'lunas' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
             const statusText = transaction.status;
@@ -368,6 +368,7 @@
             row.className = 'hover:bg-gray-50';
             row.innerHTML = `
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    ${counterIndex++}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#${transaction.id}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${transaction.customer_name}</td>
