@@ -113,9 +113,16 @@
 </div> -->
 
 <!-- Total Products -->
-<div class="bg-white p-6 rounded-xl shadow-sm border mb-6 mt-6">
-    <h2 class="text-xl font-semibold mb-4">Total Amount of Products</h2>
-    <div class="text-3xl font-bold text-gray-800">Rp. {{ total_amount }}</div>
+
+<div class="grid grid-cols-2 md:grid-cols-2 gap-4">
+    <div class="bg-white p-6 rounded-xl shadow-sm border mb-6 mt-6">
+        <h2 class="text-xl font-semibold mb-4">Total Amount of Products</h2>
+        <div class="text-3xl font-bold text-gray-800" id="total-amount-product">Rp. {{ total_amount }}</div>
+    </div>
+    <div class="bg-white p-6 rounded-xl shadow-sm border mb-6 mt-6">
+        <h2 class="text-xl font-semibold mb-4">Income Today</h2>
+        <div class="text-3xl font-bold text-gray-800" id="income-today">Rp. {{ income_today }}</div>
+    </div>
 </div>
 
 <!-- Products Table -->
@@ -249,6 +256,7 @@
     // API Base URLs
     const PRODUCT_API_BASE = '{% url "product_api" %}';
     const CATEGORY_API_BASE = '{% url "category_api" %}';
+    const TRANSACTION_API_BASE = '{% url "product_transaction_api" %}';
 
     // Utility functions
     function showMessage(message, type = 'success') {
@@ -308,10 +316,7 @@
 
     // Update total amount display
     function updateTotalAmount(amount) {
-        const totalAmountDiv = document.querySelector('.bg-white .text-3xl');
-        if (totalAmountDiv) {
-            totalAmountDiv.textContent = `Rp. ${amount}`;
-        }
+        document.getElementById('total-amount-product').textContent = `Rp. ${amount}`;
     }
 
     // Load Products
@@ -347,7 +352,6 @@
         } catch (error) {
             showMessage('Failed to load products', 'error');
         }
-
         btn.classList.remove('opacity-50', 'pointer-events-none');
         btn.innerHTML = originalHTML;
     }
