@@ -368,13 +368,6 @@
             row.className = 'hover:bg-gray-50';
             row.innerHTML = `
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    <button onclick="viewTransactionDetails(${transaction.id})"
-                            class="text-blue-600 hover:text-blue-900 p-1 rounded" title="View Details">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                        </svg>
-                    </button>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#${transaction.id}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${transaction.customer_name}</td>
@@ -385,11 +378,14 @@
                     </span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${transaction.transaction_date}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button onclick="editTransaction(${transaction.id})"
-                            class="text-indigo-600 hover:text-indigo-900 mr-3">Edit</button>
-                    <button onclick="deleteTransaction(${transaction.id})"
-                            class="text-red-600 hover:text-red-900">Delete</button>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <button onclick="viewTransactionDetails(${transaction.id})"
+                            class="text-blue-600 hover:text-blue-900 p-1 rounded" title="View Details">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                    </button>
                 </td>
             `;
             tableBody.appendChild(row);
