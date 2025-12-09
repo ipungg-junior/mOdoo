@@ -495,33 +495,70 @@ class TransactionService:
             transaction.full_clean()  # Validate
             transaction.save()
 
+            failed_items = []
+
             for item in all_items:
                 product_id = item.get('product_id')
                 quantity = item.get('qty', 0)
 
                 try:
                     product = Product.objects.get(id=product_id)
-                    transaction_item = TransactionItem()
-                    transaction_item.transaction = transaction
-                    transaction_item.product_name = product.name
-                    transaction_item.quantity = int(quantity)
-                    transaction_item.price_per_item = product.price
-                    transaction_item.full_clean()  # Validate
-                    transaction_item.save()
-                    
-                    # Update product quantity
-                    product.qty -= int(quantity)
-                    product.full_clean()
-                    product.save()
-                    
-                    # Calculate total price
-                    total_price += int(product.price) * int(quantity)
+                    if product.qty < int(quantity) or int(quantity) <= 0:
+                        failed_items.append({
+                            'product_id': product_id,
+                            'available_qty': product.qty,
+                            'requested_qty': quantity
+                        })
+                        print(f'Insufficient stock for product {product.name}: available {product.qty}, requested {quantity}')
+                    else:
+                        transaction_item = TransactionItem()
+                        transaction_item.transaction = transaction
+                        transaction_item.product_name = product.name
+                        transaction_item.quantity = int(quantity)
+                        transaction_item.price_per_item = product.price
+                        transaction_item.full_clean()  # Validate
+                        transaction_item.save()
+                        
+                        # Update product quantity
+                        product.qty -= int(quantity)
+                        product.full_clean()
+                        product.save()
+                        
+                        # Calculate total price
+                        total_price += int(product.price) * int(quantity)
                     
                 except Product.DoesNotExist:
-                    return JsonResponse({'success': False, 'message': f'Product with ID {product_id} not found'}, status=400)
-                
-            transaction.total_price = total_price
-            transaction.save()
+                    failed_items.append({
+                        'product_id': product_id,
+                        'available_qty': 0,
+                        'requested_qty': quantity
+                    })
+                    print(f'Product with ID {product_id} does not exist')
+            
+            if total_price == 0:
+                transaction.delete()  # Clean up the transaction if no items were added
+                return JsonResponse({'success': False, 'message': 'No valid items to create transaction'}, status=400)
+            else:
+                # Update total price of the transaction
+                transaction.total_price = total_price
+                transaction.save()
+            
+            if failed_items:
+                print(f'Failed items due to insufficient stock: {failed_items}')
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Trasaction created with some failed items due to insufficient stock',
+                    'data': {
+                        'transaction': {
+                            'id': transaction.id,
+                            'customer_name': transaction.customer_name,
+                            'status': transaction.status,
+                            'total_price': str(format_rupiah(transaction.total_price)),
+                            'transaction_date': transaction.transaction_date.isoformat() if transaction.transaction_date else None,
+                        },
+                        'failed_items': failed_items
+                    }
+                }, status=200)
 
             return JsonResponse({
                 'success': True,
