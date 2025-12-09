@@ -83,7 +83,8 @@ class ProductPageView(PermissionRequiredMixin, View):
         """Render the main product management page"""
         # Get total amount of products
         total_amount = format_rupiah(ProductService.get_product_total_amount(request))
-        return render(request, 'index.html', context={'total_amount': total_amount})
+        income_today = format_rupiah(TransactionService._get_income_today(request))
+        return render(request, 'index.html', context={'total_amount': total_amount, 'income_today': income_today})
 
 
 class ProductCreatePageView(PermissionRequiredMixin, View):

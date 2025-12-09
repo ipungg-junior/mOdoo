@@ -3,9 +3,11 @@ from django.http import JsonResponse
 from django.core.exceptions import ValidationError
 from django.contrib import messages
 from django.db.models import Sum
+from django.utils import timezone
 from .models import Product, Category, Transaction, TransactionItem
 from django.contrib.auth.models import User
 from engine.utils import format_rupiah
+
 
 
 class CategoryService:
@@ -218,6 +220,7 @@ class ProductService:
             'success': True,
             'data': {
                 'total_amount': format_rupiah(ProductService.get_product_total_amount(request)),
+                'income_today': format_rupiah(TransactionService.list_transaction(request).get('data', {}).get('total_transaction_today', 0)),
                 'product_list': product_data}
         })
 
@@ -394,8 +397,30 @@ class TransactionService:
             return TransactionService.update_transaction(request, json_request)
         elif action == 'delete':
             return TransactionService.delete_transaction(request, json_request)
+        elif action == 'get_income_today':
+            return TransactionService.income_today(request)
         else:
             return JsonResponse({'success': False, 'message': f'Unknown POST action: {action}'}, status=400)
+
+    @staticmethod
+    def _get_income_today(request):
+        """Get total income for today"""
+        today = timezone.now().date()
+        total_income = Transaction.objects.filter(
+            transaction_date__date=today
+        ).aggregate(total=Sum('total_price'))['total'] or 0
+        return total_income
+    
+    @staticmethod
+    def income_today(request):
+        """Return income today as JSON response"""
+        total_income = TransactionService._get_income_today(request)
+        return JsonResponse({
+            'success': True,
+            'data': {
+                'income_today': format_rupiah(total_income)
+            }
+        })
 
     @staticmethod
     def list_transaction(request):
