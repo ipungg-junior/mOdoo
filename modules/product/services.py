@@ -449,6 +449,8 @@ class TransactionService:
         name = data.get('name', '')
         payment_status = data.get('payment_status', 'false')
         
+        print(f'Creating transaction for {name} with items: {all_items} and payment status: {payment_status}')
+        
         if not all_items:
             return JsonResponse({'success': False, 'message': 'Transaction items are required'}, status=400)
         
