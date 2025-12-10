@@ -44,7 +44,28 @@ class Product(models.Model):
     def __str__(self):
         return self.name
     
+
+# Base model for payment status
+class PaymentStatus(models.Model):
+    name = models.CharField(max_length=20, unique=True)
+    display_name = models.CharField(max_length=20)
+    description = models.CharField(max_length=100, blank=True, null=True)
+
+    def __str__(self):
+        return self.display_name
+
+
+# Base model for payment term
+class PaymentTerm(models.Model):
+    name = models.CharField(max_length=20, unique=True)
+    display_name = models.CharField(max_length=20)
+    description = models.CharField(max_length=100, blank=True, null=True)
+
+    def __str__(self):
+        return self.display_name
     
+    
+# Base model for transactions    
 class Transaction(models.Model):
     customer_name = models.CharField(max_length=200, null=True, blank=True)
     total_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
@@ -53,6 +74,9 @@ class Transaction(models.Model):
         ('belum_lunas', 'Belum Lunas'),
     ]
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='belum_lunas')
+    tmp_status = models.ForeignKey(PaymentStatus, on_delete=models.SET_NULL, null=True, blank=True)
+    payment_term = models.ForeignKey(PaymentTerm, on_delete=models.SET_NULL, null=True, blank=True)
+    due_date = models.DateField(null=True, blank=True)
     transaction_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -67,3 +91,15 @@ class TransactionItem(models.Model):
 
     def __str__(self):
         return f"{self.quantity} x {self.product.name} at {self.price_per_item} each"
+    
+# Record of payments made towards a transaction
+class PaymentRecord(models.Model):
+    # This table will be move to accounting module later
+    transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE, related_name='payments')
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_date = models.DateTimeField(auto_now_add=True)
+    payment_method = models.CharField(max_length=50, choices=[('cash', 'Cash'), ('transfer', 'Transfer')])
+    status = models.ForeignKey(PaymentStatus, on_delete=models.SET_NULL, null=True, blank=True)
+
+    def __str__(self):
+        return f"Payment of {self.amount} for transaction {self.transaction.id} on {self.payment_date}"
