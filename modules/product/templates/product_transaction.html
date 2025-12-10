@@ -442,7 +442,7 @@
         tableBody.innerHTML = '';
         var counterIndex = 1;
         transactions.forEach(transaction => {
-            const statusClass = transaction.status_value === 'lunas' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+            const statusClass = transaction.status_value === 'paid' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
             const statusText = transaction.status;
             const customerName = transaction.customer_name || 'Walk-in Customer';
 

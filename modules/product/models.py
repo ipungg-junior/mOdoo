@@ -50,6 +50,9 @@ class PaymentStatus(models.Model):
     name = models.CharField(max_length=20, unique=True)
     display_name = models.CharField(max_length=20)
     description = models.CharField(max_length=100, blank=True, null=True)
+    
+    def get_display_name(self):
+        return self.display_name
 
     def __str__(self):
         return self.display_name
@@ -60,6 +63,9 @@ class PaymentTerm(models.Model):
     name = models.CharField(max_length=20, unique=True)
     display_name = models.CharField(max_length=20)
     description = models.CharField(max_length=100, blank=True, null=True)
+    
+    def get_display_name(self):
+        return self.display_name
 
     def __str__(self):
         return self.display_name

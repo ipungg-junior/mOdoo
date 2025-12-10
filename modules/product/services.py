@@ -452,12 +452,14 @@ class TransactionService:
                 'id': transaction.id,
                 'customer_name': transaction.customer_name or 'N/A',
                 'total_price': str(format_rupiah(transaction.total_price)) if transaction.total_price else '0,00',
-                'status': transaction.get_status_display(),
-                'status_value': transaction.status,
+                'status': transaction.tmp_status.get_display_name(),
+                'status_value': transaction.tmp_status.name,
                 'transaction_date': transaction.transaction_date.strftime('%Y-%m-%d %H:%M:%S') if transaction.transaction_date else None,
                 'items': items_data,
                 'items_count': len(items_data)
             })
+
+        print(f'transaction_data: {transaction_data}')
 
         return JsonResponse({
             'success': True,
