@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Product Management</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .loading {
             opacity: 0.6;
@@ -18,54 +18,171 @@
             right: 20px;
             z-index: 9999;
         }
+
+        /* Mobile responsive table */
+        @media (max-width: 768px) {
+            .table-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .modal-content {
+                margin: 0;
+                max-height: 100vh;
+                border-radius: 0;
+            }
+        }
+
+        /* Custom modal styles for Tailwind */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            padding: 1rem;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            max-width: 95vw;
+            max-height: 95vh;
+            overflow-y: auto;
+            width: 100%;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .alert {
+            padding: 0.75rem 1rem;
+            border-radius: 0.375rem;
+            margin-bottom: 1rem;
+        }
+
+        .alert-success {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .alert-danger {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
     </style>
 </head>
 
 <body>
     {% csrf_token %}
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'module_list' %}">mOdoo</a>
-            <div class="navbar-nav ms-auto">
-                <span class="navbar-text me-3">Welcome, {{ user.username }}!</span>
-                <a href="{% url 'logout' %}" class="btn btn-outline-light btn-sm">Logout</a>
-            </div>
+
+    <!-- Mobile-Responsive Navigation -->
+    <header class="fixed top-0 left-0 right-0 h-14 border-b bg-white flex items-center px-4 justify-between z-40 shadow-sm">
+        <div class="flex items-center gap-3">
+            <button id="menuBtn" class="lg:hidden p-2 rounded-md hover:bg-gray-100">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+            <h1 class="font-semibold text-lg text-gray-800">Product Management</h1>
         </div>
-    </nav>
+
+        <div class="flex items-center gap-2 md:gap-4">
+            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium text-sm">
+                {{ user.username|slice:":2"|upper }}
+            </div>
+            <button id="logoutBtn" class="p-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors shadow-sm" title="Logout">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16,17 21,12 16,7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+            </button>
+        </div>
+    </header>
 
     <!-- Status Messages -->
     <div id="statusMessages" class="status-message"></div>
 
-    <div class="container mt-5">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1>Product Management</h1>
-            <div>
-                <button id="loadCategoriesBtn" class="btn btn-info me-2">Load Categories</button>
-                <button id="loadProductsBtn" class="btn btn-info me-2">Load Products</button>
-                <button id="addCategoryBtn" class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#categoryModal">Add Category</button>
-                <button id="addProductBtn" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#productModal">Add Product</button>
+    <div class="container mx-auto px-4 mt-20 md:mt-24">
+        <!-- Action Buttons - Mobile Responsive -->
+        <div class="mb-6">
+            <div class="flex flex-col sm:flex-row gap-3 sm:gap-2">
+                <button id="loadCategoriesBtn"
+                    class="flex-1 sm:flex-none px-4 py-2.5 text-sm font-medium text-blue-700 bg-blue-100 border border-blue-300 rounded-md hover:bg-blue-200 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 shadow-sm">
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    Load Categories
+                </button>
+                <button id="loadProductsBtn"
+                    class="flex-1 sm:flex-none px-4 py-2.5 text-sm font-medium text-green-700 bg-green-100 border border-green-300 rounded-md hover:bg-green-200 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 shadow-sm">
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    Load Products
+                </button>
+                <button id="addCategoryBtn"
+                    class="flex-1 sm:flex-none px-4 py-2.5 text-sm font-medium text-white bg-purple-600 border border-transparent rounded-md hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all duration-200 shadow-sm"
+                    data-bs-toggle="modal" data-bs-target="#categoryModal">
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Add Category
+                </button>
+                <button id="addProductBtn"
+                    class="flex-1 sm:flex-none px-4 py-2.5 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 shadow-sm"
+                    data-bs-toggle="modal" data-bs-target="#productModal">
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Add Product
+                </button>
             </div>
         </div>
 
         <!-- Categories Section -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5>Categories</h5>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6 overflow-hidden">
+            <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-lg font-semibold text-gray-800">Categories</h2>
+                    <span class="text-sm text-gray-500">Manage product categories</span>
+                </div>
             </div>
-            <div class="card-body">
-                <div id="categoriesTable" class="table-responsive">
-                    <table class="table table-striped">
-                        <thead>
+            <div class="p-4">
+                <div id="categoriesTable" class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
                             <tr>
-                                <th>Name</th>
-                                <th>Description</th>
-                                <th>Created</th>
-                                <th>Actions</th>
+                                <th class="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                <th class="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                                <th class="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                                <th class="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="categoriesBody">
+                        <tbody id="categoriesBody" class="bg-white divide-y divide-gray-200">
                             <tr>
-                                <td colspan="4" class="text-center">Click "Load Categories" to load data</td>
+                                <td colspan="4" class="px-3 md:px-6 py-8 text-center text-gray-500">
+                                    <div class="flex flex-col items-center">
+                                        <svg class="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                                            </path>
+                                        </svg>
+                                        <p class="text-sm">Click "Load Categories" to load data</p>
+                                    </div>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -74,26 +191,36 @@
         </div>
 
         <!-- Products Section -->
-        <div class="card">
-            <div class="card-header">
-                <h5>Products</h5>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-lg font-semibold text-gray-800">Products</h2>
+                    <span class="text-sm text-gray-500">Manage inventory items</span>
+                </div>
             </div>
-            <div class="card-body">
-                <div id="productsTable" class="table-responsive">
-                    <table class="table table-striped">
-                        <thead>
+            <div class="p-4">
+                <div id="productsTable" class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
                             <tr>
-                                <th>Name</th>
-                                <th>Description</th>
-                                <th>Category</th>
-                                <th>Price</th>
-                                <th>Status</th>
-                                <th>Actions</th>
+                                <th class="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                <th class="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                                <th class="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                                <th class="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                                <th class="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="productsBody">
+                        <tbody id="productsBody" class="bg-white divide-y divide-gray-200">
                             <tr>
-                                <td colspan="6" class="text-center">Click "Load Products" to load data</td>
+                                <td colspan="6" class="px-3 md:px-6 py-8 text-center text-gray-500">
+                                    <div class="flex flex-col items-center">
+                                        <svg class="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                                        </svg>
+                                        <p class="text-sm">Click "Load Products" to load data</p>
+                                    </div>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -103,88 +230,110 @@
     </div>
 
     <!-- Category Modal -->
-    <div class="modal fade" id="categoryModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="categoryModalTitle">Add Category</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="categoryForm">
-                        <input type="hidden" id="categoryId" name="id">
-                        <div class="mb-3">
-                            <label for="categoryName" class="form-label">Name *</label>
-                            <input type="text" class="form-control" id="categoryName" name="name" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="categoryDescription" class="form-label">Description</label>
-                            <textarea class="form-control" id="categoryDescription" name="description" rows="3"></textarea>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="saveCategoryBtn">Save</button>
-                </div>
+    <div class="modal-overlay hidden" id="categoryModal">
+        <div class="modal-content max-w-md mx-4">
+            <div class="flex items-center justify-between p-4 md:p-6 border-b border-gray-200">
+                <h3 class="text-lg md:text-xl font-semibold text-gray-800" id="categoryModalTitle">Add Category</h3>
+                <button type="button" class="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-100 transition-colors" data-bs-dismiss="modal">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="p-4 md:p-6">
+                <form id="categoryForm">
+                    <input type="hidden" id="categoryId" name="id">
+                    <div class="mb-4">
+                        <label for="categoryName" class="block text-sm font-medium text-gray-700 mb-2">Category Name *</label>
+                        <input type="text" class="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                            id="categoryName" name="name" placeholder="Enter category name" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="categoryDescription" class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                        <textarea class="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
+                            id="categoryDescription" name="description" rows="3" placeholder="Enter category description"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="flex flex-col sm:flex-row justify-end gap-3 p-4 md:p-6 border-t border-gray-200 bg-gray-50">
+                <button type="button"
+                    class="w-full sm:w-auto px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200"
+                    data-bs-dismiss="modal">Cancel</button>
+                <button type="button"
+                    class="w-full sm:w-auto px-4 py-2.5 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200"
+                    id="saveCategoryBtn">
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    Save Category
+                </button>
             </div>
         </div>
     </div>
 
     <!-- Product Modal -->
-    <div class="modal fade" id="productModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="productModalTitle">Add Product</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="productForm">
-                        <input type="hidden" id="productId" name="id">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="productName" class="form-label">Name *</label>
-                                    <input type="text" class="form-control" id="productName" name="name" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="productPrice" class="form-label">Price *</label>
-                                    <input type="number" step="0.01" class="form-control" id="productPrice" name="price" required>
-                                </div>
-                            </div>
+    <div class="modal-overlay hidden" id="productModal">
+        <div class="modal-content max-w-2xl mx-4">
+            <div class="flex items-center justify-between p-4 md:p-6 border-b border-gray-200">
+                <h3 class="text-lg md:text-xl font-semibold text-gray-800" id="productModalTitle">Add Product</h3>
+                <button type="button" class="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-100 transition-colors" data-bs-dismiss="modal">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="p-4 md:p-6">
+                <form id="productForm">
+                    <input type="hidden" id="productId" name="id">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label for="productName" class="block text-sm font-medium text-gray-700 mb-2">Product Name *</label>
+                            <input type="text" class="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                id="productName" name="name" placeholder="Enter product name" required>
                         </div>
-                        <div class="mb-3">
-                            <label for="productDescription" class="form-label">Description</label>
-                            <textarea class="form-control" id="productDescription" name="description" rows="3"></textarea>
+                        <div>
+                            <label for="productPrice" class="block text-sm font-medium text-gray-700 mb-2">Price *</label>
+                            <input type="number" step="0.01" min="0"
+                                class="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                id="productPrice" name="price" placeholder="0.00" required>
                         </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="productCategory" class="form-label">Category</label>
-                                    <select class="form-control" id="productCategory" name="category_id">
-                                        <option value="">Select Category</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="productStatus" class="form-label">Status</label>
-                                    <select class="form-control" id="productStatus" name="is_active">
-                                        <option value="true">Active</option>
-                                        <option value="false">Inactive</option>
-                                    </select>
-                                </div>
-                            </div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="productDescription" class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                        <textarea class="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
+                            id="productDescription" name="description" rows="3" placeholder="Enter product description"></textarea>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="productCategory" class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                            <select class="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                id="productCategory" name="category_id">
+                                <option value="">Select Category</option>
+                            </select>
                         </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="saveProductBtn">Save</button>
-                </div>
+                        <div>
+                            <label for="productStatus" class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                            <select class="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                id="productStatus" name="is_active">
+                                <option value="true">✅ Active</option>
+                                <option value="false">❌ Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="flex flex-col sm:flex-row justify-end gap-3 p-4 md:p-6 border-t border-gray-200 bg-gray-50">
+                <button type="button"
+                    class="w-full sm:w-auto px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200"
+                    data-bs-dismiss="modal">Cancel</button>
+                <button type="button"
+                    class="w-full sm:w-auto px-4 py-2.5 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200"
+                    id="saveProductBtn">
+                    <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    Save Product
+                </button>
             </div>
         </div>
     </div>
@@ -201,12 +350,21 @@
             const messagesDiv = document.getElementById('statusMessages');
             const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
             messagesDiv.innerHTML = `
-                <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                <div class="alert ${alertClass}" role="alert">
                     ${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    <button type="button" class="ml-4 text-gray-400 hover:text-gray-600 text-xl font-bold" onclick="this.parentElement.remove()">×</button>
                 </div>
             `;
             setTimeout(() => messagesDiv.innerHTML = '', 5000);
+        }
+
+        // Modal functions
+        function showModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+        }
+
+        function hideModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
         }
 
         // Removed old apiRequest function - now using direct fetch calls
@@ -380,7 +538,7 @@
 
                 if (result.success) {
                     showMessage(result.message);
-                    bootstrap.Modal.getInstance(document.getElementById('categoryModal')).hide();
+                    hideModal('categoryModal');
                     resetCategoryForm();
                     loadCategories(); // Reload categories
                 } else {
@@ -400,7 +558,7 @@
             document.getElementById('categoryDescription').value = description;
             document.getElementById('categoryModalTitle').textContent = 'Edit Category';
 
-            new bootstrap.Modal(document.getElementById('categoryModal')).show();
+            showModal('categoryModal');
         }
 
         async function deleteCategory(id, name) {
@@ -481,7 +639,7 @@
 
                 if (result.success) {
                     showMessage(result.message);
-                    bootstrap.Modal.getInstance(document.getElementById('productModal')).hide();
+                    hideModal('productModal');
                     resetProductForm();
                     loadProducts(); // Reload products
                 } else {
@@ -529,7 +687,7 @@
                 document.getElementById('productStatus').value = product.is_active ? 'true' : 'false';
                 document.getElementById('productModalTitle').textContent = 'Edit Product';
 
-                new bootstrap.Modal(document.getElementById('productModal')).show();
+                showModal('productModal');
             } catch (error) {
                 showMessage('Failed to load product data', 'error');
             }
@@ -572,12 +730,29 @@
         // Event listeners
         document.getElementById('loadCategoriesBtn').addEventListener('click', loadCategories);
         document.getElementById('loadProductsBtn').addEventListener('click', loadProducts);
+        document.getElementById('addCategoryBtn').addEventListener('click', function () {
+            resetCategoryForm();
+            showModal('categoryModal');
+        });
+        document.getElementById('addProductBtn').addEventListener('click', function () {
+            resetProductForm();
+            showModal('productModal');
+        });
         document.getElementById('saveCategoryBtn').addEventListener('click', saveCategory);
         document.getElementById('saveProductBtn').addEventListener('click', saveProduct);
 
-        // Reset forms when modals are hidden
-        document.getElementById('categoryModal').addEventListener('hidden.bs.modal', resetCategoryForm);
-        document.getElementById('productModal').addEventListener('hidden.bs.modal', resetProductForm);
+        // Add click handlers for modal close buttons
+        document.querySelectorAll('[data-bs-dismiss="modal"]').forEach(button => {
+            button.addEventListener('click', function () {
+                const modalId = this.closest('.modal-overlay').id;
+                hideModal(modalId);
+                if (modalId === 'categoryModal') {
+                    resetCategoryForm();
+                } else if (modalId === 'productModal') {
+                    resetProductForm();
+                }
+            });
+        });
 
         // Load initial data
         document.addEventListener('DOMContentLoaded', function () {
