@@ -173,9 +173,9 @@
     <div class="modal-content w-full max-w-4xl mx-2 md:mx-4">
         <!-- Modal Header -->
         <div class="flex items-center justify-between p-4 md:p-6 border-b border-gray-200">
-            <h3 class="text-lg md:text-xl font-semibold text-gray-800" id="transactionModalTitle">New Transaction</h3>
+            <h3 class="text-sm md:text-lg font-semibold text-gray-800" id="transactionModalTitle">New Transaction</h3>
             <button id="closeTransactionModal" class="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 md:w-6 h-4 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
             </button>
@@ -189,25 +189,26 @@
                 <!-- Product Selection -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div>
-                        <label for="productName" class="block text-sm font-medium text-gray-700 mb-2">Product Name</label>
-                        <select class="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        <label for="productName" class="block text-xs md:text-sm font-medium text-gray-700 mb-2">Product Name *</label>
+                        <select
+                            class="text-xs md:text:sm w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent transition-all"
                             id="productName" name="product_id">
-                            <option value="">Select Product</option>
+                            <option class="text-xs md:text-sm" value="">Select Product</option>
                         </select>
                     </div>
                     <div>
-                        <label for="productQty" class="block text-sm font-medium text-gray-700 mb-2">Quantity *</label>
+                        <label for="productQty" class="block text-xs md:text-sm font-medium text-gray-700 mb-2">Quantity *</label>
                         <input type="number" min="1"
-                            class="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all" id="productQty"
-                            name="qty" placeholder="Enter quantity">
+                            class="text-xs md:text:sm w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent transition-all"
+                            id="productQty" name="qty" placeholder="Enter quantity">
                     </div>
                 </div>
 
                 <!-- Add Item Button -->
                 <div class="mb-6">
                     <button id="addItem"
-                        class="w-full md:w-auto px-4 py-2.5 text-sm font-medium text-white bg-gray-500 border border-transparent rounded-md hover:bg-gray-700 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 shadow-sm">
-                        <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        class="w-full md:w-auto px-4 py-2.5 text-xs md:text-sm font-medium text-white bg-gray-500 border border-transparent rounded-md hover:bg-gray-700 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 shadow-sm">
+                        <svg class="w-4 md:w-6 h-4 md:h-6 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                         </svg>
                         Add Item
@@ -216,7 +217,7 @@
 
                 <!-- Items Table -->
                 <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-3">Transaction Items</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-3">Item list</label>
                     <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
                         <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200">
@@ -224,26 +225,26 @@
                                     <tr>
                                         <th class="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             <button id="resetitemsBtn" class="p-1.5 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors" title="Reset Items">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <svg class="w-3 md:w-4 h-3 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                         d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                                                 </svg>
                                             </button>
                                         </th>
-                                        <th class="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-                                        <th class="px-3 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+                                        <th class="px-1 md:px-6 py-3 text-left text-[0.60rem] md:text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                                        <th class="px-1 md:px-6 py-3 text-left text-[0.60rem] md:text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
                                     </tr>
                                 </thead>
                                 <tbody id="itemsTableBody" class="bg-white divide-y divide-gray-200">
                                     <tr>
-                                        <td colspan="3" class="px-3 md:px-6 py-8 text-center text-gray-500">
+                                        <td colspan="3" class="px-3 md:px-6 py-8 text-center text-gray-500 text-[0.60rem]">
                                             <div class="flex flex-col items-center">
                                                 <svg class="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                         d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-5.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4">
                                                     </path>
                                                 </svg>
-                                                <p class="text-sm">No items added yet</p>
+                                                <p class="text-[0.60rem] md:text-sm">No items added yet</p>
                                             </div>
                                         </td>
                                     </tr>
@@ -256,22 +257,22 @@
                 <!-- Transaction Details -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="md:col-span-1">
-                        <label for="transactionName" class="block text-sm font-medium text-gray-700 mb-2">Customer Name</label>
+                        <label for="transactionName" class="block text-xs md:text-sm font-medium text-gray-700 mb-2">Customer Name</label>
                         <input type="text" class="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                             id="transactionName" name="name" placeholder="Enter customer name">
                     </div>
                     <div class="md:col-span-1">
-                        <label for="transactionDateTime" class="block text-sm font-medium text-gray-700 mb-2">Transaction Date & Time</label>
+                        <label for="transactionDateTime" class="block text-xs md:text-sm font-medium text-gray-700 mb-2">Transaction Datetime</label>
                         <input type="datetime-local"
                             class="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50"
                             id="transactionDateTime" name="transaction_datetime">
                     </div>
                     <div class="md:col-span-1">
-                        <label for="paymentStatus" class="block text-sm font-medium text-gray-700 mb-2">Payment Status</label>
+                        <label for="paymentStatus" class="block text-xs md:text-sm font-medium text-gray-700 mb-2">Payment Status</label>
                         <select class="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                             id="paymentStatus" name="payment_status">
-                            <option value="true">Paid (LUNAS)</option>
                             <option value="false">Pending (BELUM BAYAR)</option>
+                            <option value="true">Paid (LUNAS)</option>
                         </select>
                     </div>
                 </div>
@@ -281,11 +282,11 @@
         <!-- Modal Footer -->
         <div class="flex flex-col sm:flex-row justify-end gap-2 p-4 md:p-6 border-t border-gray-200 bg-gray-50">
             <button id="cancelTransactionBtn"
-                class="w-full sm:w-auto px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 shadow-sm">
+                class="w-full sm:w-auto px-4 py-2.5 text-xs md:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 shadow-sm">
                 Cancel
             </button>
             <button id="saveTransactionBtn"
-                class="w-full sm:w-auto px-4 py-2.5 text-sm font-medium text-white bg-gray-500 border border-transparent rounded-md hover:bg-gray-700 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 shadow-sm">
+                class="w-full sm:w-auto px-4 py-2.5 text-xs md:text-sm font-medium text-white bg-gray-500 border border-transparent rounded-md hover:bg-gray-700 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 shadow-sm">
                 Save
             </button>
         </div>
