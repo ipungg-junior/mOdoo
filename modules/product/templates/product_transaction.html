@@ -148,7 +148,9 @@
                     <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
                     <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
                     <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Term</th>
+                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
+                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction Date</th>
                 </tr>
             </thead>
             <tbody id="allTransactionTableBody" class="bg-white divide-y divide-gray-200">
@@ -269,12 +271,10 @@
                             id="transactionDateTime" name="transaction_datetime">
                     </div>
                     <div class="md:col-span-1">
-                        <label for="paymentStatus" class="block text-xs md:text-sm font-medium text-gray-700 mb-2">Payment Status</label>
+                        <label for="paymentTerm" class="block text-xs md:text-sm font-medium text-gray-700 mb-2">Term of Payment</label>
                         <select
                             class="text-xs md:text-sm w-full px-3 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                            id="paymentStatus" name="payment_status">
-                            <option value="false">Pending (BELUM BAYAR)</option>
-                            <option value="true">Paid (LUNAS)</option>
+                            id="paymentTerm" name="payment_term">
                         </select>
                     </div>
                 </div>
@@ -314,6 +314,8 @@
         resetForm();
         // Load products for the dropdown
         loadProducts();
+        // Load payment terms for the dropdown
+        loadPaymentTerm();
         // Set current date and time
         const now = new Date();
         const year = now.getFullYear();
@@ -349,6 +351,18 @@
             option.value = product.id;
             option.textContent = product.name;
             productSelect.appendChild(option);
+        });
+    }
+
+    async function renderTermofPayment(term_list) {
+        const paymentTerm = document.getElementById('paymentTerm');
+        paymentTerm.innerHTML = '<option value="">Select Payment</option>';
+
+        term_list.forEach(term => {
+            const option = document.createElement('option');
+            option.value = term.name;
+            option.textContent = term.display_name;
+            paymentTerm.appendChild(option);
         });
     }
 
@@ -388,6 +402,30 @@
             }
         } catch (error) {
             showMessage('Failed to load products: ' + error.message, 'error');
+        }
+    }
+
+    // Load Payment Terms
+    async function loadPaymentTerm() {
+        try {
+            const response = await fetch(TRANSACTION_API_BASE, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+                },
+                body: JSON.stringify({ action: 'get_payment_terms' })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                renderTermofPayment(result.data.payment_terms);
+            } else {
+                showMessage(result.error || result.message, 'error');
+            }
+        } catch (error) {
+            showMessage('Failed to load payment terms: ' + error.message, 'error');
         }
     }
 
@@ -442,9 +480,10 @@
         tableBody.innerHTML = '';
         var counterIndex = 1;
         transactions.forEach(transaction => {
-            const statusClass = transaction.status_value === 'lunas' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+            const statusClass = transaction.status_value === 'paid' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
             const statusText = transaction.status;
             const customerName = transaction.customer_name || 'Walk-in Customer';
+            const due_date = transaction.due_date || '-';
 
             const row = document.createElement('tr');
             row.className = 'hover:bg-gray-50 transition-colors duration-150';
@@ -467,13 +506,15 @@
                 <td class="px-3 md:px-6 py-4 whitespace-nowrap">
                     <div class="text-sm text-gray-900 font-medium">${transaction.total_price}</div>
                     <div class="text-xs text-gray-500 mt-1">${customerName}</div>
-                </td>
-                <td class="px-3 py-4 whitespace-nowrap">
-                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">
-                        ${statusText}
-                    </span>
-                </td>
-                <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">${transaction.transaction_date}</td>                
+                    </td>
+                    <td class="px-3 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">
+                            ${statusText}
+                        </span>
+                    </td>
+                    <td class="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${transaction.payment_term}</td>
+                    <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">${due_date}</td>                
+                    <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">${transaction.transaction_date}</td>                
             `;
             tableBody.appendChild(row);
         });
@@ -773,7 +814,9 @@
         event.preventDefault();
         const transactionId = document.getElementById('transactionId').value;
         const transactionName = document.getElementById('transactionName').value;
-        const paymentStatus = document.getElementById('paymentStatus').value;
+        // Get payment term
+        const paymentSelect = document.getElementById('paymentTerm');
+        const paymentTerm = paymentSelect.options[paymentSelect.selectedIndex].value;
 
         // Check if this is an edit or create operation
         const isEdit = transactionId && transactionId !== '';
@@ -792,7 +835,7 @@
                     action: 'update',
                     id: transactionId,
                     name: transactionName,
-                    payment_status: paymentStatus,
+                    payment_term: paymentTerm,
                     items: existingItems.concat(newItems) // Combine existing and new items
                 };
             } else {
@@ -800,10 +843,12 @@
                 requestData = {
                     action: 'create',
                     name: transactionName,
-                    payment_status: paymentStatus,
+                    payment_term: paymentTerm,
                     items: newItems
                 };
             }
+
+            console.log('Request Data:', requestData);
 
             const response = await fetch(TRANSACTION_API_BASE, {
                 method: 'POST',
