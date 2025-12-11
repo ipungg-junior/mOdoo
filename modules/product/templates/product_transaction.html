@@ -149,7 +149,8 @@
                     <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
                     <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Term</th>
-                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
+                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction Date</th>
                 </tr>
             </thead>
             <tbody id="allTransactionTableBody" class="bg-white divide-y divide-gray-200">
@@ -482,6 +483,7 @@
             const statusClass = transaction.status_value === 'paid' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
             const statusText = transaction.status;
             const customerName = transaction.customer_name || 'Walk-in Customer';
+            const due_date = transaction.due_date || '-';
 
             const row = document.createElement('tr');
             row.className = 'hover:bg-gray-50 transition-colors duration-150';
@@ -511,6 +513,7 @@
                         </span>
                     </td>
                     <td class="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${transaction.payment_term}</td>
+                    <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">${due_date}</td>                
                     <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">${transaction.transaction_date}</td>                
             `;
             tableBody.appendChild(row);

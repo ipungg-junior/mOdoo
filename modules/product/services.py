@@ -467,6 +467,7 @@ class TransactionService:
                 'status': transaction.tmp_status.get_display_name(),
                 'status_value': transaction.tmp_status.name,
                 'payment_term': transaction.payment_term.get_display_name(),
+                'due_date': transaction.due_date.strftime('%Y-%m-%d') if transaction.due_date else None,
                 'transaction_date': transaction.transaction_date.strftime('%Y-%m-%d %H:%M:%S') if transaction.transaction_date else None,
                 'items': items_data,
                 'items_count': len(items_data)
