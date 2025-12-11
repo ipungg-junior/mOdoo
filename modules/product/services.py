@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 from django.contrib import messages
 from django.db.models import Sum
 from django.utils import timezone
-from .models import Product, Category, Transaction, TransactionItem
+from .models import Product, Category, Transaction, TransactionItem, PaymentTerm, PaymentStatus
 from django.contrib.auth.models import User
 from engine.utils import format_rupiah
 
@@ -392,13 +392,16 @@ class TransactionService:
         if action == 'list':
             return TransactionService.list_transaction(request)
         elif action == 'create':
-            return TransactionService.create_transaction(request, json_request)
+            # return TransactionService.create_transaction(request, json_request)
+            return TransactionService.create_transaction_v2(request, json_request)
         elif action == 'update':
             return TransactionService.update_transaction(request, json_request)
         elif action == 'delete':
             return TransactionService.delete_transaction(request, json_request)
         elif action == 'get_income_today':
             return TransactionService.income_today(request)
+        elif action == 'get_payment_terms':
+            return TransactionService.get_payment_terms(request)
         else:
             return JsonResponse({'success': False, 'message': f'Unknown POST action: {action}'}, status=400)
 
@@ -420,6 +423,15 @@ class TransactionService:
             'data': {
                 'income_today': format_rupiah(total_income)
             }
+        })
+
+    @staticmethod
+    def get_payment_terms(request):
+        """Return payment terms as JSON response"""
+        payment_terms = [{'name': term.name, 'display_name': term.display_name} for term in PaymentTerm.objects.all()]
+        return JsonResponse({
+            'success': True,
+            'data': {'payment_terms': payment_terms}
         })
 
     @staticmethod
@@ -460,8 +472,6 @@ class TransactionService:
                 'items_count': len(items_data)
             })
 
-        print(f'transaction_data: {transaction_data}')
-
         return JsonResponse({
             'success': True,
             'data': {
@@ -493,8 +503,143 @@ class TransactionService:
                 
             transaction = Transaction(
                 customer_name=name,
-                status=payment_status
+                status=payment_status,
             )
+            transaction.full_clean()  # Validate
+            transaction.save()
+
+            failed_items = []
+
+            for item in all_items:
+                product_id = item.get('product_id')
+                quantity = item.get('qty', 0)
+
+                try:
+                    product = Product.objects.get(id=product_id)
+                    if product.qty < int(quantity) or int(quantity) <= 0:
+                        failed_items.append({
+                            'product_id': product_id,
+                            'available_qty': product.qty,
+                            'requested_qty': quantity
+                        })
+                        print(f'Insufficient stock for product {product.name}: available {product.qty}, requested {quantity}')
+                    else:
+                        transaction_item = TransactionItem()
+                        transaction_item.transaction = transaction
+                        transaction_item.product_name = product.name
+                        transaction_item.quantity = int(quantity)
+                        transaction_item.price_per_item = product.price
+                        transaction_item.full_clean()  # Validate
+                        transaction_item.save()
+                        
+                        # Update product quantity
+                        product.qty -= int(quantity)
+                        product.full_clean()
+                        product.save()
+                        
+                        # Calculate total price
+                        total_price += int(product.price) * int(quantity)
+                    
+                except Product.DoesNotExist:
+                    failed_items.append({
+                        'product_id': product_id,
+                        'available_qty': 0,
+                        'requested_qty': quantity
+                    })
+                    print(f'Product with ID {product_id} does not exist')
+            
+            if total_price == 0:
+                transaction.delete()  # Clean up the transaction if no items were added
+                return JsonResponse({'success': False, 'message': 'No valid items to create transaction'}, status=400)
+            else:
+                # Update total price of the transaction
+                transaction.total_price = total_price
+                transaction.save()
+            
+            if failed_items:
+                print(f'Failed items due to insufficient stock: {failed_items}')
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Trasaction created with some failed items due to insufficient stock',
+                    'data': {
+                        'transaction': {
+                            'id': transaction.id,
+                            'customer_name': transaction.customer_name,
+                            'status': transaction.status,
+                            'total_price': str(format_rupiah(transaction.total_price)),
+                            'transaction_date': transaction.transaction_date.isoformat() if transaction.transaction_date else None,
+                        },
+                        'failed_items': failed_items
+                    }
+                }, status=200)
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Transaction created successfully',
+                'data': {'transaction': {
+                    'id': transaction.id,
+                    'customer_name': transaction.customer_name,
+                    'status': transaction.status,
+                    'total_price': str(format_rupiah(transaction.total_price)),
+                    'transaction_date': transaction.transaction_date.isoformat() if transaction.transaction_date else None,
+                }}
+            })
+            
+        except ValidationError as e:
+            print(e)
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+        except ValueError as e:
+            print(e)
+            return JsonResponse({'success': False, 'message': f'Invalid data format: {str(e)}'}, status=400)
+
+    @staticmethod
+    def create_transaction_v2(request, data):
+        """Create a new transaction - Version 2 (Placeholder)"""
+        all_items = data.get('items', [])
+        name = data.get('name', '')
+        payment_term = data.get('payment_term', 'credit-three-day')
+        
+        print(f'Creating transaction (V2) for {name} with items: {all_items} and payment term: {payment_term}')
+        
+        if not all_items:
+            return JsonResponse({'success': False, 'message': 'Transaction items are required'}, status=400)
+        
+        try:
+            total_price = 0
+            
+            # Setup payment term and status
+            if payment_term in ['CASH', 'cash']:
+                tmp_status = PaymentStatus.objects.get(name='paid')
+                payment_term = PaymentTerm.objects.get(name='cash')
+            else:
+                tmp_status = PaymentStatus.objects.get(name='unpaid')
+                payment_term = PaymentTerm.objects.get(name=payment_term)
+                
+            transaction = Transaction(
+                customer_name=name,
+                tmp_status=tmp_status,
+                payment_term=payment_term
+            )
+            
+            # Setup due date if payment term is credit
+            if payment_term.name.startswith('credit'):
+                days = payment_term.name.split('-')[-2]  # Extract number of days from name
+                if days == 'three':
+                    days = 3
+                elif days == 'seven':
+                    days = 7
+                elif days == 'fourteen':
+                    days = 14
+                else:
+                    days = 30
+                    
+                due_date = timezone.now() + timezone.timedelta(days=days)
+                transaction.due_date = due_date
+                
+            elif payment_term.name == 'cash':
+                # set due date to transaction date for cash payments
+                transaction.due_date = timezone.now()
+                
             transaction.full_clean()  # Validate
             transaction.save()
 
