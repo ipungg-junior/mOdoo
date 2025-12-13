@@ -69,26 +69,23 @@ class AccountReceivable:
     @staticmethod
     def list_receivables(request):
         from .models import AccountingReceivablePayment
-        receivables = AccountingReceivablePayment.objects.select_related('status', 'term', 'created_by').all().order_by('-created_at')
+        receivables = AccountingReceivablePayment.objects.filter(status__name='unpaid')
         data = []
         for r in receivables:
             data.append({
                 'id': r.id,
-                'amount': str(r.amount),
+                'amount': ((r.amount)),
                 'due_date': r.due_date.isoformat() if r.due_date else None,
                 'status': r.status.display_name if r.status else 'N/A',
-                'term': r.term.display_name if r.term else 'N/A',
-                'created_by': r.created_by.username if r.created_by else 'N/A',
-                'created_at': r.created_at.isoformat() if r.created_at else None
+                'term': r.term.display_name if r.term else 'N/A'
             })
+            
         # Calculate totals
-        total_amount = sum(float(r['amount']) for r in data)
         total_pending = sum(float(r['amount']) for r in data if 'unpaid' in r['status'].lower())
         return JsonResponse({
             'success': True,
             'data': {
                 'receivables': data,
-                'total_amount': format_rupiah(total_amount),
                 'total_pending': format_rupiah(total_pending),
                 'count': len(data)
             }
