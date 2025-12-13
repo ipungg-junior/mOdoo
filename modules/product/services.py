@@ -7,6 +7,7 @@ from django.utils import timezone
 from .models import Product, Category, Transaction, TransactionItem, PaymentTerm, PaymentStatus
 from django.contrib.auth.models import User
 from engine.utils import format_rupiah
+from datetime import datetime
 
 
 
@@ -402,8 +403,31 @@ class TransactionService:
             return TransactionService.income_today(request)
         elif action == 'get_payment_terms':
             return TransactionService.get_payment_terms(request)
+        elif action == 'change_status_transaction':
+            return TransactionService.change_status_transaction(request, json_request)
         else:
             return JsonResponse({'success': False, 'message': f'Unknown POST action: {action}'}, status=400)
+
+    @staticmethod
+    def change_status_transaction(request, json_request):
+        try:
+            transaction_id = json_request.get('transactionId')
+            transaction = Transaction.objects.get(id=transaction_id)
+            if transaction.tmp_status.name == 'paid':
+                transaction.tmp_status = PaymentStatus.objects.get(name='unpaid')
+            else:
+                transaction.tmp_status = PaymentStatus.objects.get(name='paid')
+            
+            today = timezone.now().date()
+            transaction.paid_date = today       
+            transaction.save()
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Transaction status changed successfully'
+            })
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
     @staticmethod
     def _get_income_today(request):
@@ -599,6 +623,13 @@ class TransactionService:
         all_items = data.get('items', [])
         name = data.get('name', '')
         payment_term = data.get('payment_term', 'credit-three-day')
+        transaction_date = data.get('datetime', None)
+        
+        # convert string → datetime
+        schedule_time = datetime.strptime(
+            transaction_date,
+            '%Y-%m-%dT%H:%M'
+        )
         
         print(f'Creating transaction (V2) for {name} with items: {all_items} and payment term: {payment_term}')
         
@@ -690,6 +721,9 @@ class TransactionService:
             else:
                 # Update total price of the transaction
                 transaction.total_price = total_price
+                # Save date transaction
+                if transaction_date is not None:
+                    transaction.transaction_date = schedule_time
                 transaction.save()
             
             if failed_items:

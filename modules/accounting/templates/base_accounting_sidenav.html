@@ -1,0 +1,32 @@
+<div class="p-4">
+    <div class="text-xs uppercase text-gray-500">Main Menu</div>
+
+    <nav class="mt-3 space-y-2 text-sm">
+        <a href="{% url 'accounting_index_page' %}" class="flex items-center px-3 py-2 rounded-md hover:bg-gray-100">
+            <span class="mr-2"><i class="fas fa-home"></i></span> Home
+        </a>
+
+        <details class="group">
+            <summary class="cursor-pointer flex items-center px-3 py-2 hover:bg-gray-200 rounded-md select-none">
+                <span class="mr-2"><i class="fas fa-receipt"></i></span> Accounting Payable <span class="ml-auto"><i class="fas fa-chevron-down"></i></span>
+            </summary>
+            <div class="pl-8 mt-1 space-y-2 text-gray-700">
+                <a href="{% url 'accounting_payable_page' %}" class="block hover:text-black">Report Payable</a>
+            </div>
+        </details>
+
+        <details class="group">
+            <summary class="cursor-pointer flex items-center px-3 py-2 hover:bg-gray-200 rounded-md select-none">
+                <span class="mr-2"><i class="fas fa-store"></i></span> Accounting Receivable <span class="ml-auto"><i class="fas fa-chevron-down"></i></span>
+            </summary>
+            <div class="pl-8 mt-1 space-y-2 text-gray-700">
+                <a href="{% url 'accounting_receivable_page' %}" class="block hover:text-black">Report Receivable</a>
+                <a href="{% url 'accounting_create_ar_page' %}" class="block hover:text-black">Create Receivable</a>
+            </div>
+        </details>
+
+        <a href="{% url 'module_list' %}" class="cursor-pointer flex items-center px-3 py-2 hover:bg-gray-200 rounded-md select-none" style="margin-top: 2em !important;">
+            <span class="mr-2"><i class="fas fa-cubes"></i></span> Back To Main Menu
+        </a>
+    </nav>
+</div>

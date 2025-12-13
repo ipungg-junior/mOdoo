@@ -617,6 +617,7 @@
         // Create mobile-responsive modal
         const modal = document.createElement('div');
         modal.className = 'modal-overlay';
+        modal.id = 'transaction-detail-modal';
         modal.innerHTML = `
             <div class="modal-content w-full max-w-4xl mx-2 md:mx-4">
                 <div class="flex items-center justify-between p-4 md:p-6 border-b border-gray-200">
@@ -632,8 +633,12 @@
                 <div class="p-4 md:p-6 max-h-96 md:max-h-[70vh] overflow-y-auto">
                     ${detailsHTML}
                 </div>
-
+                
                 <div class="flex justify-end gap-3 p-4 md:p-6 border-t border-gray-200 bg-gray-50">
+                    <button onclick="changeStatus(${transaction.id})"
+                            class="px-4 py-2 text-xs md:text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200">
+                        Change Status
+                    </button>
                     <button onclick="this.closest('.modal-overlay').remove()"
                             class="px-4 py-2 text-xs md:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200">
                         Close
@@ -643,6 +648,40 @@
         `;
 
         document.body.appendChild(modal);
+    }
+
+    // Change status transaction
+    async function changeStatus(transactionId) {
+        const transaction = transactionsData.find(t => t.id === transactionId);
+        if (!transaction) {
+            showMessage('Transaction not found', 'error');
+            return;
+        }
+
+        // POST API change status
+        try {
+            const response = await fetch(TRANSACTION_API_BASE, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+                },
+                body: JSON.stringify({ action: 'change_status_transaction', transactionId: transactionId })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // close modal
+                document.getElementById('transaction-detail-modal').remove();
+                loadTransactions();
+            } else {
+                showMessage(result.error || result.message, 'error');
+            }
+        } catch (error) {
+            showMessage('Failed to change status: ' + error.message, 'error');
+        }
+
     }
 
     // Edit Transaction
@@ -817,6 +856,8 @@
         // Get payment term
         const paymentSelect = document.getElementById('paymentTerm');
         const paymentTerm = paymentSelect.options[paymentSelect.selectedIndex].value;
+        // Get datetime
+        const transactionDate = document.getElementById('transactionDateTime').value;
 
         // Check if this is an edit or create operation
         const isEdit = transactionId && transactionId !== '';
@@ -844,6 +885,7 @@
                     action: 'create',
                     name: transactionName,
                     payment_term: paymentTerm,
+                    datetime: transactionDate,
                     items: newItems
                 };
             }
