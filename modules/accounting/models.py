@@ -67,12 +67,12 @@ class AccountingReceivablePayment(models.Model):
     ]
     receivable_from = models.CharField(max_length=3, choices=INCOME_VARIANT, default='etc', null=True, blank=True)
     amount = models.DecimalField(max_digits=15, decimal_places=2)
-    due_date = models.DateField()
+    due_date = models.DateField(null=True, blank=True)
     status = models.ForeignKey(AccountingPaymentStatus, on_delete=models.SET_NULL, null=True)
     term = models.ForeignKey(AccountingPaymentTerm, on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
-        return f"Payment of {self.amount} on {self.payment_date}"
+        return f"Payment"
     
     
 # Record for batch payments
@@ -90,7 +90,7 @@ class AccountingBatchPayment(models.Model):
     batch_number = models.CharField(max_length=100)
     total_amount = models.DecimalField(max_digits=15, decimal_places=2)
     payment_type = models.CharField(max_length=2, choices=PAYMENT_TYPE_CHOICES)
-    payment_date = models.DateField()
+    payment_date = models.DateField(null=True, blank=True)
     payment_method = models.CharField(max_length=2, choices=PAYMENT_METHOD_CHOICES)
 
     def __str__(self):
@@ -104,7 +104,7 @@ class AccountingBankTransferRecord(models.Model):
     bank_account_number = models.CharField(max_length=100)
     bank_account_name = models.CharField(max_length=100)
     transfer_amount = models.IntegerField()
-    transfer_date = models.DateField()
+    transfer_date = models.DateField(null=True, blank=True)
     reference_number = models.CharField(max_length=100)
 
     def __str__(self):
@@ -115,7 +115,7 @@ class AccountingQRISPaymentRecord(models.Model):
     batch_payment = models.CharField(max_length=100)
     qris_code = models.CharField(max_length=100)
     payment_amount = models.IntegerField()
-    payment_date = models.DateField()
+    payment_date = models.DateField(null=True, blank=True)
     reference_number = models.CharField(max_length=100)
 
     def __str__(self):
@@ -126,7 +126,7 @@ class AccountingCashPaymentRecord(models.Model):
     batch_payment = models.CharField(max_length=100)
     cash_received_by = models.CharField(max_length=100)
     payment_amount = models.IntegerField()
-    payment_date = models.DateField()
+    payment_date = models.DateField(null=True, blank=True)
     reference_number = models.CharField(max_length=100)
 
     def __str__(self):
@@ -138,7 +138,7 @@ class AccountingVirtualAccountPaymentRecord(models.Model):
     bank_name = models.CharField(max_length=100)
     virtual_account_number = models.CharField(max_length=100)
     payment_amount = models.IntegerField()
-    payment_date = models.DateField()
+    payment_date = models.DateField(null=True, blank=True)
     reference_number = models.CharField(max_length=100)
 
     def __str__(self):
