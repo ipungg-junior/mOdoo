@@ -520,7 +520,7 @@ class TransactionService:
                 'transactions': transaction_data,
                 'volume_transaction': str(format_rupiah(total_today)),
                 'cash_on_hand': str(format_rupiah(TransactionService._get_paid_transaction_today())),
-                'pending_payment': str('Maintenance')
+                'pending_payment': str(format_rupiah(TransactionService._get_pending_payment()))
             }
         })
 
