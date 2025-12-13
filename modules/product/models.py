@@ -83,7 +83,7 @@ class Transaction(models.Model):
     tmp_status = models.ForeignKey(PaymentStatus, on_delete=models.SET_NULL, null=True, blank=True)
     payment_term = models.ForeignKey(PaymentTerm, on_delete=models.SET_NULL, null=True, blank=True)
     due_date = models.DateField(null=True, blank=True)
-    transaction_date = models.DateTimeField(auto_now_add=True)
+    transaction_date = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"Transaction of {self.product.name} by {self.user.username} on {self.transaction_date}"

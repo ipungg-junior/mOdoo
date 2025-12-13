@@ -817,6 +817,8 @@
         // Get payment term
         const paymentSelect = document.getElementById('paymentTerm');
         const paymentTerm = paymentSelect.options[paymentSelect.selectedIndex].value;
+        // Get datetime
+        const transactionDate = document.getElementById('transactionDateTime').value;
 
         // Check if this is an edit or create operation
         const isEdit = transactionId && transactionId !== '';
@@ -844,6 +846,7 @@
                     action: 'create',
                     name: transactionName,
                     payment_term: paymentTerm,
+                    datetime: transactionDate,
                     items: newItems
                 };
             }

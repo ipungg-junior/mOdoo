@@ -7,6 +7,7 @@ from django.utils import timezone
 from .models import Product, Category, Transaction, TransactionItem, PaymentTerm, PaymentStatus
 from django.contrib.auth.models import User
 from engine.utils import format_rupiah
+from datetime import datetime
 
 
 
@@ -599,6 +600,13 @@ class TransactionService:
         all_items = data.get('items', [])
         name = data.get('name', '')
         payment_term = data.get('payment_term', 'credit-three-day')
+        transaction_date = data.get('datetime', None)
+        
+        # convert string → datetime
+        schedule_time = datetime.strptime(
+            transaction_date,
+            '%Y-%m-%dT%H:%M'
+        )
         
         print(f'Creating transaction (V2) for {name} with items: {all_items} and payment term: {payment_term}')
         
@@ -690,6 +698,9 @@ class TransactionService:
             else:
                 # Update total price of the transaction
                 transaction.total_price = total_price
+                # Save date transaction
+                if transaction_date is not None:
+                    transaction.transaction_date = schedule_time
                 transaction.save()
             
             if failed_items:
