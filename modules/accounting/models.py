@@ -61,11 +61,15 @@ class AccountingPaymentTerm(models.Model):
 
 # Record for receivable payments (invoice payments)
 class AccountingReceivablePayment(models.Model):
+    INCOME_VARIANT = [
+        ('tr', 'Transaction'),
+        ('etc', 'Other'),
+    ]
+    receivable_from = models.CharField(max_length=3, choices=INCOME_VARIANT, default='etc', null=True, blank=True)
     amount = models.DecimalField(max_digits=15, decimal_places=2)
     due_date = models.DateField()
     status = models.ForeignKey(AccountingPaymentStatus, on_delete=models.SET_NULL, null=True)
     term = models.ForeignKey(AccountingPaymentTerm, on_delete=models.SET_NULL, null=True)
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
         return f"Payment of {self.amount} on {self.payment_date}"
