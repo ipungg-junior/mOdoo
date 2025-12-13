@@ -403,8 +403,39 @@ class TransactionService:
             return TransactionService.income_today(request)
         elif action == 'get_payment_terms':
             return TransactionService.get_payment_terms(request)
+        elif action == 'change_status_transaction':
+            return TransactionService.get_payment_terms(request)
         else:
             return JsonResponse({'success': False, 'message': f'Unknown POST action: {action}'}, status=400)
+
+    @staticmethod
+    def change_status_transaction(request, json_request):
+        try:
+            transaction_id = json_request.get('transactionId')
+            transaction = Transaction.objects.get(id=transaction_id)
+            if transaction.tmp_status.name == 'paid':
+                transaction.tmp_status = PaymentStatus.objects.get(name='unpaid')
+            else:
+                transaction.tmp_status = PaymentStatus.objects.get(name='paid')
+            
+            today = timezone.now().date()
+            transaction.paid_date = today
+            
+            print(transaction_id)
+            print(transaction.tmp_status)
+            print(transaction.paid_date)        
+            # transaction.save()
+
+            return JsonResponse({
+                'success': False,
+                'message': 'Undermaintenance'
+            })
+            # return JsonResponse({
+            #     'success': True,
+            #     'message': 'Transaction status changed successfully'
+            # })
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
     @staticmethod
     def _get_income_today(request):

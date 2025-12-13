@@ -80,6 +80,7 @@ class Transaction(models.Model):
         ('belum_lunas', 'Belum Lunas'),
     ]
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='belum_lunas')
+    paid_date = models.DateTimeField(null=True, blank=True)
     tmp_status = models.ForeignKey(PaymentStatus, on_delete=models.SET_NULL, null=True, blank=True)
     payment_term = models.ForeignKey(PaymentTerm, on_delete=models.SET_NULL, null=True, blank=True)
     due_date = models.DateField(null=True, blank=True)
