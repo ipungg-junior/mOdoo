@@ -404,7 +404,7 @@ class TransactionService:
         elif action == 'get_payment_terms':
             return TransactionService.get_payment_terms(request)
         elif action == 'change_status_transaction':
-            return TransactionService.get_payment_terms(request)
+            return TransactionService.change_status_transaction(request, json_request)
         else:
             return JsonResponse({'success': False, 'message': f'Unknown POST action: {action}'}, status=400)
 
@@ -419,21 +419,13 @@ class TransactionService:
                 transaction.tmp_status = PaymentStatus.objects.get(name='paid')
             
             today = timezone.now().date()
-            transaction.paid_date = today
-            
-            print(transaction_id)
-            print(transaction.tmp_status)
-            print(transaction.paid_date)        
-            # transaction.save()
+            transaction.paid_date = today       
+            transaction.save()
 
             return JsonResponse({
-                'success': False,
-                'message': 'Undermaintenance'
+                'success': True,
+                'message': 'Transaction status changed successfully'
             })
-            # return JsonResponse({
-            #     'success': True,
-            #     'message': 'Transaction status changed successfully'
-            # })
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
