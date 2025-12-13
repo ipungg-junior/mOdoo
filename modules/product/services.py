@@ -429,6 +429,17 @@ class TransactionService:
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
+    # Get transaction with tmp_status paid today
+    @staticmethod
+    def _get_paid_transaction_today():
+        """Get total paid transaction for today"""
+        today = timezone.now().date()
+        paid_today = Transaction.objects.filter(
+            transaction_date__date=today,
+            tmp_status__name='paid'
+        ).aggregate(total=Sum('total_price'))['total'] or 0
+        return paid_today
+
     @staticmethod
     def _get_income_today(request):
         """Get total income for today"""
@@ -501,7 +512,9 @@ class TransactionService:
             'success': True,
             'data': {
                 'transactions': transaction_data,
-                'total_transaction_today': str(format_rupiah(total_today))
+                'volume_transaction': str(format_rupiah(total_today)),
+                'cash_on_hand': str(format_rupiah(TransactionService._get_paid_transaction_today())),
+                'pending_payment': str('Maintenance')
             }
         })
 

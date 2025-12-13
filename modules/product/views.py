@@ -123,11 +123,8 @@ class ProductTransactionPageView(PermissionRequiredMixin, View):
         from django.db.models import Sum
         from .models import Transaction
 
-        today = timezone.now().date()
-        total_today = Transaction.objects.filter(
-            transaction_date__date=today
-        ).aggregate(total=Sum('total_price'))['total'] or 0
+        # Summary data
+        volume_transaction = format_rupiah(TransactionService._get_income_today(request))
+        cash_on_hand = format_rupiah(TransactionService._get_paid_transaction_today())
 
-        return render(request, 'product_transaction.html', {
-            'total_transaction_today': format_rupiah(total_today)
-        })
+        return render(request, 'product_transaction.html', {'volume_transaction': volume_transaction, 'cash_on_hand': cash_on_hand})

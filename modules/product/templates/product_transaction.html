@@ -111,10 +111,20 @@
 
 {% block main_content %}
 
-<!-- Total Transaction -->
-<div class="bg-white p-4 md:p-6 rounded-lg shadow-sm border mb-4 md:mb-6 mx-2 md:mx-0">
-    <h2 class="text-lg md:text-xl font-semibold mb-2 text-gray-800">Total transaction today</h2>
-    <div id="totalTransactionToday" class="text-xl md:text-2xl font-bold text-green-600">Rp. {{ total_transaction_today }}</div>
+<!-- Summary Cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="bg-white p-6 rounded-xl shadow-sm border">
+        <h2 class="font-semibold mb-2 text-sm">Volume transaction today</h2>
+        <div class="text-xl font-bold text-blue-600" id="volume-transaction">Rp. {{ volume_transaction }}</div>
+    </div>
+    <div class="bg-white p-6 rounded-xl shadow-sm border">
+        <h2 class="font-semibold mb-2 text-sm">Cash On Hand</h2>
+        <div class="text-xl font-bold text-green-600" id="cash-on-hand">Rp. {{ cash_on_hand }}</div>
+    </div>
+    <div class="bg-white p-6 rounded-xl shadow-sm border">
+        <h2 class="font-semibold mb-2 text-sm">Pending Volume</h2>
+        <div class="text-xl font-bold text-orange-600" id="pending-payment">Rp. {{ pending_volume }}</div>
+    </div>
 </div>
 
 <!-- Add Transaction Button -->
@@ -447,7 +457,9 @@
                 transactionsData = result.data.transactions;
                 renderTransactions(result.data.transactions);
                 // Update total transaction today
-                document.getElementById('totalTransactionToday').textContent = 'Rp. ' + result.data.total_transaction_today;
+                document.getElementById('volume-transaction').textContent = 'Rp. ' + result.data.volume_transaction;
+                document.getElementById('cash-on-hand').textContent = 'Rp. ' + result.data.cash_on_hand;
+                document.getElementById('pending-payment').textContent = 'Rp. ' + result.data.pending_payment;
                 showMessage('Transactions loaded successfully!', 'success');
             } else {
                 showMessage(result.error || result.message, 'error');
