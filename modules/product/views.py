@@ -126,5 +126,7 @@ class ProductTransactionPageView(PermissionRequiredMixin, View):
         # Summary data
         volume_transaction = format_rupiah(TransactionService._get_income_today(request))
         cash_on_hand = format_rupiah(TransactionService._get_paid_transaction_today())
+        pending_payment = format_rupiah(TransactionService._get_pending_payment())
+        print(pending_payment)
 
-        return render(request, 'product_transaction.html', {'volume_transaction': volume_transaction, 'cash_on_hand': cash_on_hand})
+        return render(request, 'product_transaction.html', {'volume_transaction': volume_transaction, 'cash_on_hand': cash_on_hand, 'pending_payment': pending_payment})

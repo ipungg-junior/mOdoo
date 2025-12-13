@@ -440,6 +440,12 @@ class TransactionService:
         ).aggregate(total=Sum('total_price'))['total'] or 0
         return paid_today
 
+    # Get pending payment
+    @staticmethod
+    def _get_pending_payment():
+        unpaid = Transaction.objects.filter(tmp_status__name='unpaid').aggregate(total=Sum('total_price'))['total'] or None
+        return unpaid
+    
     @staticmethod
     def _get_income_today(request):
         """Get total income for today"""
