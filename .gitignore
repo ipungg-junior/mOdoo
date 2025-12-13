@@ -8,6 +8,10 @@ modules/__pycache__/
 modules/hr/__pycache__/
 modules/product/__pycache__/
 modules/other_module/__pycache__/
+modules/accounting/__pycache__/
 modules/hr/migrations/
 modules/product/migrations/
 modules/other_module/migrations/
+modules/accounting/migrations/
+
+*.sqlite3
