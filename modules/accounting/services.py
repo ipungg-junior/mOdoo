@@ -77,6 +77,7 @@ class AccountReceivable:
                 'amount': ((r.amount)),
                 'due_date': r.due_date.isoformat() if r.due_date else None,
                 'status': r.status.display_name if r.status else 'N/A',
+                'status_value': r.status.name if r.status else 'N/A',
                 'term': r.term.display_name if r.term else 'N/A'
             })
             
