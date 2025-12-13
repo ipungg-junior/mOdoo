@@ -650,6 +650,8 @@ class TransactionService:
             '%Y-%m-%dT%H:%M'
         )
         
+        
+        
         print(f'Creating transaction (V2) for {name} with items: {all_items} and payment term: {payment_term}')
         
         if not all_items:
@@ -743,6 +745,9 @@ class TransactionService:
                 # Save date transaction
                 if transaction_date is not None:
                     transaction.transaction_date = schedule_time
+                    if schedule_time > datetime.now():
+                        return JsonResponse({'success': False, 'message': 'Waktu transaksi melebihi batas hari ini'}, status=400)
+                        
                 transaction.save()
             
             if failed_items:
