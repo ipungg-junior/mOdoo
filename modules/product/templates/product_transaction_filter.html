@@ -110,36 +110,76 @@
 {% endblock %}
 
 {% block main_content %}
-
-<!-- Summary Cards -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-    <div class="bg-white p-6 rounded-xl shadow-sm border">
-        <h2 class="font-semibold mb-2 text-sm">Volume transaction today</h2>
-        <div class="text-xl font-bold text-blue-600" id="volume-transaction">Rp. {{ volume_transaction }}</div>
-    </div>
-    <div class="bg-white p-6 rounded-xl shadow-sm border">
-        <h2 class="font-semibold mb-2 text-sm">Cash On Hand</h2>
-        <div class="text-xl font-bold text-green-600" id="cash-on-hand">Rp. {{ cash_on_hand }}</div>
-    </div>
-    <div class="bg-white p-6 rounded-xl shadow-sm border">
-        <h2 class="font-semibold mb-2 text-sm">Pending Payment</h2>
-        <div class="text-xl font-bold text-orange-600" id="pending-payment">Rp. {{ pending_payment }}</div>
-    </div>
-</div>
-
-<!-- Add Transaction Button -->
-<div class="flex justify-center md:justify-end mb-4 mx-2 md:mx-1">
-    <button id="addTransactionBtn"
-        class="w-full md:w-auto px-4 py-2 text-sm font-medium text-white bg-gray-500 border border-transparent rounded-md hover:bg-gray-700 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 shadow-sm">
-        <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-        </svg>
-        New Transaction
-    </button>
-</div>
-
 <!-- Transaction Table -->
-<h2 class="text-lg md:text-xl font-semibold mt-2 md:mt-4 mb-4 mx-2 md:mx-0 text-gray-800">Transaction List</h2>
+<h2 class="text-lg md:text-xl font-semibold mt-2 md:mt-4 mb-4 mx-2 md:mx-0 text-gray-800">Filter Transaction</h2>
+
+<!-- Filters -->
+<div class="bg-white rounded-lg shadow-sm border mx-2 md:mx-0 p-4 mb-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div>
+            <label for="filterId" class="block text-xs font-medium text-gray-700 mb-1">Transaction ID</label>
+            <input type="text" id="filterId" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                placeholder="Search ID...">
+        </div>
+        <div>
+            <label for="filterCustomer" class="block text-xs font-medium text-gray-700 mb-1">Customer Name</label>
+            <input type="text" id="filterCustomer" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                placeholder="Search customer...">
+        </div>
+        <div>
+            <label for="filterStatus" class="block text-xs font-medium text-gray-700 mb-1">Status</label>
+            <select id="filterStatus" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+                <option value="">All Status</option>
+                <option value="paid">Paid</option>
+                <option value="unpaid">Unpaid</option>
+            </select>
+        </div>
+        <div>
+            <label for="filterPaymentTerm" class="block text-xs font-medium text-gray-700 mb-1">Payment Term</label>
+            <select id="filterPaymentTerm" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+                <option value="">All Terms</option>
+                <option value="cash">Cash</option>
+                <option value="credit-three-day">Credit 3 Days</option>
+                <option value="credit-seven-day">Credit 7 Days</option>
+                <option value="credit-fourteen-day">Credit 14 Days</option>
+                <option value="credit-thirty-day">Credit 30 Days</option>
+            </select>
+        </div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+        <div>
+            <label for="filterDueDate" class="block text-xs font-medium text-gray-700 mb-1">Due Date</label>
+            <input type="date" id="filterDueDate" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+        </div>
+        <div>
+            <label for="filterTransactionDate" class="block text-xs font-medium text-gray-700 mb-1">Transaction Date</label>
+            <input type="date" id="filterTransactionDate"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+        </div>
+    </div>
+    <div class="grid grid-cols-1 md:flex md:justify-between items-center mt-4">
+        <div class="flex items-center gap-2">
+            <label for="perPage" class="text-xs font-medium text-gray-700">Show:</label>
+            <select id="perPage" class="px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+            </select>
+            <span class="text-xs text-gray-600">per page</span>
+        </div>
+        <div class="flex gap-2 mt-4 md:mt-0">
+            <button id="clearFiltersBtn"
+                class="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:ring-2 focus:ring-gray-500 transition-all">
+                Clear Filters
+            </button>
+            <button id="applyFiltersBtn"
+                class="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 transition-all">
+                Apply Filters
+            </button>
+        </div>
+    </div>
+</div>
 
 <div class="bg-white rounded-lg shadow-sm border mx-2 md:mx-0 overflow-hidden">
     <div class="overflow-x-auto">
@@ -257,6 +297,40 @@
                                 </tbody>
                             </table>
                         </div>
+
+                        <!-- Pagination -->
+                        <div id="paginationContainer" class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6 hidden">
+                            <div class="flex items-center justify-between">
+                                <div class="text-sm text-gray-700">
+                                    Showing <span id="showingStart">1</span> to <span id="showingEnd">10</span> of <span id="totalItems">0</span> results
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <button id="prevPageBtn"
+                                        class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                        disabled>
+                                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                                                clip-rule="evenodd" />
+                                        </svg>
+                                        Previous
+                                    </button>
+
+                                    <div class="flex space-x-1">
+                                        <span id="pageNumbers" class="relative z-0 inline-flex"></span>
+                                    </div>
+
+                                    <button id="nextPageBtn"
+                                        class="relative ml-3 inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                        disabled>
+                                        Next
+                                        <svg class="ml-1 h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                                                clip-rule="evenodd" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -311,40 +385,11 @@
     let existingItems = []; // Existing items when editing
     let newItems = []; // Newly added items during edit
 
-
-    // Add Transaction Modal
-    document.getElementById('addTransactionBtn').addEventListener('click', function () {
-        // Reset form first
-        resetForm();
-        // Load products for the dropdown
-        loadProducts();
-        // Load payment terms for the dropdown
-        loadPaymentTerm();
-        // Set current date and time
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const day = String(now.getDate()).padStart(2, '0');
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        const datetimeLocal = `${year}-${month}-${day}T${hours}:${minutes}`;
-        document.getElementById('transactionDateTime').value = datetimeLocal;
-        // Set modal title for new transaction
-        document.getElementById('transactionModalTitle').textContent = 'New Transaction';
-
-        document.getElementById('transactionModal').classList.remove('hidden');
-    });
-
-    // Example JavaScript to handle modal functionality
-    document.getElementById('closeTransactionModal').addEventListener('click', function () {
-        document.getElementById('transactionModal').classList.add('hidden');
-        resetForm(); // Clear all fields when modal is closed
-    });
-
-    document.getElementById('cancelTransactionBtn').addEventListener('click', function () {
-        document.getElementById('transactionModal').classList.add('hidden');
-        resetForm(); // Clear all fields when modal is cancelled
-    });
+    // Pagination and filter state
+    let currentPage = 1;
+    let currentPerPage = 10;
+    let currentFilters = {};
+    let paginationData = null;
 
     async function renderProductList(productList) {
         const productSelect = document.getElementById('productName');
@@ -383,78 +428,43 @@
         setTimeout(() => messagesDiv.innerHTML = '', 5000);
     }
 
-    // Load Products
-    async function loadProducts() {
+    // Load Transactions with filters and pagination
+    async function loadTransactions(page = 1, filters = {}, perPage = currentPerPage) {
         try {
-            const response = await fetch(PRODUCT_API_BASE, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
-                },
-                body: JSON.stringify({ action: 'list' })
-            });
+            const requestData = {
+                action: 'list',
+                page: page,
+                per_page: perPage,
+                ...filters
+            };
 
-            const result = await response.json();
-
-            if (result.success) {
-                // Set global productList variable with the loaded products
-                productList = result.data.product_list || [];
-                renderProductList(productList);
-            } else {
-                showMessage(result.error || result.message, 'error');
-            }
-        } catch (error) {
-            showMessage('Failed to load products: ' + error.message, 'error');
-        }
-    }
-
-    // Load Payment Terms
-    async function loadPaymentTerm() {
-        try {
             const response = await fetch(TRANSACTION_API_BASE, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
                 },
-                body: JSON.stringify({ action: 'get_payment_terms' })
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                renderTermofPayment(result.data.payment_terms);
-            } else {
-                showMessage(result.error || result.message, 'error');
-            }
-        } catch (error) {
-            showMessage('Failed to load payment terms: ' + error.message, 'error');
-        }
-    }
-
-    // Load Transactions
-    async function loadTransactions() {
-        try {
-            const response = await fetch(TRANSACTION_API_BASE, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
-                },
-                body: JSON.stringify({ action: 'list' })
+                body: JSON.stringify(requestData)
             });
 
             const result = await response.json();
 
             if (result.success) {
                 transactionsData = result.data.transactions;
+                paginationData = result.data.pagination;
                 renderTransactions(result.data.transactions);
-                // Update total transaction today
-                document.getElementById('volume-transaction').textContent = 'Rp. ' + result.data.volume_transaction;
-                document.getElementById('cash-on-hand').textContent = 'Rp. ' + result.data.cash_on_hand;
-                document.getElementById('pending-payment').textContent = 'Rp. ' + result.data.pending_payment;
-                showMessage('Transactions loaded successfully!', 'success');
+                renderPagination(result.data.pagination);
+
+                // Update summary only on first load or when no filters
+                if (page === 1 && Object.keys(filters).length === 0) {
+                    document.getElementById('volume-transaction').textContent = 'Rp. ' + result.data.volume_transaction;
+                    document.getElementById('cash-on-hand').textContent = 'Rp. ' + result.data.cash_on_hand;
+                    document.getElementById('pending-payment').textContent = 'Rp. ' + result.data.pending_payment;
+                }
+
+                if (page === 1) {
+                    showMessage('Transactions loaded successfully!', 'success');
+                }
             } else {
                 showMessage(result.error || result.message, 'error');
             }
@@ -484,7 +494,8 @@
         }
 
         tableBody.innerHTML = '';
-        var counterIndex = 1;
+        const startIndex = (currentPage - 1) * currentPerPage;
+        var counterIndex = startIndex + 1;
         transactions.forEach(transaction => {
             const statusClass = transaction.status_value === 'paid' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
             const statusText = transaction.status;
@@ -524,6 +535,62 @@
             `;
             tableBody.appendChild(row);
         });
+    }
+
+    // Render Pagination
+    function renderPagination(pagination) {
+        const container = document.getElementById('paginationContainer');
+        const showingStart = document.getElementById('showingStart');
+        const showingEnd = document.getElementById('showingEnd');
+        const totalItems = document.getElementById('totalItems');
+        const prevBtn = document.getElementById('prevPageBtn');
+        const nextBtn = document.getElementById('nextPageBtn');
+        const pageNumbers = document.getElementById('pageNumbers');
+
+        if (pagination.total_pages <= 1) {
+            container.classList.add('hidden');
+            return;
+        }
+
+        container.classList.remove('hidden');
+
+        // Update showing info
+        const start = (pagination.current_page - 1) * pagination.per_page + 1;
+        const end = Math.min(pagination.current_page * pagination.per_page, pagination.total_items);
+        showingStart.textContent = start;
+        showingEnd.textContent = end;
+        totalItems.textContent = pagination.total_items;
+
+        // Update buttons
+        prevBtn.disabled = !pagination.has_previous;
+        nextBtn.disabled = !pagination.has_next;
+
+        // Render page numbers
+        pageNumbers.innerHTML = '';
+        const maxVisible = 5;
+        let startPage = Math.max(1, pagination.current_page - Math.floor(maxVisible / 2));
+        let endPage = Math.min(pagination.total_pages, startPage + maxVisible - 1);
+
+        if (endPage - startPage + 1 < maxVisible) {
+            startPage = Math.max(1, endPage - maxVisible + 1);
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            const pageBtn = document.createElement('button');
+            pageBtn.className = `relative inline-flex items-center px-3 py-2 border text-sm font-medium ${i === pagination.current_page
+                ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                }`;
+            pageBtn.textContent = i;
+            pageBtn.onclick = () => goToPage(i);
+            pageNumbers.appendChild(pageBtn);
+        }
+    }
+
+    // Go to specific page
+    function goToPage(page) {
+        currentPage = page;
+        loadTransactions(currentPage, currentFilters, currentPerPage);
     }
 
     // View Transaction Details
@@ -690,47 +757,6 @@
 
     }
 
-    // Edit Transaction
-    function editTransaction(transactionId) {
-        const transaction = transactionsData.find(t => t.id === transactionId);
-        if (!transaction) {
-            showMessage('Transaction not found', 'error');
-            return;
-        }
-
-        // Reset form first
-        resetForm();
-
-        // Load products for the dropdown (important for adding new items during edit)
-        loadProducts();
-
-        // Populate form with transaction data
-        document.getElementById('transactionId').value = transaction.id;
-        document.getElementById('transactionName').value = transaction.customer_name;
-        document.getElementById('paymentStatus').value = transaction.status_value === 'lunas' ? 'true' : 'false';
-
-        // Set transaction date
-        if (transaction.transaction_date) {
-            const date = new Date(transaction.transaction_date);
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            const hours = String(date.getHours()).padStart(2, '0');
-            const minutes = String(date.getMinutes()).padStart(2, '0');
-            const datetimeLocal = `${year}-${month}-${day}T${hours}:${minutes}`;
-            document.getElementById('transactionDateTime').value = datetimeLocal;
-        }
-
-        // Load existing items into the table
-        loadTransactionItems(transaction.items);
-
-        // Change modal title
-        document.getElementById('transactionModalTitle').textContent = 'Edit Transaction';
-
-        // Show modal
-        document.getElementById('transactionModal').classList.remove('hidden');
-    }
-
     // Load transaction items into the table
     function loadTransactionItems(items) {
         const tableBody = document.getElementById('itemsTableBody');
@@ -810,14 +836,6 @@
         }
     }
 
-    // Delete item from the items table
-    function deleteItemTable(itemId) {
-        const row = document.getElementById(`item-row-${itemId}`);
-        if (row) {
-            row.remove();
-        }
-    }
-
     // Reset table items
     function resetItemsTable() {
         const tableBody = document.getElementById('itemsTableBody');
@@ -832,166 +850,63 @@
         isInputingItem = false;
     }
 
-    // reset form
-    function resetForm() {
-        document.getElementById('transactionForm').reset();
-        document.getElementById('transactionId').value = '';
-        document.getElementById('transactionModalTitle').textContent = 'New Transaction';
-        resetItemsTable();
-        existingItems = [];
-        newItems = [];
-    }
+    // Filter and pagination event listeners
+    document.getElementById('applyFiltersBtn').addEventListener('click', function () {
+        // Collect filter values
+        currentFilters = {
+            filter_id: document.getElementById('filterId').value,
+            filter_customer_name: document.getElementById('filterCustomer').value,
+            filter_status: document.getElementById('filterStatus').value,
+            filter_payment_term: document.getElementById('filterPaymentTerm').value,
+            filter_due_date: document.getElementById('filterDueDate').value,
+            filter_transaction_date: document.getElementById('filterTransactionDate').value
+        };
+        // Remove empty filters
+        Object.keys(currentFilters).forEach(key => {
+            if (!currentFilters[key]) delete currentFilters[key];
+        });
+        currentPage = 1; // Reset to first page
+        loadTransactions(currentPage, currentFilters, currentPerPage);
+    });
+
+    document.getElementById('clearFiltersBtn').addEventListener('click', function () {
+        // Clear all filter inputs
+        document.getElementById('filterId').value = '';
+        document.getElementById('filterCustomer').value = '';
+        document.getElementById('filterStatus').value = '';
+        document.getElementById('filterPaymentTerm').value = '';
+        document.getElementById('filterDueDate').value = '';
+        document.getElementById('filterTransactionDate').value = '';
+        currentFilters = {};
+        currentPage = 1;
+        loadTransactions(currentPage, currentFilters, currentPerPage);
+    });
+
+    document.getElementById('perPage').addEventListener('change', function () {
+        currentPerPage = parseInt(this.value);
+        currentPage = 1; // Reset to first page
+        loadTransactions(currentPage, currentFilters, currentPerPage);
+    });
+
+    document.getElementById('prevPageBtn').addEventListener('click', function () {
+        if (paginationData && paginationData.has_previous) {
+            goToPage(paginationData.previous_page);
+        }
+    });
+
+    document.getElementById('nextPageBtn').addEventListener('click', function () {
+        if (paginationData && paginationData.has_next) {
+            goToPage(paginationData.next_page);
+        }
+    });
 
     // Load Transactions handler
     document.getElementById('loadTransactionsBtn').addEventListener('click', function (event) {
         event.preventDefault();
-        loadTransactions();
+        currentPage = 1;
+        currentFilters = {};
+        loadTransactions(currentPage, currentFilters, currentPerPage);
     });
-
-    // Submit Transaction
-    document.getElementById('saveTransactionBtn').addEventListener('click', async function (event) {
-        event.preventDefault();
-        const transactionId = document.getElementById('transactionId').value;
-        const transactionName = document.getElementById('transactionName').value;
-        // Get payment term
-        const paymentSelect = document.getElementById('paymentTerm');
-        const paymentTerm = paymentSelect.options[paymentSelect.selectedIndex].value;
-        // Get datetime
-        const transactionDate = document.getElementById('transactionDateTime').value;
-
-        // Check if this is an edit or create operation
-        const isEdit = transactionId && transactionId !== '';
-
-        if (!isEdit && newItems.length === 0) {
-            alert('Please add at least one item to the transaction.');
-            return;
-        }
-
-        try {
-            let requestData;
-
-            if (isEdit) {
-                // Edit operation - update basic info and items
-                requestData = {
-                    action: 'update',
-                    id: transactionId,
-                    name: transactionName,
-                    payment_term: paymentTerm,
-                    items: existingItems.concat(newItems) // Combine existing and new items
-                };
-            } else {
-                // Create operation - include items
-                requestData = {
-                    action: 'create',
-                    name: transactionName,
-                    payment_term: paymentTerm,
-                    datetime: transactionDate,
-                    items: newItems
-                };
-            }
-
-            console.log('Request Data:', requestData);
-
-            const response = await fetch(TRANSACTION_API_BASE, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
-                },
-                body: JSON.stringify(requestData)
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                const message = isEdit ? 'Transaction updated successfully!' : 'Transaction created successfully!';
-                showMessage(message, 'success');
-                document.getElementById('transactionModal').classList.add('hidden');
-                resetForm();
-                // Refresh the transaction list
-                loadTransactions();
-            } else {
-                showMessage(result.message || 'Failed to save transaction', 'error');
-            }
-        } catch (error) {
-            showMessage('Error saving transaction: ' + error.message, 'error');
-        }
-    });
-
-    // Add item to the transaction
-    document.getElementById('addItem').addEventListener('click', function (event) {
-        event.preventDefault();
-        // Logic to add item to the items table
-        const productId = document.getElementById('productName').value;
-        const qty = document.getElementById('productQty').value;
-        if (!productId || !qty) {
-            alert('Please select a product and enter quantity.');
-            return;
-        }
-
-        // Get product details
-        const productSelect = document.getElementById('productName');
-        const productName = productSelect.options[productSelect.selectedIndex].text;
-
-        // Get product price from the loaded products data
-        const selectedProduct = productList.find(p => p.id == productId);
-        if (!selectedProduct) {
-            alert('Product not found in loaded products.');
-            return;
-        }
-
-        const tableBody = document.getElementById('itemsTableBody');
-        if (isInputingItem === false && existingItems.length === 0) {
-            tableBody.innerHTML = ''; // Clear "No items added yet." message
-        }
-
-        // Create new row for the item
-        const rowIndex = existingItems.length + newItems.length;
-        const newRow = document.createElement('tr');
-        newRow.className = 'hover:bg-gray-50';
-        newRow.id = `item-row-new-${newItems.length}`;
-        newRow.innerHTML = `
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                <button onclick="deleteNewItem(${newItems.length})"
-                        class="text-red-600 hover:text-red-900 p-1 rounded" title="Delete Item">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                    </svg>
-                </button>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${productName}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${qty}</td>
-        `;
-        tableBody.appendChild(newRow);
-        isInputingItem = true;
-
-        // Store item for later submission
-        newItems.push({
-            product_id: productId,
-            product_name: productName,
-            qty: qty,
-            price_per_item: selectedProduct.raw_price
-        });
-
-        // Clear inputs
-        document.getElementById('productName').value = '';
-        document.getElementById('productQty').value = '';
-
-    });
-
-    // Delete new item from table (for newly added items during edit)
-    function deleteNewItem(index) {
-        if (confirm('Are you sure you want to remove this item from the transaction?')) {
-            const row = document.getElementById(`item-row-new-${index}`);
-            if (row) {
-                row.remove();
-                // Remove from newItems array
-                if (newItems && newItems[index]) {
-                    newItems.splice(index, 1);
-                }
-            }
-        }
-    }
 
 
 </script>

@@ -127,6 +127,21 @@ class ProductTransactionPageView(PermissionRequiredMixin, View):
         volume_transaction = format_rupiah(TransactionService._get_income_today(request))
         cash_on_hand = format_rupiah(TransactionService._get_paid_transaction_today())
         pending_payment = format_rupiah(TransactionService._get_pending_payment())
-        print(pending_payment)
 
         return render(request, 'product_transaction.html', {'volume_transaction': volume_transaction, 'cash_on_hand': cash_on_hand, 'pending_payment': pending_payment})
+    
+
+class ProductTransactionFilterPageView(PermissionRequiredMixin, View):
+    """
+    View for filter transaction
+    """
+    group_required = 'group_access_product'
+    permission_required = 'product.view_product'
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name__icontains=self.group_required).exists():
+            raise PermissionDenied
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request):
+        return render(request, 'product_transaction_filter.html')
