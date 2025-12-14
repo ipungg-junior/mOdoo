@@ -391,7 +391,22 @@ class TransactionService:
         action = json_request.get('action')
 
         if action == 'list':
-            return TransactionService.list_transaction(request)
+            # Extract filters and pagination parameters
+            filters = {
+                'id': json_request.get('filter_id', '').strip(),
+                'customer_name': json_request.get('filter_customer_name', '').strip(),
+                'status': json_request.get('filter_status', '').strip(),
+                'payment_term': json_request.get('filter_payment_term', '').strip(),
+                'due_date': json_request.get('filter_due_date', '').strip(),
+                'transaction_date': json_request.get('filter_transaction_date', '').strip(),
+            }
+            # Remove empty filters
+            filters = {k: v for k, v in filters.items() if v}
+
+            page = int(json_request.get('page', 1))
+            per_page = int(json_request.get('per_page', 10))
+
+            return TransactionService.list_transaction(request, filters, page, per_page)
         elif action == 'create':
             # return TransactionService.create_transaction(request, json_request)
             return TransactionService.create_transaction_v2(request, json_request)
@@ -476,9 +491,42 @@ class TransactionService:
         })
 
     @staticmethod
-    def list_transaction(request):
-        """List all transactions with their items"""
-        transactions = Transaction.objects.select_related().all().order_by('-transaction_date')
+    def list_transaction(request, filters=None, page=1, per_page=10):
+        """List transactions with filtering and pagination"""
+        from django.core.paginator import Paginator
+        from django.db.models import Q
+
+        # Start with base queryset
+        transactions_query = Transaction.objects.select_related('tmp_status', 'payment_term').order_by('-transaction_date')
+
+        # Apply filters if provided
+        if filters:
+            query_conditions = Q()
+
+            if filters.get('id'):
+                query_conditions &= Q(id__icontains=filters['id'])
+
+            if filters.get('customer_name'):
+                query_conditions &= Q(customer_name__icontains=filters['customer_name'])
+
+            if filters.get('status'):
+                query_conditions &= Q(tmp_status__name__icontains=filters['status'])
+
+            if filters.get('payment_term'):
+                query_conditions &= Q(payment_term__name__icontains=filters['payment_term'])
+
+            if filters.get('due_date'):
+                query_conditions &= Q(due_date__date=filters['due_date'])
+
+            if filters.get('transaction_date'):
+                query_conditions &= Q(transaction_date__date=filters['transaction_date'])
+
+            transactions_query = transactions_query.filter(query_conditions)
+
+        # Apply pagination
+        paginator = Paginator(transactions_query, per_page)
+        page_obj = paginator.get_page(page)
+
         transaction_data = []
 
         # Calculate total transaction today
@@ -488,7 +536,7 @@ class TransactionService:
             transaction_date__date=today
         ).aggregate(total=Sum('total_price'))['total'] or 0
 
-        for transaction in transactions:
+        for transaction in page_obj.object_list:
             # Get transaction items
             items = TransactionItem.objects.filter(transaction=transaction)
             items_data = []
@@ -505,9 +553,9 @@ class TransactionService:
                 'id': transaction.id,
                 'customer_name': transaction.customer_name or 'N/A',
                 'total_price': str(format_rupiah(transaction.total_price)) if transaction.total_price else '0,00',
-                'status': transaction.tmp_status.get_display_name(),
-                'status_value': transaction.tmp_status.name,
-                'payment_term': transaction.payment_term.get_display_name(),
+                'status': transaction.tmp_status.get_display_name() if transaction.tmp_status else 'N/A',
+                'status_value': transaction.tmp_status.name if transaction.tmp_status else 'unpaid',
+                'payment_term': transaction.payment_term.get_display_name() if transaction.payment_term else 'N/A',
                 'due_date': transaction.due_date.strftime('%Y-%m-%d') if transaction.due_date else None,
                 'transaction_date': transaction.transaction_date.strftime('%Y-%m-%d %H:%M:%S') if transaction.transaction_date else None,
                 'items': items_data,
@@ -518,6 +566,16 @@ class TransactionService:
             'success': True,
             'data': {
                 'transactions': transaction_data,
+                'pagination': {
+                    'current_page': page_obj.number,
+                    'total_pages': paginator.num_pages,
+                    'total_items': paginator.count,
+                    'per_page': per_page,
+                    'has_next': page_obj.has_next(),
+                    'has_previous': page_obj.has_previous(),
+                    'next_page': page_obj.next_page_number() if page_obj.has_next() else None,
+                    'previous_page': page_obj.previous_page_number() if page_obj.has_previous() else None
+                },
                 'volume_transaction': str(format_rupiah(total_today)),
                 'cash_on_hand': str(format_rupiah(TransactionService._get_paid_transaction_today())),
                 'pending_payment': str(format_rupiah(TransactionService._get_pending_payment()))
