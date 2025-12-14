@@ -141,6 +141,7 @@
 <!-- Transaction Table -->
 <h2 class="text-lg md:text-xl font-semibold mt-2 md:mt-4 mb-4 mx-2 md:mx-0 text-gray-800">Transaction List</h2>
 
+
 <div class="bg-white rounded-lg shadow-sm border mx-2 md:mx-0 overflow-hidden">
     <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
@@ -178,7 +179,45 @@
             </tbody>
         </table>
     </div>
+    <!-- Pagination -->
+    <div id="paginationContainer" class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6 hidden">
+        <div class="flex items-center justify-between">
+            <div class="flex px-4 py-4 items-center gap-2">
+                <label for="perPage" class="text-xs font-medium text-gray-700">Show:</label>
+                <select id="perPage" class="px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                    <option value="5">5</option>
+                    <option value="10" selected>10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                </select>
+                <span class="text-xs text-gray-600">per page</span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button id="prevPageBtn"
+                    class="relative inline-flex items-center px-1 py-1 md:px-2 md:py-2 rounded-l-md border border-gray-300 bg-white text-xs md:text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    disabled>
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+
+                <div class="flex space-x-1">
+                    <span id="pageNumbers" class="relative z-0 inline-flex"></span>
+                </div>
+
+                <button id="nextPageBtn"
+                    class="relative ml-3 inline-flex items-center px-1 py-1 md:px-2 md:py-2 rounded-r-md border border-gray-300 bg-white text-xs md:text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    disabled>
+                    <svg class="ml-1 h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
+
+
 
 <!-- Transaction Modal -->
 <div id="transactionModal" class="modal-overlay hidden">
@@ -311,6 +350,12 @@
     let existingItems = []; // Existing items when editing
     let newItems = []; // Newly added items during edit
 
+    // Pagination and filter state
+    let currentPage = 1;
+    let currentPerPage = 10;
+    let currentFilters = {};
+    let paginationData = null;
+
 
     // Add Transaction Modal
     document.getElementById('addTransactionBtn').addEventListener('click', function () {
@@ -434,7 +479,13 @@
     }
 
     // Load Transactions
-    async function loadTransactions() {
+    async function loadTransactions(page = 1, filters = {}, perPage = currentPerPage) {
+        const requestData = {
+            action: 'list',
+            page: page,
+            per_page: perPage,
+            ...filters
+        };
         try {
             const response = await fetch(TRANSACTION_API_BASE, {
                 method: 'POST',
@@ -442,7 +493,7 @@
                     'Content-Type': 'application/json',
                     'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
                 },
-                body: JSON.stringify({ action: 'list' })
+                body: JSON.stringify(requestData)
             });
 
             const result = await response.json();
@@ -450,6 +501,7 @@
             if (result.success) {
                 transactionsData = result.data.transactions;
                 renderTransactions(result.data.transactions);
+                renderPagination(result.data.pagination);
                 // Update total transaction today
                 document.getElementById('volume-transaction').textContent = 'Rp. ' + result.data.volume_transaction;
                 document.getElementById('cash-on-hand').textContent = 'Rp. ' + result.data.cash_on_hand;
@@ -524,6 +576,56 @@
             `;
             tableBody.appendChild(row);
         });
+    }
+
+    // Render Pagination
+    function renderPagination(pagination) {
+        const container = document.getElementById('paginationContainer');
+        const prevBtn = document.getElementById('prevPageBtn');
+        const nextBtn = document.getElementById('nextPageBtn');
+        const pageNumbers = document.getElementById('pageNumbers');
+
+        if (pagination.total_pages <= 1) {
+            container.classList.add('hidden');
+            return;
+        }
+
+        container.classList.remove('hidden');
+
+        // Update showing info
+        const start = (pagination.current_page - 1) * pagination.per_page + 1;
+        const end = Math.min(pagination.current_page * pagination.per_page, pagination.total_items);
+
+        // Update buttons
+        prevBtn.disabled = !pagination.has_previous;
+        nextBtn.disabled = !pagination.has_next;
+
+        // Render page numbers
+        pageNumbers.innerHTML = '';
+        const maxVisible = 5;
+        let startPage = Math.max(1, pagination.current_page - Math.floor(maxVisible / 2));
+        let endPage = Math.min(pagination.total_pages, startPage + maxVisible - 1);
+
+        if (endPage - startPage + 1 < maxVisible) {
+            startPage = Math.max(1, endPage - maxVisible + 1);
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            const pageBtn = document.createElement('button');
+            pageBtn.className = `relative inline-flex items-center px-2 py-1 md:px-3 md:py-2 border text-xs md:text-sm font-medium ${i === pagination.current_page
+                ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                }`;
+            pageBtn.textContent = i;
+            pageBtn.onclick = () => goToPage(i);
+            pageNumbers.appendChild(pageBtn);
+        }
+    }
+
+    // Go to specific page
+    function goToPage(page) {
+        currentPage = page;
+        loadTransactions(currentPage, currentFilters, currentPerPage);
     }
 
     // View Transaction Details
@@ -841,6 +943,24 @@
         existingItems = [];
         newItems = [];
     }
+
+    document.getElementById('perPage').addEventListener('change', function () {
+        currentPerPage = parseInt(this.value);
+        currentPage = 1; // Reset to first page
+        loadTransactions(currentPage, currentFilters, currentPerPage);
+    });
+
+    document.getElementById('prevPageBtn').addEventListener('click', function () {
+        if (paginationData && paginationData.has_previous) {
+            goToPage(paginationData.previous_page);
+        }
+    });
+
+    document.getElementById('nextPageBtn').addEventListener('click', function () {
+        if (paginationData && paginationData.has_next) {
+            goToPage(paginationData.next_page);
+        }
+    });
 
     // Load Transactions handler
     document.getElementById('loadTransactionsBtn').addEventListener('click', function (event) {
