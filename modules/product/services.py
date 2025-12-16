@@ -420,6 +420,10 @@ class TransactionService:
             return TransactionService.get_payment_terms(request)
         elif action == 'change_status_transaction':
             return TransactionService.change_status_transaction(request, json_request)
+        elif action == 'get_transaction_chart':
+            return TransactionService.get_transaction_chart(request)
+        elif action == 'get_daily_totals':
+            return TransactionService.get_daily_totals(request)
         else:
             return JsonResponse({'success': False, 'message': f'Unknown POST action: {action}'}, status=400)
 
@@ -967,8 +971,58 @@ class TransactionService:
 
         except Transaction.DoesNotExist:
             return JsonResponse({'success': False, 'message': 'Transaction not found'}, status=404)
-        except ValidationError as e:
-            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+    @staticmethod
+    def get_transaction_chart(request):
+        """Return transaction volume data for the last 7 days"""
+        from django.utils import timezone
+        from datetime import timedelta
+
+        today = timezone.now().date()
+        dates = []
+        amounts = []
+
+        for i in range(6, -1, -1):  # Last 7 days, from oldest to newest
+            date = today - timedelta(days=i)
+            total = Transaction.objects.filter(
+                transaction_date__date=date
+            ).aggregate(total=Sum('total_price'))['total'] or 0
+            dates.append(date.strftime('%d-%m-%Y'))
+            amounts.append(float(total))
+
+        return JsonResponse({
+            'success': True,
+            'data': {
+                'dates': dates,
+                'amounts': amounts
+            }
+        })
+
+    @staticmethod
+    def get_daily_totals(request):
+        """Return daily transaction totals for the last 7 days"""
+        from django.utils import timezone
+        from datetime import timedelta
+
+        today = timezone.now().date()
+        daily_totals = []
+
+        for i in range(6, -1, -1):  # Last 7 days, from oldest to newest
+            date = today - timedelta(days=i)
+            total = Transaction.objects.filter(
+                transaction_date__date=date
+            ).aggregate(total=Sum('total_price'))['total'] or 0
+            daily_totals.append({
+                'date': date.strftime('%d-%m-%Y'),
+                'income': format_rupiah(total)
+            })
+
+        return JsonResponse({
+            'success': True,
+            'data': {
+                'daily_totals': daily_totals
+            }
+        })
 
     @staticmethod
     def delete_transaction(request, data):
