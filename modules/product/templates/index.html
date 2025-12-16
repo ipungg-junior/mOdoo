@@ -256,11 +256,8 @@
             <div class="flex flex-col md:flex-row gap-4">
                 <!-- Product Image -->
                 <div class="flex-shrink-0">
-                    <div class="w-32 h-32 bg-gray-200 rounded-lg flex items-center justify-center">
-                        <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                        </svg>
+                    <div class="w-32 h-32 bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
+                        <img src="https://picsum.photos/300/300?random=${product.id % 1000}" alt="${product.name}" class="w-full h-full object-cover">
                     </div>
                 </div>
                 <!-- Product Info -->
@@ -423,11 +420,13 @@
             card.className = 'bg-white rounded-lg shadow-sm border overflow-hidden hover:shadow-md transition-shadow duration-200 cursor-pointer';
             card.onclick = () => showProductDetail(product);
 
+            // Generate example image based on product ID for consistency
+            const imageId = product.id % 1000; // Use product ID to get consistent images
+            const imageUrl = `https://picsum.photos/300/300?random=${imageId}`;
+
             card.innerHTML = `
-                <div class="aspect-square bg-gray-200 flex items-center justify-center">
-                    <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                    </svg>
+                <div class="aspect-square bg-gray-200 flex items-center justify-center overflow-hidden">
+                    <img src="${imageUrl}" alt="${product.name}" class="w-full h-full object-cover">
                 </div>
                 <div class="p-4">
                     <h3 class="font-semibold text-gray-900 text-sm mb-1 truncate">${product.name}</h3>
