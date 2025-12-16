@@ -139,7 +139,7 @@
 </div>
 
 <div class="overflow-x-auto pb-4">
-    <div id="productsContainer" class="grid grid-rows-3 gap-4" style="grid-auto-flow: column; grid-auto-columns: 280px;">
+    <div id="productsContainer" class="grid grid-rows-3 gap-4" style="grid-auto-flow: column; grid-auto-columns: 140px;">
         <!-- Products will be populated here -->
         <div class="flex items-center justify-center col-span-full text-gray-500 py-8">
             Click "Load Products" to load data
@@ -431,9 +431,9 @@
                 <div class="p-4">
                     <h3 class="font-semibold text-gray-900 text-sm mb-1 truncate">${product.name}</h3>
                     <p class="text-xs text-gray-500 mb-2">${categoryName}</p>
-                    <div class="flex items-center justify-between">
+                    <div class="flex flex-col items-start justify-between">
                         <span class="text-lg font-bold text-green-600">${product.price}</span>
-                        ${statusBadge}
+                        <span class="text-sm text-green-600 mx-2-">${statusBadge}</span>
                     </div>
                 </div>
             `;
