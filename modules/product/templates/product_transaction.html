@@ -2,7 +2,6 @@
 {% load static %}
 
 {% block head_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <style>
     .status-message {
@@ -128,23 +127,6 @@
     </div>
 </div>
 
-<!-- Chart and Daily Totals Grid -->
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-    <!-- Transaction Chart -->
-    <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border">
-        <h2 class="text-xl font-semibold mb-4">Transaction Volume (Last 7 Days)</h2>
-        <div id="transactionChart" style="height: 300px;"></div>
-    </div>
-
-    <!-- Daily Totals Cards -->
-    <div class="bg-white p-6 rounded-xl shadow-sm border">
-        <h2 class="text-lg font-semibold mb-4">Daily Totals</h2>
-        <div id="dailyTotalsContainer" class="space-y-3 max-h-80 overflow-y-auto">
-            <!-- Cards will be populated by JavaScript -->
-        </div>
-    </div>
-</div>
-
 <!-- Add Transaction Button -->
 <div class="flex justify-center md:justify-end mb-4 mx-2 md:mx-1">
     <button id="addTransactionBtn"
@@ -235,7 +217,22 @@
     </div>
 </div>
 
+<!-- Chart and Daily Totals Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+    <!-- Transaction Chart -->
+    <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border">
+        <h2 class="text-xl font-semibold mb-4">Transaction Volume (Last 7 Days)</h2>
+        <div id="transactionChart" style="height: 300px;"></div>
+    </div>
 
+    <!-- Daily Totals Cards -->
+    <div class="bg-white p-6 rounded-xl shadow-sm border">
+        <h2 class="text-lg font-semibold mb-4">Daily Totals</h2>
+        <div id="dailyTotalsContainer" class="space-y-3 max-h-80 overflow-y-auto">
+            <!-- Cards will be populated by JavaScript -->
+        </div>
+    </div>
+</div>
 
 <!-- Transaction Modal -->
 <div id="transactionModal" class="modal-overlay hidden">
@@ -1157,6 +1154,15 @@
 
     // Render ApexChart
     function renderTransactionChart(dates, amounts) {
+        // Detect mobile device
+        const isMobile = window.innerWidth < 768;
+
+        // Format dates for mobile (exclude year)
+        const formattedDates = isMobile ? dates.map(date => {
+            const parts = date.split('-');
+            return `${parts[0]}-${parts[1]}`; // dd-mm
+        }) : dates;
+
         const options = {
             series: [{
                 name: 'Transaction Volume',
@@ -1164,7 +1170,7 @@
             }],
             chart: {
                 type: 'area',
-                height: 300,
+                height: isMobile ? 250 : 300,
                 toolbar: {
                     show: false
                 }
@@ -1175,7 +1181,7 @@
             },
             stroke: {
                 curve: 'smooth',
-                width: 2
+                width: isMobile ? 1.5 : 2
             },
             fill: {
                 type: 'gradient',
@@ -1187,11 +1193,11 @@
                 }
             },
             xaxis: {
-                categories: dates,
+                categories: formattedDates,
                 labels: {
-                    rotate: -45,
+                    rotate: isMobile ? -90 : -45,
                     style: {
-                        fontSize: '12px'
+                        fontSize: isMobile ? '10px' : '12px'
                     }
                 }
             },
@@ -1199,6 +1205,9 @@
                 labels: {
                     formatter: function (value) {
                         return 'Rp. ' + (value / 1000).toFixed(0) + 'k';
+                    },
+                    style: {
+                        fontSize: isMobile ? '10px' : '12px'
                     }
                 }
             },
@@ -1217,7 +1226,17 @@
                     },
                     xaxis: {
                         labels: {
-                            rotate: -90
+                            rotate: -90,
+                            style: {
+                                fontSize: '10px'
+                            }
+                        }
+                    },
+                    yaxis: {
+                        labels: {
+                            style: {
+                                fontSize: '10px'
+                            }
                         }
                     }
                 }
