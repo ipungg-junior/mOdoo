@@ -125,36 +125,26 @@
     </div>
 </div>
 
-<!-- Products Table -->
+<!-- Products Cards -->
 <h2 class="text-xl font-semibold mt-8 mb-4">Products List</h2>
 
-<div class="overflow-x-auto bg-white rounded-lg shadow-sm">
-    <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
-            <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"><button id="loadProductsBtn"
-                        class="p-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors" title="Load Products">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
-                            </path>
-                        </svg></button></th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-            </tr>
-        </thead>
-        <tbody id="productsTableBody" class="bg-white divide-y divide-gray-200">
-            <tr>
-                <td colspan="7" class="px-6 py-4 text-center text-gray-500">
-                    Click "Load Products" to load data
-                </td>
-            </tr>
-        </tbody>
-    </table>
+<div class="mb-4">
+    <button id="loadProductsBtn" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors" title="Load Products">
+        <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+            </path>
+        </svg>
+        Load Products
+    </button>
+</div>
+
+<div class="overflow-x-auto pb-4">
+    <div id="productsContainer" class="grid grid-rows-3 gap-4" style="grid-auto-flow: column; grid-auto-columns: 140px;">
+        <!-- Products will be populated here -->
+        <div class="flex items-center justify-center col-span-full text-gray-500 py-8">
+            Click "Load Products" to load data
+        </div>
+    </div>
 </div>
 
 
@@ -247,6 +237,60 @@
         <div class="flex justify-end gap-2 p-4 border-t bg-gray-50">
             <button id="cancelProductBtn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
             <button id="saveProductBtn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- Product Detail Modal -->
+<div id="productDetailModal" class="modal-overlay hidden">
+    <div class="modal-content w-full max-w-2xl mx-4">
+        <div class="flex items-center justify-between p-4 border-b">
+            <h3 class="text-lg font-semibold">Product Details</h3>
+            <button id="closeProductDetailModal" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="p-4">
+            <div class="flex flex-col md:flex-row gap-4">
+                <!-- Product Image -->
+                <div class="flex-shrink-0">
+                    <div class="w-32 h-32 bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
+                        <img src="https://picsum.photos/300/300?random=${product.id % 1000}" alt="${product.name}" class="w-full h-full object-cover">
+                    </div>
+                </div>
+                <!-- Product Info -->
+                <div class="flex-1">
+                    <h4 class="text-xl font-bold text-gray-900 mb-2" id="detailProductName"></h4>
+                    <div class="space-y-2">
+                        <div>
+                            <span class="text-sm font-medium text-gray-500">Category:</span>
+                            <span class="text-sm text-gray-900 ml-2" id="detailProductCategory"></span>
+                        </div>
+                        <div>
+                            <span class="text-sm font-medium text-gray-500">Price:</span>
+                            <span class="text-lg font-bold text-green-600 ml-2" id="detailProductPrice"></span>
+                        </div>
+                        <div>
+                            <span class="text-sm font-medium text-gray-500">Quantity:</span>
+                            <span class="text-sm text-gray-900 ml-2" id="detailProductQty"></span>
+                        </div>
+                        <div>
+                            <span class="text-sm font-medium text-gray-500">Status:</span>
+                            <span class="ml-2" id="detailProductStatus"></span>
+                        </div>
+                        <div>
+                            <span class="text-sm font-medium text-gray-500">Description:</span>
+                            <p class="text-sm text-gray-900 mt-1" id="detailProductDescription"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="flex justify-end gap-2 p-4 border-t bg-gray-50">
+            <button id="editProductBtn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700">Edit Product</button>
+            <button id="closeDetailBtn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">Close</button>
         </div>
     </div>
 </div>
@@ -356,42 +400,70 @@
         btn.innerHTML = originalHTML;
     }
 
-    // Render Products
+    // Render Products as Cards
     function renderProducts(products) {
-        const tbody = document.getElementById('productsTableBody');
-        tbody.innerHTML = '';
+        const container = document.getElementById('productsContainer');
+        container.innerHTML = '';
 
         if (products.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">No products found</td></tr>';
+            container.innerHTML = '<div class="flex items-center justify-center col-span-full text-gray-500 py-8">No products found</div>';
             return;
         }
 
-        var productCount = 1;
         products.forEach(product => {
             const categoryName = product.category ? product.category.name : 'No Category';
             const statusBadge = product.is_active ?
                 '<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Active</span>' :
                 '<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Inactive</span>';
 
-            const row = `
-                <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${productCount}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${product.name}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${categoryName}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${product.qty}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${product.price}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">${statusBadge}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button class="text-indigo-600 hover:text-indigo-900 mr-2" onclick="editProduct(${product.id})">Edit</button>
-                        <button class="text-red-600 hover:text-red-900" onclick="deleteProduct(${product.id}, '${product.name}')">Delete</button>
-                    </td>
-                </tr>
+            const card = document.createElement('div');
+            card.className = 'bg-white rounded-lg shadow-sm border overflow-hidden hover:shadow-md transition-shadow duration-200 cursor-pointer';
+            card.onclick = () => showProductDetail(product);
+
+            // Generate example image based on product ID for consistency
+            const imageId = product.id % 1000; // Use product ID to get consistent images
+            const imageUrl = `https://picsum.photos/300/300?random=${imageId}`;
+
+            card.innerHTML = `
+                <div class="aspect-square bg-gray-200 flex items-center justify-center overflow-hidden">
+                    <img src="${imageUrl}" alt="${product.name}" class="w-full h-full object-cover">
+                </div>
+                <div class="p-4">
+                    <h3 class="font-semibold text-gray-900 text-sm mb-1 truncate">${product.name}</h3>
+                    <p class="text-xs text-gray-500 mb-2">${categoryName}</p>
+                    <div class="flex flex-col items-start justify-between">
+                        <span class="text-lg font-bold text-green-600">${product.price}</span>
+                        <span class="text-sm text-green-600 mx-2-">${statusBadge}</span>
+                    </div>
+                </div>
             `;
-            tbody.innerHTML += row;
-            productCount += 1;
+
+            container.appendChild(card);
         });
     }
 
+    // Show Product Detail Modal
+    function showProductDetail(product) {
+        const categoryName = product.category ? product.category.name : 'No Category';
+        const statusBadge = product.is_active ?
+            '<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Active</span>' :
+            '<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Inactive</span>';
+
+        document.getElementById('detailProductName').textContent = product.name;
+        document.getElementById('detailProductCategory').textContent = categoryName;
+        document.getElementById('detailProductPrice').textContent = product.price;
+        document.getElementById('detailProductQty').textContent = product.qty;
+        document.getElementById('detailProductStatus').innerHTML = statusBadge;
+        document.getElementById('detailProductDescription').textContent = product.description || 'No description available';
+
+        // Store product ID for edit functionality
+        document.getElementById('editProductBtn').onclick = () => {
+            hideModal('productDetailModal');
+            editProduct(product.id);
+        };
+
+        showModal('productDetailModal');
+    }
 
     function resetCategoryForm() {
         document.getElementById('categoryForm').reset();
@@ -590,6 +662,14 @@
 
     document.getElementById('productModal').addEventListener('click', (e) => {
         if (e.target.id === 'productModal') hideModal('productModal');
+    });
+
+    // Product Detail Modal listeners
+    document.getElementById('closeProductDetailModal').addEventListener('click', () => hideModal('productDetailModal'));
+    document.getElementById('closeDetailBtn').addEventListener('click', () => hideModal('productDetailModal'));
+
+    document.getElementById('productDetailModal').addEventListener('click', (e) => {
+        if (e.target.id === 'productDetailModal') hideModal('productDetailModal');
     });
 
 </script>
