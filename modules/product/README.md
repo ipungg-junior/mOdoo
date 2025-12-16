@@ -9,6 +9,9 @@ Product and category management module with transaction handling and inventory t
 - Transaction processing with inventory adjustment
 - Payment status and terms
 - Dashboard with total amounts and income tracking
+- Transaction analytics with interactive charts
+- Daily transaction totals visualization
+- Mobile-responsive chart scaling and date formatting
 
 ## Models
 - `Category`: Product categories
@@ -30,11 +33,11 @@ Product and category management module with transaction handling and inventory t
 - API Endpoints:
   - `/api/product/`: Product operations
   - `/api/category/`: Category operations
-  - `/api/transaction/`: Transaction operations
+  - `/api/transaction/`: Transaction operations (CRUD, chart data, daily totals)
 - Page Views:
   - `/product/`: Main dashboard
   - `/product/create-product/`: Product creation
-  - `/product/transaction/`: Transaction management
+  - `/product/transaction/`: Transaction management with analytics
 
 ## Version
-v0.1.0 - Basic product CRUD with transactions
+v0.1.1 - Enhanced with transaction analytics and mobile-responsive charts
