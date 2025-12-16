@@ -560,7 +560,7 @@
             // Populate form
             document.getElementById('productId').value = product.id;
             document.getElementById('productName').value = product.name;
-            document.getElementById('productPrice').value = product.price;
+            document.getElementById('productPrice').value = product.raw_price || product.price;
             document.getElementById('productDescription').value = product.description || '';
             document.getElementById('productCategory').value = product.category ? product.category.id : '';
             document.getElementById('productStatus').value = product.is_active ? 'true' : 'false';
