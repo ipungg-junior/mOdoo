@@ -1017,6 +1017,9 @@ class TransactionService:
                 'income': format_rupiah(total)
             })
 
+        # Reverse sort (higher to lower)
+        daily_totals.sort(key=lambda x: x['date'], reverse=True)
+
         return JsonResponse({
             'success': True,
             'data': {
