@@ -449,6 +449,26 @@ class TransactionService:
             today = timezone.now().date()
             transaction.paid_date = today       
             transaction.save()
+            
+            try:
+                receivable = AccountingReceivablePayment.objects.get(
+                    receivable_from='tr',
+                    reference_id=transaction.id
+                )
+                if transaction.tmp_status.name == 'paid':
+                    receivable.status = AccountingPaymentStatus.objects.get(name='paid')
+                else:
+                    receivable.status = AccountingPaymentStatus.objects.get(name='unpaid')
+                receivable.save()
+            except AccountingReceivablePayment.DoesNotExist:
+                if transaction.tmp_status.name == 'paid':
+                    transaction.tmp_status = PaymentStatus.objects.get(name='unpaid')
+                else:
+                    transaction.tmp_status = PaymentStatus.objects.get(name='paid')
+                transaction.paid_date = None
+                transaction.save()
+                return JsonResponse({'success': False, 'message': 'Associated receivable record not found, transaction status reverted'}, status=500)
+                
 
             return JsonResponse({
                 'success': True,
