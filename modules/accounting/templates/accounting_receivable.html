@@ -94,9 +94,8 @@
 </div>
 
 <!-- Receivables List -->
-
-<div class="grid grid-cols-2 gap-2">
-    <div class="bg-white rounded-lg shadow-sm p-6">
+<div class="grid grid-row md:grid-cols-2 gap-2">
+    <div class="bg-white border rounded-lg shadow-sm p-6">
         <h2 class="text-xl font-semibold mb-4">Pending Payment</h2>
         <div id="loadingState" class="text-center py-8">
             <div class="inline-flex items-center">
@@ -118,7 +117,7 @@
             </div>
         </div>
     </div>
-    <div class="bg-white rounded-lg shadow-sm p-6">
+    <div class="bg-white border rounded-lg shadow-sm p-6">
         <h2 class="text-xl font-semibold mb-4">Success Payment</h2>
         <div id="receivablesContainer-success" class="scrollable-cards">
             <div id="receivablesList-success" class="space-y-4">
@@ -222,6 +221,10 @@
                 </span>
             </div>
             <div class="flex flex-col text-sm">
+                <div>
+                    <span class="font-medium text-gray-700">Receivable:</span>
+                    <span class="text-gray-600">${receivable.receivable_name}</span>
+                </div>  
                 <div>
                     <span class="font-medium text-gray-700">Due date:</span>
                     <span class="text-gray-600">${receivable.due_date}</span>

@@ -9,6 +9,15 @@ from django.contrib.auth.models import User
 from engine.utils import format_rupiah
 from datetime import datetime
 
+# Import accounting models for receivable creation
+try:
+    from modules.accounting.models import AccountingReceivablePayment, AccountingPaymentStatus, AccountingPaymentTerm
+except ImportError:
+    # Handle case where accounting module is not available
+    AccountingReceivablePayment = None
+    AccountingPaymentStatus = None
+    AccountingPaymentTerm = None
+
 
 
 class CategoryService:
@@ -440,6 +449,26 @@ class TransactionService:
             today = timezone.now().date()
             transaction.paid_date = today       
             transaction.save()
+            
+            try:
+                receivable = AccountingReceivablePayment.objects.get(
+                    receivable_from='tr',
+                    reference_id=transaction.id
+                )
+                if transaction.tmp_status.name == 'paid':
+                    receivable.status = AccountingPaymentStatus.objects.get(name='paid')
+                else:
+                    receivable.status = AccountingPaymentStatus.objects.get(name='unpaid')
+                receivable.save()
+            except AccountingReceivablePayment.DoesNotExist:
+                if transaction.tmp_status.name == 'paid':
+                    transaction.tmp_status = PaymentStatus.objects.get(name='unpaid')
+                else:
+                    transaction.tmp_status = PaymentStatus.objects.get(name='paid')
+                transaction.paid_date = None
+                transaction.save()
+                return JsonResponse({'success': False, 'message': 'Associated receivable record not found, transaction status reverted'}, status=500)
+                
 
             return JsonResponse({
                 'success': True,
@@ -809,8 +838,39 @@ class TransactionService:
                     transaction.transaction_date = schedule_time
                     if schedule_time > datetime.now():
                         return JsonResponse({'success': False, 'message': 'Waktu transaksi melebihi batas hari ini'}, status=400)
-                        
+
                 transaction.save()
+
+                # Create receivable record for credit transactions (not cash)
+                if AccountingReceivablePayment:
+                    try:
+                        # Get or create accounting payment status and term
+                        receivable_status = AccountingPaymentStatus.objects.get(name=tmp_status.name)
+
+                        receivable_term = AccountingPaymentTerm.objects.get(name=payment_term.name)
+
+                        # Create receivable record
+                        receivable = AccountingReceivablePayment.objects.create(
+                            receivable_from='tr',  # 'tr' for Transaction
+                            reference_id=transaction.id,
+                            amount=total_price,
+                            due_date=transaction.due_date,
+                            status=receivable_status,
+                            term=receivable_term
+                        )
+                        print(f"Created receivable record {receivable.id} for transaction {transaction.id}")
+
+                    except Exception as e:
+                        print(f"Warning: Failed to create receivable record: {e}")
+                        # Don't fail the transaction if receivable creation fails
+                        
+                else:
+                    # If AccountingReceivablePayment model does not exist, rollback transaction
+                    for item in TransactionItem.objects.filter(transaction=transaction):
+                        item.delete()
+                    transaction.delete()
+                    print("AccountingReceivablePayment service not available, rolling back transaction creation.")
+                    return JsonResponse({'success': False, 'message': "AccountingReceivablePayment service not available, transaction rejected!"}, status=500)
             
             if failed_items:
                 print(f'Failed items due to insufficient stock: {failed_items}')
@@ -842,10 +902,10 @@ class TransactionService:
             })
             
         except ValidationError as e:
-            print(e)
+            print(f"Error creating transaction V2: {e}")
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
         except ValueError as e:
-            print(e)
+            print(f"Error creating transaction V2: {e}")
             return JsonResponse({'success': False, 'message': f'Invalid data format: {str(e)}'}, status=400)
 
     @staticmethod
