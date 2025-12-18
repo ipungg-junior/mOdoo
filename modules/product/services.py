@@ -566,7 +566,17 @@ class TransactionService:
                 query_conditions &= Q(customer_name__icontains=filters['customer_name'])
 
             if filters.get('status'):
-                query_conditions &= Q(tmp_status__name__icontains=filters['status'])
+                # Handle status filtering with mapping for backward compatibility
+                status_filter = filters['status']
+                if status_filter == 'paid':
+                    # Match 'paid' (new) or 'lunas' (legacy)
+                    query_conditions &= (Q(tmp_status__name='paid'))
+                elif status_filter == 'unpaid':
+                    # Match 'unpaid' (new) or 'belum_lunas' (legacy)
+                    query_conditions &= (Q(tmp_status__name='unpaid'))
+                else:
+                    # Fallback to contains search
+                    query_conditions &= (Q(tmp_status__name__icontains=status_filter) | Q(status__icontains=status_filter))
 
             if filters.get('payment_term'):
                 query_conditions &= Q(payment_term__name__icontains=filters['payment_term'])
