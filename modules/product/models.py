@@ -38,6 +38,7 @@ class Product(models.Model):
         blank=True
     )
     is_active = models.BooleanField(default=True)
+    image_url = models.CharField(max_length=260,blank=True, null=True, help_text="Storage URL for product image")
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
