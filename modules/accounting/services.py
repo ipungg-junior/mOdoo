@@ -74,6 +74,7 @@ class AccountReceivable:
         for r in receivables:
             data.append({
                 'id': r.id,
+                'receivable_name': r.get_display_name(),
                 'amount': ((r.amount)),
                 'due_date': r.due_date.isoformat() if r.due_date else None,
                 'status': r.status.display_name if r.status else 'N/A',
