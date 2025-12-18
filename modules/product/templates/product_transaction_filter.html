@@ -201,11 +201,12 @@
                     <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Term</th>
                     <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
                     <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction Date</th>
+                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
             </thead>
             <tbody id="allTransactionTableBody" class="bg-white divide-y divide-gray-200">
                 <tr>
-                    <td colspan="7" class="px-3 md:px-3 py-6 text-center text-gray-500">
+                    <td colspan="8" class="px-3 md:px-3 py-6 text-center text-gray-500">
                         <div class="flex flex-col items-center">
                             <svg class="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -472,7 +473,7 @@
         if (transactions.length === 0) {
             tableBody.innerHTML = `
                 <tr>
-                    <td colspan="7" class="px-3 md:px-6 py-8 text-center text-gray-500">
+                    <td colspan="8" class="px-3 md:px-6 py-8 text-center text-gray-500">
                         <div class="flex flex-col items-center">
                             <svg class="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -522,8 +523,18 @@
                         </span>
                     </td>
                     <td class="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${transaction.payment_term}</td>
-                    <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">${due_date}</td>                
-                    <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">${transaction.transaction_date}</td>                
+                    <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">${due_date}</td>
+                    <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">${transaction.transaction_date}</td>
+                    <td class="px-3 py-4 whitespace-nowrap text-sm font-medium">
+                        <div class="flex space-x-2">
+                            <button onclick="changeTransactionStatus(${transaction.id}, '${transaction.status_value}')"
+                                    class="text-blue-600 hover:text-blue-900 p-1 rounded" title="Change Status">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
             `;
             tableBody.appendChild(row);
         });
@@ -892,6 +903,41 @@
             goToPage(paginationData.next_page);
         }
     });
+
+    // Change Transaction Status
+    async function changeTransactionStatus(transactionId, currentStatus) {
+        const newStatus = currentStatus === 'paid' ? 'unpaid' : 'paid';
+        const confirmMessage = `Are you sure you want to change this transaction status to ${newStatus}?`;
+
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(TRANSACTION_API_BASE, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+                },
+                body: JSON.stringify({
+                    action: 'change_status_transaction',
+                    transactionId: transactionId
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showMessage(`Transaction status changed to ${newStatus} successfully!`, 'success');
+                loadTransactions(currentPage, currentFilters, currentPerPage);
+            } else {
+                showMessage(result.error || result.message, 'error');
+            }
+        } catch (error) {
+            showMessage('Failed to change transaction status: ' + error.message, 'error');
+        }
+    }
 
     // Load Transactions handler
     document.getElementById('loadTransactionsBtn').addEventListener('click', function (event) {
