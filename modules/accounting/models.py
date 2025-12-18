@@ -66,13 +66,17 @@ class AccountingReceivablePayment(models.Model):
         ('etc', 'Other'),
     ]
     receivable_from = models.CharField(max_length=3, choices=INCOME_VARIANT, default='etc', null=True, blank=True)
+    reference_id = models.CharField(max_length=100, null=True, blank=True)
     amount = models.DecimalField(max_digits=15, decimal_places=2)
     due_date = models.DateField(null=True, blank=True)
     status = models.ForeignKey(AccountingPaymentStatus, on_delete=models.SET_NULL, null=True)
     term = models.ForeignKey(AccountingPaymentTerm, on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
-        return f"Payment"
+        if self.receivable_from == 'tr':
+            return f"TR-{self.reference_id}"
+        else:
+            return f"{self.receivable_from}-{self.reference_id}"
     
     
 # Record for batch payments
