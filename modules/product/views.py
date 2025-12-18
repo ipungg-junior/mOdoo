@@ -20,8 +20,8 @@ class APIView(View):
         Handle GET requests - return data based on context
         """
         try:
-            # Parse JSON data from request body
-            json_request = json.loads(request.body.decode('utf-8'))
+            # For GET requests, parse query parameters or use empty dict
+            json_request = dict(request.GET.items()) if request.GET else {}
 
             if self.context == 'category_api':
                 # Category Service handling request
@@ -33,31 +33,38 @@ class APIView(View):
                 # Return 400 Bad request
                 return JsonResponse({'success': False, 'message': 'Invalid API context'}, status=400)
 
-        except json.JSONDecodeError:
-            return JsonResponse({'success': False, 'message': 'Invalid JSON data'}, status=400)
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
     def post(self, request):
         """
-        Handle POST requests - process JSON actions
+        Handle POST requests - process JSON actions or file uploads
         """
         try:
-            # Parse JSON data from request body
-            json_request = json.loads(request.body.decode('utf-8'))
-
-            if self.context == 'category_api':
-                # Category Service handling request
-                return CategoryService.process_post(request, json_request)
-            elif self.context == 'product_api':
-                # Product Service handling request
-                return ProductService.process_post(request, json_request)
-            elif self.context == 'product_transaction_api':
-                # Transaction Service handling request
-                return TransactionService.process_post(request, json_request)
+            # Check if this is a file upload request (multipart/form-data)
+            if request.FILES:
+                # Handle file upload requests
+                action = request.POST.get('action')
+                if action == 'upload_image' and self.context == 'product_api':
+                    return ProductService.upload_image(request)
+                else:
+                    return JsonResponse({'success': False, 'message': 'Invalid file upload action'}, status=400)
             else:
-                # Return 400 Bad request
-                return JsonResponse({'success': False, 'message': 'Invalid API context'}, status=400)
+                # Parse JSON data from request body for regular API calls
+                json_request = json.loads(request.body.decode('utf-8'))
+
+                if self.context == 'category_api':
+                    # Category Service handling request
+                    return CategoryService.process_post(request, json_request)
+                elif self.context == 'product_api':
+                    # Product Service handling request
+                    return ProductService.process_post(request, json_request)
+                elif self.context == 'product_transaction_api':
+                    # Transaction Service handling request
+                    return TransactionService.process_post(request, json_request)
+                else:
+                    # Return 400 Bad request
+                    return JsonResponse({'success': False, 'message': 'Invalid API context'}, status=400)
 
         except json.JSONDecodeError:
             print("Invalid JSON data received in POST request")

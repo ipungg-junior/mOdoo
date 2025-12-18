@@ -450,6 +450,59 @@ class ProductService:
 
         except Product.DoesNotExist:
             return JsonResponse({'success': False, 'message': 'Product not found'}, status=404)
+
+    @staticmethod
+    def upload_image(request):
+        """Handle product image upload"""
+        try:
+            product_id = request.POST.get('product_id')
+            if not product_id:
+                return JsonResponse({'success': False, 'message': 'Product ID is required'}, status=400)
+
+            # Get the uploaded file
+            if 'image' not in request.FILES:
+                return JsonResponse({'success': False, 'message': 'No image file provided'}, status=400)
+
+            image_file = request.FILES['image']
+
+            # Validate file type
+            allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
+            if image_file.content_type not in allowed_types:
+                return JsonResponse({'success': False, 'message': 'Invalid file type. Only JPEG, PNG, and GIF are allowed'}, status=400)
+
+            # Validate file size (10MB limit)
+            max_size = 10 * 1024 * 1024  # 10MB
+            if image_file.size > max_size:
+                return JsonResponse({'success': False, 'message': 'File too large. Maximum size is 10MB'}, status=400)
+
+            # Upload to Firebase
+            from engine.utils import firebase_storage
+            upload_result = firebase_storage.upload_product_image(image_file, product_id)
+
+            if not upload_result['success']:
+                return JsonResponse({'success': False, 'message': f'Upload failed: {upload_result["error"]}'}, status=500)
+
+            # Update product with image URL
+            try:
+                product = Product.objects.get(id=product_id)
+                product.image_url = upload_result['url']
+                product.save()
+
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Image uploaded successfully',
+                    'data': {
+                        'image_url': upload_result['url'],
+                        'filename': upload_result['filename']
+                    }
+                })
+
+            except Product.DoesNotExist:
+                return JsonResponse({'success': False, 'message': 'Product not found'}, status=404)
+
+        except Exception as e:
+            print(f"Error uploading image: {e}")
+            return JsonResponse({'success': False, 'message': f'Upload failed: {str(e)}'}, status=500)
         except Exception as e:
             return JsonResponse({
                 'success': False,
