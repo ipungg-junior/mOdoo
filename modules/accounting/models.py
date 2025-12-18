@@ -72,6 +72,12 @@ class AccountingReceivablePayment(models.Model):
     status = models.ForeignKey(AccountingPaymentStatus, on_delete=models.SET_NULL, null=True)
     term = models.ForeignKey(AccountingPaymentTerm, on_delete=models.SET_NULL, null=True)
 
+    def get_display_name(self):
+        if self.receivable_from == 'tr':
+            return f"TR-{self.reference_id}"
+        else:
+            return f"{self.receivable_from}-{self.reference_id}"
+
     def __str__(self):
         if self.receivable_from == 'tr':
             return f"TR-{self.reference_id}"
