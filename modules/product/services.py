@@ -6,7 +6,7 @@ from django.db.models import Sum
 from django.utils import timezone
 from .models import Product, Category, Transaction, TransactionItem, PaymentTerm, PaymentStatus
 from django.contrib.auth.models import User
-from engine.utils import format_rupiah
+from engine.utils import format_rupiah, firebase_storage
 from datetime import datetime
 
 # Import accounting models for receivable creation
@@ -189,6 +189,8 @@ class ProductService:
             return ProductService.update_product(request, json_request)
         elif action == 'delete':
             return ProductService.delete_product(request, json_request)
+        elif action == 'upload_image':
+            return ProductService.upload_product_image(request, json_request)
         else:
             return JsonResponse({'success': False, 'message': f'Unknown POST action: {action}'}, status=400)
 
@@ -222,6 +224,7 @@ class ProductService:
                 'price': str(format_rupiah(product.price)),
                 'raw_price': float(product.price),  # Add raw price for calculations
                 'is_active': product.is_active,
+                'image_url': product.image_url,
                 'created_at': product.created_at.isoformat() if product.created_at else None,
                 'updated_at': product.updated_at.isoformat() if product.updated_at else None,
             })
@@ -253,7 +256,7 @@ class ProductService:
 
         if not name or price is None:
             return JsonResponse({'success': False, 'message': 'Name and price are required'}, status=400)
-        
+
         if qty is None:
             qty = 0
 
@@ -267,7 +270,8 @@ class ProductService:
                 qty=qty,
                 description=description,
                 price=price,
-                is_active=is_active
+                is_active=is_active,
+                image_url=data.get('image_url')  # Add image_url support
             )
 
             if category_id:
@@ -295,7 +299,8 @@ class ProductService:
                         'name': product.category.name if product.category else None
                     } if product.category else None,
                     'price': str(product.price),
-                    'is_active': product.is_active
+                    'is_active': product.is_active,
+                    'image_url': product.image_url
                 }
             })
 
@@ -334,6 +339,8 @@ class ProductService:
                 product.description = description
             if is_active is not None:
                 product.is_active = is_active
+            if 'image_url' in data:
+                product.image_url = data.get('image_url')
 
             # Handle category
             if category_id is not None:
@@ -362,7 +369,8 @@ class ProductService:
                         'name': product.category.name if product.category else None
                     } if product.category else None,
                     'price': str(product.price),
-                    'is_active': product.is_active
+                    'is_active': product.is_active,
+                    'image_url': product.image_url
                 }
             })
 
@@ -390,7 +398,64 @@ class ProductService:
 
         except Product.DoesNotExist:
             return JsonResponse({'success': False, 'message': 'Product not found'}, status=404)
-        
+
+    @staticmethod
+    def upload_product_image(request, data):
+        """
+        Upload product image to Firebase Storage.
+
+        Args:
+            request: Django request object
+            data: Form data containing image file
+
+        Returns:
+            JsonResponse with upload result
+        """
+        product_id = data.get('product_id')
+        image_file = request.FILES.get('image')
+
+        if not image_file:
+            return JsonResponse({'success': False, 'message': 'No image file provided'}, status=400)
+
+        if not product_id:
+            return JsonResponse({'success': False, 'message': 'Product ID is required'}, status=400)
+
+        try:
+            # Verify product exists
+            Product.objects.get(id=product_id)
+
+            # Upload to Firebase Storage
+            result = firebase_storage.upload_product_image(image_file, product_id)
+
+            if result['success']:
+                # Save the image URL to the product
+                product = Product.objects.get(id=product_id)
+                product.image_url = result['url']
+                product.save()
+
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Image uploaded successfully',
+                    'data': {
+                        'image_url': result['url'],
+                        'filename': result['filename'],
+                        'compressed': result.get('compressed', False)
+                    }
+                })
+            else:
+                return JsonResponse({
+                    'success': False,
+                    'message': result.get('error', 'Upload failed')
+                }, status=500)
+
+        except Product.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Product not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': f'Upload error: {str(e)}'
+            }, status=500)
+
 
 class TransactionService:
 
