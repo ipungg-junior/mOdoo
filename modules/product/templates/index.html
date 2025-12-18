@@ -285,7 +285,7 @@
                 <!-- Product Image -->
                 <div class="flex-shrink-0">
                     <div class="w-32 h-32 bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
-                        <img src="${product.image_url || `https://picsum.photos/300/300?random=${product.id % 1000}`}" alt="${product.name}" class="w-full h-full object-cover">
+                        <img src="${product.image_url || `https://picsum.photos/300/300?random=${product.id % 1000}`}" alt="${product.name}" class="w-full h-full object-contain">
                     </div>
                 </div>
                 <!-- Product Info -->
@@ -431,7 +431,7 @@
         const reader = new FileReader();
 
         reader.onload = (e) => {
-            preview.innerHTML = `<img src="${e.target.result}" alt="Preview" class="w-full h-full object-cover">`;
+            preview.innerHTML = `<img src="${e.target.result}" alt="Preview" class="w-full h-full object-contain">`;
         };
 
         reader.readAsDataURL(file);
@@ -709,7 +709,7 @@
             // Handle existing image
             if (product.image_url) {
                 currentImageUrl = product.image_url;
-                document.getElementById('imagePreview').innerHTML = `<img src="${product.image_url}" alt="Current Image" class="w-full h-full object-cover">`;
+                document.getElementById('imagePreview').innerHTML = `<img src="${product.image_url}" alt="Current Image" class="w-full h-full object-contain">`;
                 document.getElementById('removeImageBtn').classList.remove('hidden');
             } else {
                 resetImagePreview();
