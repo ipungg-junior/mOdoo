@@ -822,22 +822,17 @@ class TransactionService:
                 transaction.save()
 
                 # Create receivable record for credit transactions (not cash)
-                if AccountingReceivablePayment and payment_term.name != 'cash':
+                if AccountingReceivablePayment:
                     try:
                         # Get or create accounting payment status and term
-                        receivable_status = AccountingPaymentStatus.objects.get(
-                            name='unpaid',
-                            defaults={'display_name': 'Unpaid', 'description': 'Payment not yet received'}
-                        )[0]
+                        receivable_status = AccountingPaymentStatus.objects.get(name=tmp_status.name)
 
-                        receivable_term = AccountingPaymentTerm.objects.get(
-                            name=payment_term.name,
-                            defaults={'display_name': payment_term.display_name, 'description': f'{payment_term.display_name} payment term'}
-                        )[0]
+                        receivable_term = AccountingPaymentTerm.objects.get(name=payment_term.name)
 
                         # Create receivable record
                         receivable = AccountingReceivablePayment.objects.create(
                             receivable_from='tr',  # 'tr' for Transaction
+                            reference_id=transaction.id,
                             amount=total_price,
                             due_date=transaction.due_date,
                             status=receivable_status,
@@ -850,11 +845,12 @@ class TransactionService:
                         # Don't fail the transaction if receivable creation fails
                         
                 else:
+                    # If AccountingReceivablePayment model does not exist, rollback transaction
                     for item in TransactionItem.objects.filter(transaction=transaction):
                         item.delete()
                     transaction.delete()
-                    print("error receivable")
-                    return JsonResponse({'success': False, 'message': "Failed server error!"}, status=501)
+                    print("AccountingReceivablePayment service not available, rolling back transaction creation.")
+                    return JsonResponse({'success': False, 'message': "AccountingReceivablePayment service not available, transaction rejected!"}, status=500)
             
             if failed_items:
                 print(f'Failed items due to insufficient stock: {failed_items}')
@@ -886,10 +882,10 @@ class TransactionService:
             })
             
         except ValidationError as e:
-            print(e)
+            print(f"Error creating transaction V2: {e}")
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
         except ValueError as e:
-            print(e)
+            print(f"Error creating transaction V2: {e}")
             return JsonResponse({'success': False, 'message': f'Invalid data format: {str(e)}'}, status=400)
 
     @staticmethod
