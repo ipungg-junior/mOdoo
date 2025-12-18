@@ -461,14 +461,37 @@ class TransactionService:
                     receivable.status = AccountingPaymentStatus.objects.get(name='unpaid')
                 receivable.save()
             except AccountingReceivablePayment.DoesNotExist:
-                if transaction.tmp_status.name == 'paid':
-                    transaction.tmp_status = PaymentStatus.objects.get(name='unpaid')
-                else:
-                    transaction.tmp_status = PaymentStatus.objects.get(name='paid')
-                transaction.paid_date = None
-                transaction.save()
-                return JsonResponse({'success': False, 'message': 'Associated receivable record not found, transaction status reverted'}, status=500)
-                
+                try:
+                    # if receivable record not found, we create one
+                    new_receivable = AccountingReceivablePayment.objects.create(
+                        receivable_from='tr',
+                        reference_id=transaction.id,
+                        amount=transaction.total_price,
+                        due_date=transaction.due_date,
+                        status=AccountingPaymentStatus.objects.get(name=transaction.tmp_status.name),
+                        term=AccountingPaymentTerm.objects.get(name=transaction.payment_term.name)
+                    )
+                    if not new_receivable:
+                        if transaction.tmp_status.name == 'paid':
+                            transaction.tmp_status = PaymentStatus.objects.get(name='unpaid')
+                        else:
+                            transaction.tmp_status = PaymentStatus.objects.get(name='paid')
+                        transaction.paid_date = None
+                        transaction.save()
+                        print('Failed to create new receivable record, revoke transaction status change')
+                        return JsonResponse({'success': False, 'message': 'Associated receivable record not found and creating failed'}, status=500)
+                    else:
+                        print(f'Created new receivable record {new_receivable.id} for transaction {transaction.id}')
+                        return JsonResponse({'success': True, 'message': 'Transaction status changed and new receivable'}, status=200)
+                except Exception as e:
+                    if transaction.tmp_status.name == 'paid':
+                        transaction.tmp_status = PaymentStatus.objects.get(name='unpaid')
+                    else:
+                        transaction.tmp_status = PaymentStatus.objects.get(name='paid')
+                    transaction.paid_date = None
+                    transaction.save()
+                    print(f'Error creating receivable record: {e}, revoke transaction status change')
+                    return JsonResponse({'success': False, 'message': 'Associated receivable record not found and creating failed'}, status=500)                                    
 
             return JsonResponse({
                 'success': True,
