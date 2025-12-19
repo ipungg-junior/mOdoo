@@ -26,20 +26,19 @@ def format_rupiah(amount):
         return f"{formatted_amount}"
 
 
-# Firebase Storage Service
+# Supabase Storage Service
 import os
 import uuid
 from io import BytesIO
 from PIL import Image
-import firebase_admin
-from firebase_admin import credentials, storage
 from django.conf import settings
 from django.core.files.uploadedfile import InMemoryUploadedFile
+from supabase import create_client, Client
 
 
-class FirebaseStorageService:
+class SupabaseStorageService:
     """
-    Firebase Storage service for handling media uploads with compression and organization.
+    Supabase Storage service for handling media uploads with compression and organization.
 
     Features:
     - Image compression to WebP format
@@ -49,24 +48,24 @@ class FirebaseStorageService:
     """
 
     def __init__(self):
-        """Initialize Firebase Storage service"""
+        """Initialize Supabase Storage service"""
         try:
-            # Check if Firebase is already initialized
-            if not firebase_admin._apps:
-                # Get Firebase credentials from Django settings
-                firebase_config = getattr(settings, 'FIREBASE_CONFIG', None)
-                if firebase_config:
-                    cred = credentials.Certificate(firebase_config)
-                    firebase_admin.initialize_app(cred, {
-                        'storageBucket': getattr(settings, 'FIREBASE_STORAGE_BUCKET', None)
-                    })
-                else:
-                    print("Warning: Firebase configuration not found in settings.")
+            # Get Supabase configuration from Django settings
+            self.supabase_url = getattr(settings, 'SUPABASE_URL', None)
+            self.supabase_key = getattr(settings, 'SUPABASE_ANON_KEY', None)
+            self.bucket_name = getattr(settings, 'SUPABASE_STORAGE_BUCKET', 'uploads')
 
-            self.bucket = storage.bucket()
+            if not all([self.supabase_url, self.supabase_key]):
+                print("Warning: Supabase configuration not found in settings.")
+                self.supabase: Client = None
+                self.initialized = False
+            else:
+                self.supabase: Client = create_client(self.supabase_url, self.supabase_key)
+                self.initialized = True
         except Exception as e:
-            print(f"Warning: Firebase Storage initialization failed: {e}")
-            self.bucket = None
+            print(f"Warning: Supabase Storage initialization failed: {e}")
+            self.supabase = None
+            self.initialized = False
 
     def _compress_image(self, image_file, quality=85, max_size=(1920, 1080)):
         """
@@ -141,7 +140,7 @@ class FirebaseStorageService:
 
     def upload_file(self, file_obj, directory='uploads', compress_image=True):
         """
-        Upload a file to Firebase Storage.
+        Upload a file to Supabase Storage.
 
         Args:
             file_obj: Django InMemoryUploadedFile or file-like object
@@ -151,10 +150,10 @@ class FirebaseStorageService:
         Returns:
             dict: Upload result with URL and metadata
         """
-        if not self.bucket:
+        if not self.initialized:
             return {
                 'success': False,
-                'error': 'Firebase Storage not initialized',
+                'error': 'Supabase Storage not initialized',
                 'url': None
             }
 
@@ -178,21 +177,42 @@ class FirebaseStorageService:
                     file_data = file_obj
                 filename = self._generate_filename(file_obj.name, directory)
 
-            # Upload to Firebase Storage
-            blob = self.bucket.blob(filename)
-            blob.upload_from_file(file_data, content_type=content_type)
+            # Read file data as bytes
+            if hasattr(file_data, 'read'):
+                file_content = file_data.read()
+                if isinstance(file_content, str):
+                    file_content = file_content.encode('utf-8')
+            else:
+                file_content = file_data
 
-            # Make the file publicly accessible
-            blob.make_public()
+            # Upload using Supabase SDK
+            response = self.supabase.storage.from_(self.bucket_name).upload(
+                path=filename,
+                file=file_content,
+                file_options={
+                    "content-type": content_type,
+                    "cache-control": "3600"
+                }
+            )
 
-            return {
-                'success': True,
-                'url': blob.public_url,
-                'filename': filename,
-                'size': getattr(file_obj, 'size', 0),
-                'content_type': content_type,
-                'compressed': compress_image and is_image
-            }
+            if response.status_code == 200 or response.status_code == 201:
+                # Get public URL
+                public_url = self.supabase.storage.from_(self.bucket_name).get_public_url(filename)
+
+                return {
+                    'success': True,
+                    'url': public_url,
+                    'filename': filename,
+                    'size': getattr(file_obj, 'size', 0),
+                    'content_type': content_type,
+                    'compressed': compress_image and is_image
+                }
+            else:
+                return {
+                    'success': False,
+                    'error': f'Upload failed: {response.status_code} - {response.json() if hasattr(response, "json") else "Unknown error"}',
+                    'url': None
+                }
 
         except Exception as e:
             return {
@@ -245,7 +265,7 @@ class FirebaseStorageService:
 
     def delete_file(self, file_url):
         """
-        Delete a file from Firebase Storage.
+        Delete a file from Supabase Storage.
 
         Args:
             file_url: Public URL of the file to delete
@@ -253,19 +273,26 @@ class FirebaseStorageService:
         Returns:
             bool: Success status
         """
-        if not self.bucket:
+        if not self.initialized:
             return False
 
         try:
-            # Extract filename from URL
-            # Firebase URLs typically end with /bucket/filename
-            url_parts = file_url.split('/')
-            filename = '/'.join(url_parts[-2:])  # Get bucket/filename part
+            # Extract filename from Supabase public URL
+            # Supabase URLs typically: /storage/v1/object/public/{bucket}/{path}
+            url_parts = file_url.split('/storage/v1/object/public/')
+            if len(url_parts) < 2:
+                print(f"Warning: Invalid Supabase URL format: {file_url}")
+                return False
 
-            blob = self.bucket.blob(filename)
-            blob.delete()
+            path_part = url_parts[1]
+            # Remove bucket name from path
+            filename = path_part.replace(f'{self.bucket_name}/', '', 1)
 
-            return True
+            # Delete using Supabase SDK
+            response = self.supabase.storage.from_(self.bucket_name).remove([filename])
+
+            # Check if deletion was successful
+            return len(response) > 0 and response[0].get('name') == filename
 
         except Exception as e:
             print(f"Warning: File deletion failed: {e}")
@@ -273,4 +300,4 @@ class FirebaseStorageService:
 
 
 # Global instance for easy import
-firebase_storage = FirebaseStorageService()
+supabase_storage = SupabaseStorageService()

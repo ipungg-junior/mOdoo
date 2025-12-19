@@ -6,7 +6,7 @@ from django.db.models import Sum
 from django.utils import timezone
 from .models import Product, Category, Transaction, TransactionItem, PaymentTerm, PaymentStatus
 from django.contrib.auth.models import User
-from engine.utils import format_rupiah, firebase_storage
+from engine.utils import format_rupiah, supabase_storage
 from datetime import datetime
 
 # Import accounting models for receivable creation
@@ -475,9 +475,8 @@ class ProductService:
             if image_file.size > max_size:
                 return JsonResponse({'success': False, 'message': 'File too large. Maximum size is 10MB'}, status=400)
 
-            # Upload to Firebase
-            from engine.utils import firebase_storage
-            upload_result = firebase_storage.upload_product_image(image_file, product_id)
+            # Upload to Supabase
+            upload_result = supabase_storage.upload_product_image(image_file, product_id)
 
             if not upload_result['success']:
                 return JsonResponse({'success': False, 'message': f'Upload failed: {upload_result["error"]}'}, status=500)
