@@ -60,6 +60,8 @@ class SupabaseStorageService:
                 self.supabase: Client = None
                 self.initialized = False
             else:
+                # Ensure URL doesn't have trailing slash for proper SDK operation
+                self.supabase_url = self.supabase_url.rstrip('/')
                 self.supabase: Client = create_client(self.supabase_url, self.supabase_key)
                 self.initialized = True
         except Exception as e:
