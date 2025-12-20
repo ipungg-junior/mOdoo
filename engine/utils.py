@@ -60,10 +60,17 @@ class SupabaseStorageService:
                 self.supabase: Client = None
                 self.initialized = False
             else:
-                # Ensure URL doesn't have trailing slash for proper SDK operation
+                # Supabase SDK expects URL without trailing slash
                 self.supabase_url = self.supabase_url.rstrip('/')
-                self.supabase: Client = create_client(self.supabase_url, self.supabase_key)
-                self.initialized = True
+                print(f"Initializing Supabase with URL: {self.supabase_url}")
+                try:
+                    self.supabase: Client = create_client(self.supabase_url, self.supabase_key)
+                    self.initialized = True
+                    print("Supabase Storage initialized successfully")
+                except Exception as e:
+                    print(f"Failed to initialize Supabase client: {e}")
+                    self.supabase = None
+                    self.initialized = False
         except Exception as e:
             print(f"Warning: Supabase Storage initialization failed: {e}")
             self.supabase = None
@@ -179,27 +186,51 @@ class SupabaseStorageService:
                     file_data = file_obj
                 filename = self._generate_filename(file_obj.name, directory)
 
-            # Read file data as bytes
+            # Prepare file content for upload
             if hasattr(file_data, 'read'):
+                # For file-like objects (BytesIO, etc.)
+                file_data.seek(0)  # Ensure we're at the beginning
                 file_content = file_data.read()
                 if isinstance(file_content, str):
                     file_content = file_content.encode('utf-8')
             else:
                 file_content = file_data
 
+            # Ensure file_content is bytes
+            if not isinstance(file_content, bytes):
+                file_content = bytes(str(file_content), 'utf-8')
+
             # Upload using Supabase SDK
-            response = self.supabase.storage.from_(self.bucket_name).upload(
-                path=filename,
-                file=file_content,
-                file_options={
-                    "content-type": content_type,
-                    "cache-control": "3600"
+            try:
+                response = self.supabase.storage.from_(self.bucket_name).upload(
+                    path=filename,
+                    file=file_content,
+                    file_options={
+                        "content-type": content_type,
+                        "cache-control": "3600"
+                    }
+                )
+                print(f"Supabase upload response: {response}")
+            except Exception as upload_error:
+                print(f"Supabase upload error: {upload_error}")
+                return {
+                    'success': False,
+                    'error': f'Upload failed: {str(upload_error)}',
+                    'url': None
                 }
-            )
 
             if response.status_code == 200 or response.status_code == 201:
                 # Get public URL
-                public_url = self.supabase.storage.from_(self.bucket_name).get_public_url(filename)
+                try:
+                    public_url = self.supabase.storage.from_(self.bucket_name).get_public_url(filename)
+                    print(f"Generated public URL: {public_url}")
+                except Exception as url_error:
+                    print(f"Error generating public URL: {url_error}")
+                    return {
+                        'success': False,
+                        'error': f'URL generation failed: {str(url_error)}',
+                        'url': None
+                    }
 
                 return {
                     'success': True,
@@ -280,21 +311,30 @@ class SupabaseStorageService:
 
         try:
             # Extract filename from Supabase public URL
-            # Supabase URLs typically: /storage/v1/object/public/{bucket}/{path}
-            url_parts = file_url.split('/storage/v1/object/public/')
-            if len(url_parts) < 2:
+            # URL format: https://project.supabase.co/storage/v1/object/public/bucket/filename
+            if '/storage/v1/object/public/' not in file_url:
                 print(f"Warning: Invalid Supabase URL format: {file_url}")
                 return False
 
-            path_part = url_parts[1]
-            # Remove bucket name from path
-            filename = path_part.replace(f'{self.bucket_name}/', '', 1)
+            # Split on the public path marker
+            path_part = file_url.split('/storage/v1/object/public/', 1)[1]
+
+            # Remove bucket name prefix if present
+            if path_part.startswith(f'{self.bucket_name}/'):
+                filename = path_part[len(f'{self.bucket_name}/'):]
+            else:
+                filename = path_part
+
+            print(f"Attempting to delete file: {filename} from bucket: {self.bucket_name}")
 
             # Delete using Supabase SDK
             response = self.supabase.storage.from_(self.bucket_name).remove([filename])
+            print(f"Delete response: {response}")
 
             # Check if deletion was successful
-            return len(response) > 0 and response[0].get('name') == filename
+            if isinstance(response, list) and len(response) > 0:
+                return response[0].get('name') == filename
+            return False
 
         except Exception as e:
             print(f"Warning: File deletion failed: {e}")
