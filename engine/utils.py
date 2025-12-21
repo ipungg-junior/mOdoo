@@ -218,20 +218,11 @@ class SupabaseStorageService:
                     'error': f'Upload failed: {str(upload_error)}',
                     'url': None
                 }
+                
 
-            if response.status_code == 200 or response.status_code == 201:
-                # Get public URL
-                try:
-                    public_url = self.supabase.storage.from_(self.bucket_name).get_public_url(filename)
-                    print(f"Generated public URL: {public_url}")
-                except Exception as url_error:
-                    print(f"Error generating public URL: {url_error}")
-                    return {
-                        'success': False,
-                        'error': f'URL generation failed: {str(url_error)}',
-                        'url': None
-                    }
-
+            if response.full_path:
+                public_url = self.supabase.storage.from_(self.bucket_name).get_public_url(filename)
+                print(f"File uploaded successfully: {public_url}")
                 return {
                     'success': True,
                     'url': public_url,
@@ -243,11 +234,13 @@ class SupabaseStorageService:
             else:
                 return {
                     'success': False,
-                    'error': f'Upload failed: {response.status_code} - {response.json() if hasattr(response, "json") else "Unknown error"}',
+                    'error': response.error,
                     'url': None
                 }
 
+
         except Exception as e:
+            print(f"Warning: File upload failed: {e}")
             return {
                 'success': False,
                 'error': str(e),
