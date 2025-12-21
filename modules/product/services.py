@@ -215,7 +215,12 @@ class ProductService:
             if product.image_url is None or product.image_url == '':
                 signed_url_img = None
             else:
-                signed_url_img = supabase_storage.get_url_from(product.image_url)
+                signed_url_img = supabase_storage.get_signed_url(product.image_url, cached_url=product.signed_url, last_update=product.last_update_signed_url)
+                if signed_url_img['is_new']:
+                    # Update signed URL and timestamp
+                    product.signed_url = signed_url_img['url']
+                    product.last_update_signed_url = timezone.now()
+                    product.save()
                 
             product_data.append({
                 'id': product.id,
@@ -229,7 +234,7 @@ class ProductService:
                 'price': str(format_rupiah(product.price)),
                 'raw_price': float(product.price),  # Add raw price for calculations
                 'is_active': product.is_active,
-                'image_url': signed_url_img,
+                'image_url': signed_url_img['url'] if signed_url_img else None,
                 'created_at': product.created_at.isoformat() if product.created_at else None,
                 'updated_at': product.updated_at.isoformat() if product.updated_at else None,
             })
@@ -344,8 +349,6 @@ class ProductService:
                 product.description = description
             if is_active is not None:
                 product.is_active = is_active
-            if 'image_url' in data:
-                product.image_url = data.get('image_url')
 
             # Handle category
             if category_id is not None:
@@ -375,7 +378,6 @@ class ProductService:
                     } if product.category else None,
                     'price': str(product.price),
                     'is_active': product.is_active,
-                    'image_url': product.image_url
                 }
             })
 
@@ -405,58 +407,6 @@ class ProductService:
             return JsonResponse({'success': False, 'message': 'Product not found'}, status=404)
 
     @staticmethod
-    def upload_product_image(request, data):
-        """
-        Upload product image to Firebase Storage.
-
-        Args:
-            request: Django request object
-            data: Form data containing image file
-
-        Returns:
-            JsonResponse with upload result
-        """
-        product_id = data.get('product_id')
-        image_file = request.FILES.get('image')
-
-        if not image_file:
-            return JsonResponse({'success': False, 'message': 'No image file provided'}, status=400)
-
-        if not product_id:
-            return JsonResponse({'success': False, 'message': 'Product ID is required'}, status=400)
-
-        try:
-            # Verify product exists
-            Product.objects.get(id=product_id)
-
-            # Upload to Firebase Storage
-            result = firebase_storage.upload_product_image(image_file, product_id)
-
-            if result['success']:
-                # Save the image URL to the product
-                product = Product.objects.get(id=product_id)
-                product.image_url = result['url']
-                product.save()
-
-                return JsonResponse({
-                    'success': True,
-                    'message': 'Image uploaded successfully',
-                    'data': {
-                        'image_url': result['url'],
-                        'filename': result['filename'],
-                        'compressed': result.get('compressed', False)
-                    }
-                })
-            else:
-                return JsonResponse({
-                    'success': False,
-                    'message': result.get('error', 'Upload failed')
-                }, status=500)
-
-        except Product.DoesNotExist:
-            return JsonResponse({'success': False, 'message': 'Product not found'}, status=404)
-
-    @staticmethod
     def upload_image(request):
         """Handle product image upload"""
         try:
@@ -471,32 +421,34 @@ class ProductService:
             image_file = request.FILES['image']
 
             # Validate file type
-            allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
+            allowed_types = ['image/jpeg', 'image/jpg', 'image/png']
             if image_file.content_type not in allowed_types:
-                return JsonResponse({'success': False, 'message': 'Invalid file type. Only JPEG, PNG, and GIF are allowed'}, status=400)
+                return JsonResponse({'success': False, 'message': 'Invalid file type. Only JPEG, and PNG are allowed'}, status=400)
 
-            # Validate file size (10MB limit)
-            max_size = 10 * 1024 * 1024  # 10MB
+            # Validate file size (5MB limit)
+            max_size = 5 * 1024 * 1024  # 5MB
             if image_file.size > max_size:
-                return JsonResponse({'success': False, 'message': 'File too large. Maximum size is 10MB'}, status=400)
+                return JsonResponse({'success': False, 'message': 'File too large. Maximum size is 5MB'}, status=400)
 
             # Upload to Supabase
             upload_result = supabase_storage.upload_product_image(image_file, product_id)
 
             if not upload_result['success']:
                 return JsonResponse({'success': False, 'message': f'Upload failed: {upload_result["error"]}'}, status=500)
-
+            
             # Update product with image URL
             try:
                 product = Product.objects.get(id=product_id)
-                product.image_url = upload_result['path']
+                product.image_url = upload_result['filename']
+                product.signed_url = upload_result['url']
+                product.last_update_signed_url = timezone.now()
                 product.save()
-
+                
                 return JsonResponse({
                     'success': True,
                     'message': 'Image uploaded successfully',
                     'data': {
-                        'image_url': upload_result['path']
+                        'image_url': upload_result['url']
                     }
                 })
 
