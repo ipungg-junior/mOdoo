@@ -212,7 +212,11 @@ class ProductService:
         products = Product.objects.select_related('category').all()
         product_data = []
         for product in products:
-            signed_url_img = supabase_storage.get_url_from(product.image_url)
+            if product.image_url is None or product.image_url == '':
+                signed_url_img = None
+            else:
+                signed_url_img = supabase_storage.get_url_from(product.image_url)
+                
             product_data.append({
                 'id': product.id,
                 'name': product.name,
@@ -485,15 +489,14 @@ class ProductService:
             # Update product with image URL
             try:
                 product = Product.objects.get(id=product_id)
-                product.image_url = upload_result['url']
+                product.image_url = upload_result['path']
                 product.save()
 
                 return JsonResponse({
                     'success': True,
                     'message': 'Image uploaded successfully',
                     'data': {
-                        'image_url': upload_result['url'],
-                        'filename': upload_result['filename']
+                        'image_url': upload_result['path']
                     }
                 })
 

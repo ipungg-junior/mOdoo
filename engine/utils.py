@@ -210,7 +210,6 @@ class SupabaseStorageService:
                         "cache-control": "3600"
                     }
                 )
-                print(f"Supabase upload response: {response}")
             except Exception as upload_error:
                 print(f"Supabase upload error: {upload_error}")
                 return {
@@ -221,20 +220,14 @@ class SupabaseStorageService:
                 
 
             if response.full_path:
-                public_url = self.supabase.storage.from_(self.bucket_name).get_public_url(filename)
-                print(f"File uploaded successfully: {public_url}")
                 return {
                     'success': True,
-                    'url': public_url,
-                    'filename': filename,
-                    'size': getattr(file_obj, 'size', 0),
-                    'content_type': content_type,
-                    'compressed': compress_image and is_image
-                }
+                    'path': response.path}
+                
             else:
                 return {
                     'success': False,
-                    'error': response.error,
+                    'error': 'Upload failed: No path returned',
                     'url': None
                 }
 
@@ -291,24 +284,23 @@ class SupabaseStorageService:
 
     def get_url_from(self, file_path):
         """
-        Get the public URL of a file stored in Supabase Storage.
+        Get the Signed URL of a file stored in Supabase Storage.
 
         Args:
             file_path: Path of the file in the storage bucket
 
         Returns:
-            str: Public URL of the file
+            str: Signed URL of the file
         """
         if not self.initialized:
             return None
 
         try:
-            print(f"Getting public URL for file: {file_path} in bucket: {self.bucket_name}")
+            print(f"Generating signedURL for file: {file_path} in bucket: {self.bucket_name}")
             signed_url = self.supabase.storage.from_(self.bucket_name).create_signed_url(file_path, 3600)
-            print(f"Signed URL response: {signed_url}")
             return signed_url['signedURL']            
         except Exception as e:
-            print(f"Warning: Could not get public URL: {e}")
+            print(f"Warning: Could not get signed URL: {e}")
             return None
 
     def delete_file(self, file_url):
