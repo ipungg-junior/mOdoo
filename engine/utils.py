@@ -52,7 +52,7 @@ class SupabaseStorageService:
         try:
             # Get Supabase configuration from Django settings
             self.supabase_url = getattr(settings, 'SUPABASE_URL', None)
-            self.supabase_key = getattr(settings, 'SUPABASE_ANON_KEY', None)
+            self.supabase_key = getattr(settings, 'SUPABASE_SERVICE_KEY', None)
             self.bucket_name = getattr(settings, 'SUPABASE_STORAGE_BUCKET', 'uploads')
 
             if not all([self.supabase_url, self.supabase_key]):
@@ -169,7 +169,7 @@ class SupabaseStorageService:
         try:
             # Determine if file is an image
             content_type = getattr(file_obj, 'content_type', '')
-            is_image = content_type.startswith('image/') or file_obj.name.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'))
+            is_image = content_type.startswith('image/') or file_obj.name.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp', '.webp'))
 
             # Compress image if requested and it's an image
             if compress_image and is_image:
@@ -220,10 +220,26 @@ class SupabaseStorageService:
                 
 
             if response.full_path:
-                return {
-                    'success': True,
-                    'path': response.path}
-                
+                try:
+                    # Generate signedUrl
+                    signed_url = self.get_signed_url(response.path)
+                    return {
+                        'success': True,
+                        'url': signed_url['url'],
+                        'filename': filename,
+                        'size': getattr(file_obj, 'size', 0),
+                        'content_type': content_type,
+                        'compressed': compress_image and is_image
+                    }
+                except Exception as err:
+                    print(f"Warning: Could not generate signed URL: {err}")
+                    return {
+                        'success': True,
+                        'error': f'Upload succeeded but failed to get URL: {str(err)}',
+                        'url': None,
+                        'filename': filename,
+                    }
+                    
             else:
                 return {
                     'success': False,
@@ -282,26 +298,50 @@ class SupabaseStorageService:
         directory = f"documents/{category}"
         return self.upload_file(file_obj, directory, compress_image=False)
 
-    def get_url_from(self, file_path):
+    def get_signed_url(self, file_path, cached_url=None, last_update=None):
         """
-        Get the Signed URL of a file stored in Supabase Storage.
+        Get a signed URL for a file, with caching to avoid regeneration.
 
         Args:
             file_path: Path of the file in the storage bucket
+            cached_url: Previously cached signed URL
+            last_update: Last time the signed URL was updated (datetime)
 
         Returns:
-            str: Signed URL of the file
+            str: Signed URL of the file (cached or new)
         """
         if not self.initialized:
             return None
 
-        try:
-            print(f"Generating signedURL for file: {file_path} in bucket: {self.bucket_name}")
-            signed_url = self.supabase.storage.from_(self.bucket_name).create_signed_url(file_path, 3600)
-            return signed_url['signedURL']            
-        except Exception as e:
-            print(f"Warning: Could not get signed URL: {e}")
-            return None
+        # Check if we need to regenerate the signed URL
+        needs_refresh = False
+        if cached_url is None or last_update is None:
+            needs_refresh = True
+        else:
+            # Check if more than 1 hour (3600 seconds) has passed
+            from django.utils import timezone
+            time_diff = (timezone.now() - last_update).total_seconds()
+            if time_diff >= 3600:  # 1 hour
+                needs_refresh = True
+
+        if needs_refresh:
+            try:
+                signed_url_data = self.supabase.storage.from_(self.bucket_name).create_signed_url(
+                    path=file_path,
+                    expires_in=3600  # 1 hour
+                )
+                return {
+                    'is_new': True,
+                    'url': signed_url_data['signedUrl']
+                }
+            except Exception as e:
+                print(f"Warning: Could not generate signed URL: {e}")
+                return None
+        else:
+            return {
+                'is_new': False,
+                'url': cached_url
+            }
 
     def delete_file(self, file_url):
         """
