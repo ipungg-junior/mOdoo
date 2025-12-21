@@ -212,6 +212,7 @@ class ProductService:
         products = Product.objects.select_related('category').all()
         product_data = []
         for product in products:
+            signed_url_img = supabase_storage.get_url_from(product.image_url)
             product_data.append({
                 'id': product.id,
                 'name': product.name,
@@ -224,7 +225,7 @@ class ProductService:
                 'price': str(format_rupiah(product.price)),
                 'raw_price': float(product.price),  # Add raw price for calculations
                 'is_active': product.is_active,
-                'image_url': product.image_url,
+                'image_url': signed_url_img,
                 'created_at': product.created_at.isoformat() if product.created_at else None,
                 'updated_at': product.updated_at.isoformat() if product.updated_at else None,
             })

@@ -289,6 +289,28 @@ class SupabaseStorageService:
         directory = f"documents/{category}"
         return self.upload_file(file_obj, directory, compress_image=False)
 
+    def get_url_from(self, file_path):
+        """
+        Get the public URL of a file stored in Supabase Storage.
+
+        Args:
+            file_path: Path of the file in the storage bucket
+
+        Returns:
+            str: Public URL of the file
+        """
+        if not self.initialized:
+            return None
+
+        try:
+            print(f"Getting public URL for file: {file_path} in bucket: {self.bucket_name}")
+            signed_url = self.supabase.storage.from_(self.bucket_name).create_signed_url(file_path, 3600)
+            print(f"Signed URL response: {signed_url}")
+            return signed_url['signedURL']            
+        except Exception as e:
+            print(f"Warning: Could not get public URL: {e}")
+            return None
+
     def delete_file(self, file_url):
         """
         Delete a file from Supabase Storage.
