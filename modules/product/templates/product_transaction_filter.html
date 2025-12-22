@@ -181,30 +181,35 @@
     </div>
 </div>
 
-<!-- Summary Cards -->
-<div id="summarySection" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 mx-2 md:mx-0 hidden">
-    <div class="bg-white p-4 rounded-lg shadow-sm border">
-        <h3 class="text-sm font-medium text-gray-700 mb-2">Total Transactions</h3>
-        <div class="text-xl font-bold text-blue-600" id="summaryTotalTransactions">0</div>
-    </div>
-    <div class="bg-white p-4 rounded-lg shadow-sm border">
-        <h3 class="text-sm font-medium text-gray-700 mb-2">Total Amount</h3>
-        <div class="text-xl font-bold text-green-600" id="summaryTotalAmount">Rp. 0</div>
-    </div>
-    <div class="bg-white p-4 rounded-lg shadow-sm border">
-        <h3 class="text-sm font-medium text-gray-700 mb-2">Paid Amount</h3>
-        <div class="text-xl font-bold text-blue-600" id="summaryPaidAmount">Rp. 0</div>
-    </div>
-    <div class="bg-white p-4 rounded-lg shadow-sm border">
-        <h3 class="text-sm font-medium text-gray-700 mb-2">Amount to Pay</h3>
-        <div class="text-xl font-bold text-orange-600" id="summaryAmountToPay">Rp. 0</div>
-    </div>
-</div>
+<!-- Summary Wrapper -->
+<div class="grid md:grid-cols-2 gap-4 rounded-lg shadow-sm border mx-2 md:mx-0 p-4 mb-6 hidden" id="summaryWrapper">
 
-<!-- Payment Term Chart -->
-<div id="chartSection" class="bg-white rounded-lg shadow-sm border mx-2 md:mx-0 p-6 mb-6 hidden">
-    <h3 class="text-lg font-semibold text-gray-800 mb-4">Payment Term Distribution</h3>
-    <div id="paymentTermChart" class="w-full" style="height: 300px;"></div>
+    <!-- Payment Term Chart -->
+    <div id="chartSection" class="bg-white rounded-lg shadow-sm border mx-2 md:mx-0 p-6 mb-4 hidden">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Payment Term Distribution</h3>
+        <div id="paymentTermChart" class="w-full" style="height: 300px;"></div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div id="summarySection" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 mx-2 md:mx-0 hidden">
+        <div class="bg-white p-4 rounded-lg shadow-sm border">
+            <h3 class="text-sm font-medium text-gray-700 mb-2">Total Transactions</h3>
+            <div class="text-xl font-bold text-blue-600" id="summaryTotalTransactions">0</div>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow-sm border">
+            <h3 class="text-sm font-medium text-gray-700 mb-2">Total Amount</h3>
+            <div class="text-xl font-bold text-green-600" id="summaryTotalAmount">Rp. 0</div>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow-sm border">
+            <h3 class="text-sm font-medium text-gray-700 mb-2">Paid Amount</h3>
+            <div class="text-xl font-bold text-blue-600" id="summaryPaidAmount">Rp. 0</div>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow-sm border">
+            <h3 class="text-sm font-medium text-gray-700 mb-2">Amount to Pay</h3>
+            <div class="text-xl font-bold text-orange-600" id="summaryAmountToPay">Rp. 0</div>
+        </div>
+    </div>
+
 </div>
 
 <div class="bg-white rounded-lg shadow-sm border mx-2 md:mx-0 overflow-hidden">
@@ -480,6 +485,9 @@
                 paginationData = result.data.pagination;
                 renderTransactions(result.data.transactions);
                 renderPagination(result.data.pagination);
+
+                // Show summary wrapper
+                document.getElementById('summaryWrapper').classList.remove('hidden');
 
                 // Update summary and chart with combined data
                 if (result.data.summary) {
