@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block head_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <style>
     .status-message {
         position: fixed;
@@ -994,82 +994,83 @@
 
     // Render Payment Term Chart
     function renderPaymentTermChart(data) {
-        const ctx = document.getElementById('paymentTermChart').getContext('2d');
+        const options = {
+            series: [{
+                name: 'Total Amount',
+                data: data.amounts
+            }],
+            chart: {
+                type: 'bar',
+                height: 300,
+                toolbar: {
+                    show: false
+                }
+            },
+            plotOptions: {
+                bar: {
+                    horizontal: false,
+                    columnWidth: '55%',
+                    endingShape: 'rounded'
+                }
+            },
+            dataLabels: {
+                enabled: false
+            },
+            colors: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'],
+            xaxis: {
+                categories: data.labels,
+                labels: {
+                    rotate: -45,
+                    style: {
+                        fontSize: '12px'
+                    }
+                }
+            },
+            yaxis: {
+                title: {
+                    text: 'Amount (Rp)',
+                    style: {
+                        fontSize: '14px',
+                        fontWeight: 'bold'
+                    }
+                },
+                labels: {
+                    formatter: function (value) {
+                        return 'Rp ' + (value / 1000).toFixed(0) + 'k';
+                    }
+                }
+            },
+            tooltip: {
+                y: {
+                    formatter: function (value) {
+                        return 'Rp ' + value.toLocaleString('id-ID');
+                    }
+                }
+            },
+            responsive: [{
+                breakpoint: 768,
+                options: {
+                    chart: {
+                        height: 250
+                    },
+                    xaxis: {
+                        labels: {
+                            rotate: -90,
+                            style: {
+                                fontSize: '10px'
+                            }
+                        }
+                    }
+                }
+            }]
+        };
 
-        // Destroy existing chart if it exists
+        const chartElement = document.getElementById('paymentTermChart');
         if (window.paymentTermChartInstance) {
             window.paymentTermChartInstance.destroy();
         }
-
-        window.paymentTermChartInstance = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: data.labels,
-                datasets: [{
-                    label: 'Total Amount (Rp)',
-                    data: data.amounts,
-                    backgroundColor: [
-                        '#3B82F6', '#10B981', '#F59E0B', '#EF4444',
-                        '#8B5CF6', '#06B6D4', '#84CC16', '#F97316'
-                    ],
-                    borderColor: [
-                        '#2563EB', '#059669', '#D97706', '#DC2626',
-                        '#7C3AED', '#0891B2', '#65A30D', '#EA580C'
-                    ],
-                    borderWidth: 1,
-                    borderRadius: 4,
-                    borderSkipped: false,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function (context) {
-                                let label = context.dataset.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
-                                label += 'Rp ' + context.parsed.y.toLocaleString('id-ID');
-                                return label;
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function (value) {
-                                return 'Rp ' + (value / 1000).toFixed(0) + 'k';
-                            }
-                        },
-                        grid: {
-                            color: '#E5E7EB'
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
-                        },
-                        ticks: {
-                            maxRotation: 45,
-                            minRotation: 45
-                        }
-                    }
-                },
-                elements: {
-                    bar: {
-                        borderRadius: 4,
-                    }
-                }
-            }
-        });
+        window.paymentTermChartInstance = new ApexCharts(chartElement, options);
+        window.paymentTermChartInstance.render();
     }
 
     // Apply Filters handler
