@@ -181,6 +181,32 @@
     </div>
 </div>
 
+<!-- Summary Cards -->
+<div id="summarySection" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 mx-2 md:mx-0 hidden">
+    <div class="bg-white p-4 rounded-lg shadow-sm border">
+        <h3 class="text-sm font-medium text-gray-700 mb-2">Total Transactions</h3>
+        <div class="text-xl font-bold text-blue-600" id="summaryTotalTransactions">0</div>
+    </div>
+    <div class="bg-white p-4 rounded-lg shadow-sm border">
+        <h3 class="text-sm font-medium text-gray-700 mb-2">Total Amount</h3>
+        <div class="text-xl font-bold text-green-600" id="summaryTotalAmount">Rp. 0</div>
+    </div>
+    <div class="bg-white p-4 rounded-lg shadow-sm border">
+        <h3 class="text-sm font-medium text-gray-700 mb-2">Paid Amount</h3>
+        <div class="text-xl font-bold text-blue-600" id="summaryPaidAmount">Rp. 0</div>
+    </div>
+    <div class="bg-white p-4 rounded-lg shadow-sm border">
+        <h3 class="text-sm font-medium text-gray-700 mb-2">Amount to Pay</h3>
+        <div class="text-xl font-bold text-orange-600" id="summaryAmountToPay">Rp. 0</div>
+    </div>
+</div>
+
+<!-- Payment Term Chart -->
+<div id="chartSection" class="bg-white rounded-lg shadow-sm border mx-2 md:mx-0 p-6 mb-6 hidden">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4">Payment Term Distribution</h3>
+    <div id="paymentTermChart" class="w-full" style="height: 300px;"></div>
+</div>
+
 <div class="bg-white rounded-lg shadow-sm border mx-2 md:mx-0 overflow-hidden">
     <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
@@ -454,6 +480,16 @@
                 paginationData = result.data.pagination;
                 renderTransactions(result.data.transactions);
                 renderPagination(result.data.pagination);
+
+                // Update summary and chart with combined data
+                if (result.data.summary) {
+                    updateSummaryDisplay(result.data.summary);
+                    document.getElementById('summarySection').classList.remove('hidden');
+                }
+                if (result.data.chart) {
+                    renderPaymentTermChart(result.data.chart);
+                    document.getElementById('chartSection').classList.remove('hidden');
+                }
 
                 if (page === 1) {
                     showMessage('Transactions loaded successfully!', 'success');
@@ -945,6 +981,137 @@
         currentPage = 1;
         currentFilters = {};
         loadTransactions(currentPage, currentFilters, currentPerPage);
+    });
+
+
+    // Update Summary Display
+    function updateSummaryDisplay(data) {
+        document.getElementById('summaryTotalTransactions').textContent = data.total_transactions;
+        document.getElementById('summaryTotalAmount').textContent = data.total_amount;
+        document.getElementById('summaryPaidAmount').textContent = data.paid_amount;
+        document.getElementById('summaryAmountToPay').textContent = data.amount_user_must_pay;
+    }
+
+    // Render Payment Term Chart
+    function renderPaymentTermChart(data) {
+        const ctx = document.getElementById('paymentTermChart').getContext('2d');
+
+        // Destroy existing chart if it exists
+        if (window.paymentTermChartInstance) {
+            window.paymentTermChartInstance.destroy();
+        }
+
+        window.paymentTermChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.labels,
+                datasets: [{
+                    label: 'Total Amount (Rp)',
+                    data: data.amounts,
+                    backgroundColor: [
+                        '#3B82F6', '#10B981', '#F59E0B', '#EF4444',
+                        '#8B5CF6', '#06B6D4', '#84CC16', '#F97316'
+                    ],
+                    borderColor: [
+                        '#2563EB', '#059669', '#D97706', '#DC2626',
+                        '#7C3AED', '#0891B2', '#65A30D', '#EA580C'
+                    ],
+                    borderWidth: 1,
+                    borderRadius: 4,
+                    borderSkipped: false,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                label += 'Rp ' + context.parsed.y.toLocaleString('id-ID');
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function (value) {
+                                return 'Rp ' + (value / 1000).toFixed(0) + 'k';
+                            }
+                        },
+                        grid: {
+                            color: '#E5E7EB'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45
+                        }
+                    }
+                },
+                elements: {
+                    bar: {
+                        borderRadius: 4,
+                    }
+                }
+            }
+        });
+    }
+
+    // Apply Filters handler
+    document.getElementById('applyFiltersBtn').addEventListener('click', function () {
+        // Collect filter values
+        currentFilters = {
+            filter_id: document.getElementById('filterId').value,
+            filter_customer_name: document.getElementById('filterCustomer').value,
+            filter_status: document.getElementById('filterStatus').value,
+            filter_payment_term: document.getElementById('filterPaymentTerm').value,
+            filter_due_date: document.getElementById('filterDueDate').value,
+            filter_transaction_date: document.getElementById('filterTransactionDate').value
+        };
+        // Remove empty filters
+        Object.keys(currentFilters).forEach(key => {
+            if (!currentFilters[key]) delete currentFilters[key];
+        });
+        currentPage = 1; // Reset to first page
+        loadTransactions(currentPage, currentFilters, currentPerPage);
+    });
+
+    // Clear Filters handler - Updated to hide summary and chart
+    document.getElementById('clearFiltersBtn').addEventListener('click', function () {
+        // Clear all filter inputs
+        document.getElementById('filterId').value = '';
+        document.getElementById('filterCustomer').value = '';
+        document.getElementById('filterStatus').value = '';
+        document.getElementById('filterPaymentTerm').value = '';
+        document.getElementById('filterDueDate').value = '';
+        document.getElementById('filterTransactionDate').value = '';
+        currentFilters = {};
+        currentPage = 1;
+        loadTransactions(currentPage, currentFilters, currentPerPage);
+        // Hide summary and chart sections
+        document.getElementById('summarySection').classList.add('hidden');
+        document.getElementById('chartSection').classList.add('hidden');
+    });
+
+    // Initial load - hide summary and chart sections
+    document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('summarySection').classList.add('hidden');
+        document.getElementById('chartSection').classList.add('hidden');
     });
 
 
