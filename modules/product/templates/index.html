@@ -92,28 +92,7 @@
 {% endblock %}
 
 {% block main_content %}
-<!-- Chart -->
-<!-- <div class="bg-white p-6 rounded-xl shadow-sm border mb-6">
-    <h2 class="text-xl font-semibold mb-4">Sample Chart</h2>
-    <canvas id="myChart" style="max-height: 350px;"></canvas>
-</div> -->
-
-<!-- Shortcuts -->
-<!-- <h2 class="text-xl font-semibold">Your Shortcuts</h2>
-
-<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-2 mt-3 text-sm">
-    <a class="p-3 rounded-md border hover:bg-gray-50 flex justify-between" href="#">
-        Employee <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">1 Active</span>
-    </a>
-    <a class="p-3 rounded-md border hover:bg-gray-50" href="#">Leave Application →</a>
-    <a class="p-3 rounded-md border hover:bg-gray-50" href="#">HR Dashboard →</a>
-    <a class="p-3 rounded-md border hover:bg-gray-50" href="#">Employee Lifecycle Dashboard →</a>
-    <a class="p-3 rounded-md border hover:bg-gray-50" href="#">Attendance Dashboard →</a>
-    <a class="p-3 rounded-md border hover:bg-gray-50" href="#">Recruitment Dashboard →</a>
-</div> -->
-
 <!-- Total Products -->
-
 <div class="grid grid-cols-2 md:grid-cols-2 gap-4">
     <div class="bg-white p-6 rounded-xl shadow-sm border mb-6 mt-6">
         <h2 class="font-semibold mb-2 md:text-sm lg:text-md">Total Amount of Products</h2>
@@ -140,10 +119,6 @@
 
 <div class="overflow-x-auto pb-4">
     <div id="productsContainer" class="grid grid-rows-3 gap-4" style="grid-auto-flow: column; grid-auto-columns: 140px;">
-        <!-- Products will be populated here -->
-        <div class="flex items-center justify-center col-span-full text-gray-500 py-8">
-            Click "Load Products" to load data
-        </div>
     </div>
 </div>
 
@@ -285,7 +260,7 @@
                 <!-- Product Image -->
                 <div class="flex-shrink-0">
                     <div class="w-32 h-32 bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
-                        <img src="${product.image_url || `https://picsum.photos/300/300?random=${product.id % 1000}`}" alt="${product.name}" class="w-full h-full object-contain">
+                        <img id="product-detall-image" src="" class="w-full h-full object-contain">
                     </div>
                 </div>
                 <!-- Product Info -->
