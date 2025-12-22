@@ -543,6 +543,7 @@
             '<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Inactive</span>';
 
         document.getElementById('detailProductName').textContent = product.name;
+        document.getElementById('product-detall-image').src = product.image_url || ``;
         document.getElementById('detailProductCategory').textContent = categoryName;
         document.getElementById('detailProductPrice').textContent = product.price;
         document.getElementById('detailProductQty').textContent = product.qty;
@@ -683,7 +684,7 @@
             // Handle existing image
             if (product.image_url) {
                 currentImageUrl = product.image_url;
-                document.getElementById('imagePreview').innerHTML = `<img src="${product.image_url}" alt="Current Image" class="w-full h-full object-contain">`;
+                document.getElementById('imagePreview').innerHTML = `< img src = "${product.image_url}" alt = "Current Image" class="w-full h-full object-contain" > `;
                 document.getElementById('removeImageBtn').classList.remove('hidden');
             } else {
                 resetImagePreview();
@@ -706,7 +707,7 @@
     }
 
     async function deleteProduct(id, name) {
-        if (!confirm(`Are you sure you want to delete product "${name}"?`)) {
+        if (!confirm(`Are you sure you want to delete product "${name}" ?`)) {
             return;
         }
 
