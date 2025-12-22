@@ -92,28 +92,7 @@
 {% endblock %}
 
 {% block main_content %}
-<!-- Chart -->
-<!-- <div class="bg-white p-6 rounded-xl shadow-sm border mb-6">
-    <h2 class="text-xl font-semibold mb-4">Sample Chart</h2>
-    <canvas id="myChart" style="max-height: 350px;"></canvas>
-</div> -->
-
-<!-- Shortcuts -->
-<!-- <h2 class="text-xl font-semibold">Your Shortcuts</h2>
-
-<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-2 mt-3 text-sm">
-    <a class="p-3 rounded-md border hover:bg-gray-50 flex justify-between" href="#">
-        Employee <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">1 Active</span>
-    </a>
-    <a class="p-3 rounded-md border hover:bg-gray-50" href="#">Leave Application →</a>
-    <a class="p-3 rounded-md border hover:bg-gray-50" href="#">HR Dashboard →</a>
-    <a class="p-3 rounded-md border hover:bg-gray-50" href="#">Employee Lifecycle Dashboard →</a>
-    <a class="p-3 rounded-md border hover:bg-gray-50" href="#">Attendance Dashboard →</a>
-    <a class="p-3 rounded-md border hover:bg-gray-50" href="#">Recruitment Dashboard →</a>
-</div> -->
-
 <!-- Total Products -->
-
 <div class="grid grid-cols-2 md:grid-cols-2 gap-4">
     <div class="bg-white p-6 rounded-xl shadow-sm border mb-6 mt-6">
         <h2 class="font-semibold mb-2 md:text-sm lg:text-md">Total Amount of Products</h2>
@@ -140,10 +119,6 @@
 
 <div class="overflow-x-auto pb-4">
     <div id="productsContainer" class="grid grid-rows-3 gap-4" style="grid-auto-flow: column; grid-auto-columns: 140px;">
-        <!-- Products will be populated here -->
-        <div class="flex items-center justify-center col-span-full text-gray-500 py-8">
-            Click "Load Products" to load data
-        </div>
     </div>
 </div>
 
@@ -217,6 +192,34 @@
                     <textarea class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" id="productDescription" name="description"
                         rows="3"></textarea>
                 </div>
+                <!-- Image Upload Section -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Product Image</label>
+                    <div class="flex items-center gap-4">
+                        <div class="flex-shrink-0">
+                            <div id="imagePreview" class="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
+                                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                    </path>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <input type="file" id="productImage" accept="image/*" class="hidden">
+                            <button type="button" id="uploadImageBtn"
+                                class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                                Choose Image
+                            </button>
+                            <button type="button" id="removeImageBtn"
+                                class="ml-2 px-3 py-2 text-sm font-medium text-red-700 bg-white border border-red-300 rounded-md hover:bg-red-50 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 hidden">
+                                Remove
+                            </button>
+                            <p class="mt-1 text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label for="productCategory" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
@@ -257,7 +260,7 @@
                 <!-- Product Image -->
                 <div class="flex-shrink-0">
                     <div class="w-32 h-32 bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
-                        <img src="https://picsum.photos/300/300?random=${product.id % 1000}" alt="${product.name}" class="w-full h-full object-cover">
+                        <img id="product-detall-image" src="" class="w-full h-full object-contain">
                     </div>
                 </div>
                 <!-- Product Info -->
@@ -301,6 +304,10 @@
     const PRODUCT_API_BASE = '{% url "product_api" %}';
     const CATEGORY_API_BASE = '{% url "category_api" %}';
     const TRANSACTION_API_BASE = '{% url "product_transaction_api" %}';
+
+    // Image upload state
+    let selectedImageFile = null;
+    let currentImageUrl = null;
 
     // Utility functions
     function showMessage(message, type = 'success') {
@@ -363,6 +370,92 @@
         document.getElementById('total-amount-product').textContent = `Rp. ${amount}`;
     }
 
+    // Image upload functions
+    function setupImageUpload() {
+        const imageInput = document.getElementById('productImage');
+        const uploadBtn = document.getElementById('uploadImageBtn');
+        const removeBtn = document.getElementById('removeImageBtn');
+        const preview = document.getElementById('imagePreview');
+
+        // Choose image button
+        uploadBtn.addEventListener('click', () => {
+            imageInput.click();
+        });
+
+        // Image file selected
+        imageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                selectedImageFile = file;
+                previewImage(file);
+                removeBtn.classList.remove('hidden');
+            }
+        });
+
+        // Remove image button
+        removeBtn.addEventListener('click', () => {
+            selectedImageFile = null;
+            currentImageUrl = null;
+            resetImagePreview();
+            removeBtn.classList.add('hidden');
+        });
+    }
+
+    function previewImage(file) {
+        const preview = document.getElementById('imagePreview');
+        const reader = new FileReader();
+
+        reader.onload = (e) => {
+            preview.innerHTML = `<img src="${e.target.result}" alt="Preview" class="w-full h-full object-contain">`;
+        };
+
+        reader.readAsDataURL(file);
+    }
+
+    function resetImagePreview() {
+        const preview = document.getElementById('imagePreview');
+        preview.innerHTML = `
+            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+        `;
+        document.getElementById('productImage').value = '';
+    }
+
+    async function uploadImage(productId) {
+        if (!selectedImageFile) {
+            return null;
+        }
+
+        const formData = new FormData();
+        formData.append('action', 'upload_image');
+        formData.append('product_id', productId);
+        formData.append('image', selectedImageFile);
+
+        try {
+            const response = await fetch(PRODUCT_API_BASE, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+                }
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                currentImageUrl = result.data.image_url;
+                return result.data.image_url;
+            } else {
+                showMessage(result.message || 'Image upload failed', 'error');
+                return null;
+            }
+        } catch (error) {
+            showMessage('Image upload error: ' + error.message, 'error');
+            return null;
+        }
+    }
+
     // Load Products
     async function loadProducts() {
         const btn = document.getElementById('loadProductsBtn');
@@ -420,9 +513,8 @@
             card.className = 'bg-white rounded-lg shadow-sm border overflow-hidden hover:shadow-md transition-shadow duration-200 cursor-pointer';
             card.onclick = () => showProductDetail(product);
 
-            // Generate example image based on product ID for consistency
-            const imageId = product.id % 1000; // Use product ID to get consistent images
-            const imageUrl = `https://picsum.photos/300/300?random=${imageId}`;
+            // Use actual product image or fallback to placeholder
+            const imageUrl = product.image_url || `https://picsum.photos/300/300?random=${product.id % 1000}`;
 
             card.innerHTML = `
                 <div class="aspect-square bg-gray-200 flex items-center justify-center overflow-hidden">
@@ -451,6 +543,7 @@
             '<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Inactive</span>';
 
         document.getElementById('detailProductName').textContent = product.name;
+        document.getElementById('product-detall-image').src = product.image_url || ``;
         document.getElementById('detailProductCategory').textContent = categoryName;
         document.getElementById('detailProductPrice').textContent = product.price;
         document.getElementById('detailProductQty').textContent = product.qty;
@@ -491,19 +584,32 @@
         btn.classList.add('opacity-50', 'pointer-events-none');
         btn.textContent = 'Saving...';
 
-        const action = id ? 'update' : 'create';
-        const data = {
-            action,
-            name,
-            qty: qty ? parseInt(qty) : 0,
-            price: parseFloat(price),
-            description,
-            category_id: categoryId ? parseInt(categoryId) : null,
-            is_active: isActive
-        };
-        if (id) data.id = parseInt(id);
-
         try {
+
+            // Upload image first if a new image is selected
+            if (selectedImageFile) {
+                if (id) {
+                    // For updates, upload image with existing product ID
+                    imageUrl = await uploadImage(id);
+                } else {
+                    // For new products, we'll upload after creating the product
+                    // The image will be uploaded in the next step
+                }
+            }
+
+            const action = id ? 'update' : 'create';
+            console.log('Action:', action);
+            const data = {
+                action,
+                name,
+                qty: qty ? parseInt(qty) : 0,
+                price: parseFloat(price),
+                description,
+                category_id: categoryId ? parseInt(categoryId) : null,
+                is_active: isActive
+            };
+            if (id) data.id = parseInt(id);
+
             const response = await fetch(PRODUCT_API_BASE, {
                 method: 'POST',
                 headers: {
@@ -516,6 +622,13 @@
             const result = await response.json();
 
             if (result.success) {
+                const productId = result.data.id;
+
+                // If creating new product and has image, upload it now
+                if (!id && selectedImageFile) {
+                    await uploadImage(productId);
+                }
+
                 showMessage(result.message);
                 hideModal('productModal');
                 resetProductForm();
@@ -524,7 +637,7 @@
                 showMessage(result.error, 'error');
             }
         } catch (error) {
-            showMessage('Failed to save product', error);
+            showMessage('Failed to save product: ' + error.message, 'error');
         }
 
         btn.classList.remove('opacity-50', 'pointer-events-none');
@@ -568,6 +681,16 @@
             document.getElementById('productQty').value = product.qty || '';
             document.getElementById('productModalTitle').textContent = 'Edit Product';
 
+            // Handle existing image
+            if (product.image_url) {
+                currentImageUrl = product.image_url;
+                document.getElementById('imagePreview').innerHTML = `< img src = "${product.image_url}" alt = "Current Image" class="w-full h-full object-contain" > `;
+                document.getElementById('removeImageBtn').classList.remove('hidden');
+            } else {
+                resetImagePreview();
+                document.getElementById('removeImageBtn').classList.add('hidden');
+            }
+
             showModal('productModal');
         } catch (error) {
             showMessage('Failed to load product data', 'error');
@@ -584,7 +707,7 @@
     }
 
     async function deleteProduct(id, name) {
-        if (!confirm(`Are you sure you want to delete product "${name}"?`)) {
+        if (!confirm(`Are you sure you want to delete product "${name}" ?`)) {
             return;
         }
 
@@ -615,6 +738,12 @@
         document.getElementById('productForm').reset();
         document.getElementById('productId').value = '';
         document.getElementById('productModalTitle').textContent = 'Add Product';
+
+        // Reset image state
+        selectedImageFile = null;
+        currentImageUrl = null;
+        resetImagePreview();
+        document.getElementById('removeImageBtn').classList.add('hidden');
     }
 
     // Chart initialization (keeping your existing chart)
@@ -650,6 +779,9 @@
     function logoutAccount() {
         window.location.href = '{% url "logout" %}';
     }
+
+    // Initialize image upload functionality
+    setupImageUpload();
 
     // Event listeners
     document.getElementById('loadProductsBtn').addEventListener('click', loadProducts);

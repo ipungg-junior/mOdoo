@@ -6,7 +6,7 @@ from django.db.models import Sum
 from django.utils import timezone
 from .models import Product, Category, Transaction, TransactionItem, PaymentTerm, PaymentStatus
 from django.contrib.auth.models import User
-from engine.utils import format_rupiah
+from engine.utils import format_rupiah, supabase_storage
 from datetime import datetime
 
 # Import accounting models for receivable creation
@@ -189,6 +189,8 @@ class ProductService:
             return ProductService.update_product(request, json_request)
         elif action == 'delete':
             return ProductService.delete_product(request, json_request)
+        elif action == 'upload_image':
+            return ProductService.upload_product_image(request, json_request)
         else:
             return JsonResponse({'success': False, 'message': f'Unknown POST action: {action}'}, status=400)
 
@@ -210,6 +212,16 @@ class ProductService:
         products = Product.objects.select_related('category').all()
         product_data = []
         for product in products:
+            if product.image_url is None or product.image_url == '':
+                signed_url_img = None
+            else:
+                signed_url_img = supabase_storage.get_signed_url(product.image_url, cached_url=product.signed_url, last_update=product.last_update_signed_url)
+                if signed_url_img['is_new']:
+                    # Update signed URL and timestamp
+                    product.signed_url = signed_url_img['url']
+                    product.last_update_signed_url = timezone.now()
+                    product.save()
+                
             product_data.append({
                 'id': product.id,
                 'name': product.name,
@@ -222,6 +234,7 @@ class ProductService:
                 'price': str(format_rupiah(product.price)),
                 'raw_price': float(product.price),  # Add raw price for calculations
                 'is_active': product.is_active,
+                'image_url': signed_url_img['url'] if signed_url_img else None,
                 'created_at': product.created_at.isoformat() if product.created_at else None,
                 'updated_at': product.updated_at.isoformat() if product.updated_at else None,
             })
@@ -253,7 +266,7 @@ class ProductService:
 
         if not name or price is None:
             return JsonResponse({'success': False, 'message': 'Name and price are required'}, status=400)
-        
+
         if qty is None:
             qty = 0
 
@@ -267,7 +280,8 @@ class ProductService:
                 qty=qty,
                 description=description,
                 price=price,
-                is_active=is_active
+                is_active=is_active,
+                image_url=data.get('image_url')  # Add image_url support
             )
 
             if category_id:
@@ -295,7 +309,8 @@ class ProductService:
                         'name': product.category.name if product.category else None
                     } if product.category else None,
                     'price': str(product.price),
-                    'is_active': product.is_active
+                    'is_active': product.is_active,
+                    'image_url': product.image_url
                 }
             })
 
@@ -362,7 +377,7 @@ class ProductService:
                         'name': product.category.name if product.category else None
                     } if product.category else None,
                     'price': str(product.price),
-                    'is_active': product.is_active
+                    'is_active': product.is_active,
                 }
             })
 
@@ -390,7 +405,65 @@ class ProductService:
 
         except Product.DoesNotExist:
             return JsonResponse({'success': False, 'message': 'Product not found'}, status=404)
-        
+
+    @staticmethod
+    def upload_image(request):
+        """Handle product image upload"""
+        try:
+            product_id = request.POST.get('product_id')
+            if not product_id:
+                return JsonResponse({'success': False, 'message': 'Product ID is required'}, status=400)
+
+            # Get the uploaded file
+            if 'image' not in request.FILES:
+                return JsonResponse({'success': False, 'message': 'No image file provided'}, status=400)
+
+            image_file = request.FILES['image']
+
+            # Validate file type
+            allowed_types = ['image/jpeg', 'image/jpg', 'image/png']
+            if image_file.content_type not in allowed_types:
+                return JsonResponse({'success': False, 'message': 'Invalid file type. Only JPEG, and PNG are allowed'}, status=400)
+
+            # Validate file size (5MB limit)
+            max_size = 5 * 1024 * 1024  # 5MB
+            if image_file.size > max_size:
+                return JsonResponse({'success': False, 'message': 'File too large. Maximum size is 5MB'}, status=400)
+
+            # Upload to Supabase
+            upload_result = supabase_storage.upload_product_image(image_file, product_id)
+
+            if not upload_result['success']:
+                return JsonResponse({'success': False, 'message': f'Upload failed: {upload_result["error"]}'}, status=500)
+            
+            # Update product with image URL
+            try:
+                product = Product.objects.get(id=product_id)
+                product.image_url = upload_result['filename']
+                product.signed_url = upload_result['url']
+                product.last_update_signed_url = timezone.now()
+                product.save()
+                
+                return JsonResponse({
+                    'success': True,
+                    'message': 'Image uploaded successfully',
+                    'data': {
+                        'image_url': upload_result['url']
+                    }
+                })
+
+            except Product.DoesNotExist:
+                return JsonResponse({'success': False, 'message': 'Product not found'}, status=404)
+
+        except Exception as e:
+            print(f"Error uploading image: {e}")
+            return JsonResponse({'success': False, 'message': f'Upload failed: {str(e)}'}, status=500)
+        except Exception as e:
+            return JsonResponse({
+                'success': False,
+                'message': f'Upload error: {str(e)}'
+            }, status=500)
+
 
 class TransactionService:
 
