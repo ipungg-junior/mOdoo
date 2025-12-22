@@ -2,7 +2,7 @@ import json
 from django.http import JsonResponse
 from django.core.exceptions import ValidationError
 from django.contrib import messages
-from django.db.models import Sum
+from django.db.models import Sum, Count
 from django.utils import timezone
 from .models import Product, Category, Transaction, TransactionItem, PaymentTerm, PaymentStatus
 from django.contrib.auth.models import User
@@ -701,6 +701,27 @@ class TransactionService:
                 'items_count': len(items_data)
             })
 
+        # Calculate summary data
+        total_transactions = transactions_query.count()
+        total_amount = transactions_query.aggregate(total=Sum('total_price'))['total'] or 0
+        paid_amount = transactions_query.filter(tmp_status__name='paid').aggregate(total=Sum('total_price'))['total'] or 0
+        unpaid_amount = transactions_query.filter(tmp_status__name='unpaid').aggregate(total=Sum('total_price'))['total'] or 0
+
+        # Calculate chart data for payment terms
+        payment_term_data = transactions_query.values('payment_term__display_name').annotate(
+            count=Count('id'),
+            total_amount=Sum('total_price')
+        ).order_by('-total_amount')
+
+        chart_labels = []
+        chart_amounts = []
+        chart_counts = []
+
+        for item in payment_term_data:
+            chart_labels.append(item['payment_term__display_name'] or 'No Term')
+            chart_amounts.append(float(item['total_amount'] or 0))
+            chart_counts.append(item['count'])
+
         return JsonResponse({
             'success': True,
             'data': {
@@ -717,7 +738,19 @@ class TransactionService:
                 },
                 'volume_transaction': str(format_rupiah(total_today)),
                 'cash_on_hand': str(format_rupiah(TransactionService._get_paid_transaction_today())),
-                'pending_payment': str(format_rupiah(TransactionService._get_pending_payment()))
+                'pending_payment': str(format_rupiah(TransactionService._get_pending_payment())),
+                'summary': {
+                    'total_transactions': total_transactions,
+                    'total_amount': format_rupiah(total_amount),
+                    'paid_amount': format_rupiah(paid_amount),
+                    'unpaid_amount': format_rupiah(unpaid_amount),
+                    'amount_user_must_pay': format_rupiah(unpaid_amount)
+                },
+                'chart': {
+                    'labels': chart_labels,
+                    'amounts': chart_amounts,
+                    'counts': chart_counts
+                }
             }
         })
 
