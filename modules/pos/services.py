@@ -11,24 +11,16 @@ from engine.utils import format_rupiah
 class PoSService:
 
     @staticmethod
-    def process_get(request, json_request):
-        """Handle GET requests for PoS operations"""
-        action = json_request.get('action')
-
-        if action == 'get_products':
-            return PoSService.get_products(request)
-        elif action == 'get_transaction':
-            return PoSService.get_transaction(request, json_request)
-        else:
-            return JsonResponse({'success': False, 'message': f'Unknown GET action: {action}'}, status=400)
-
-    @staticmethod
     def process_post(request, json_request):
         """Handle POST requests for PoS operations"""
         action = json_request.get('action')
 
         if action == 'create_transaction':
             return PoSService.create_transaction(request, json_request)
+        elif action == 'get_products':
+            return PoSService.get_products(request)
+        elif action == 'get_transaction':
+            return PoSService.get_transaction(request, json_request)
         elif action == 'process_payment':
             return PoSService.process_payment(request, json_request)
         elif action == 'cancel_transaction':
