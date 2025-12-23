@@ -103,6 +103,13 @@
     }
 
     /* Mobile responsive adjustments */
+    @media (max-width: 1024px) {
+        .product-grid {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+        }
+    }
+
     @media (max-width: 768px) {
         .product-grid {
             grid-template-columns: repeat(2, 1fr);
@@ -116,13 +123,12 @@
             right: 0;
             background: white;
             border-top: 1px solid #e5e7eb;
-            max-height: 50vh;
-            overflow-y: auto;
+            max-height: 60vh;
             z-index: 40;
         }
 
         .main-content {
-            padding-bottom: 50vh;
+            padding-bottom: 60vh;
         }
     }
 
@@ -165,9 +171,9 @@
 {% endblock %}
 
 {% block main_content %}
-<div class="main-content p-4 md:max-h-[80vh]">
+<div class="main-content p-4 max-h-[80vh] overflow-hidden">
     <!-- Product Search and Filter -->
-    <div class="mb-6">
+    <div class="mb-4">
         <div class="flex flex-col md:flex-row gap-4 mb-4">
             <div class="flex-1">
                 <input type="text" id="productSearch" placeholder="Search products..."
@@ -181,78 +187,79 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[calc(80vh-8rem)]">
         <!-- Product List Section -->
-        <div class="lg:col-span-2">
-            <div id="productGrid" class="product-grid grid grid-cols-4 md:grid-cols-6 gap-4 overflow-y-scroll">
+        <div class="lg:col-span-2 flex flex-col">
+            <h2 class="text-lg font-semibold mb-3 text-gray-800">Products</h2>
+            <div id="productGrid" class="product-grid grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 flex-1 overflow-y-auto">
                 <!-- Products will be loaded here -->
             </div>
         </div>
 
         <!-- Cart and Payment Section -->
-        <div class="cart-section">
-            <div class="bg-white rounded-lg shadow-sm border p-4">
+        <div class="cart-section flex flex-col">
+            <div class="bg-white rounded-lg shadow-sm border p-3 flex-1 flex flex-col min-h-0">
                 <!-- Cart Header -->
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-xl font-semibold text-gray-800">Cart</h2>
-                    <button id="clearCartBtn" class="text-red-600 hover:text-red-800 text-sm">
-                        Clear All
+                <div class="flex items-center justify-between mb-2">
+                    <h2 class="text-lg font-semibold text-gray-800">Cart</h2>
+                    <button id="clearCartBtn" class="text-red-600 hover:text-red-800 text-xs">
+                        Clear
                     </button>
                 </div>
 
                 <!-- Cart Items -->
-                <div id="cartItems" class="mb-4 max-h-64 overflow-y-auto">
-                    <div class="text-center text-gray-500 py-8">
+                <div id="cartItems" class="flex-1 overflow-y-auto mb-3 min-h-0">
+                    <div class="text-center text-gray-500 py-4 text-sm">
                         Cart is empty
                     </div>
                 </div>
 
                 <!-- Customer Name -->
-                <div class="mb-4">
-                    <label for="customerName" class="block text-sm font-medium text-gray-700 mb-1">Customer Name (Optional)</label>
-                    <input type="text" id="customerName" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+                <div class="mb-2">
+                    <label for="customerName" class="block text-xs font-medium text-gray-700 mb-1">Customer (Optional)</label>
+                    <input type="text" id="customerName" class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
 
                 <!-- Transaction Summary -->
-                <div id="transactionSummary" class="hidden space-y-2 mb-4">
-                    <div class="flex justify-between text-sm">
+                <div id="transactionSummary" class="hidden space-y-1 mb-2 text-xs">
+                    <div class="flex justify-between">
                         <span>Subtotal:</span>
-                        <span id="summarySubtotal">Rp. 0</span>
+                        <span id="summarySubtotal" class="font-medium">Rp. 0</span>
                     </div>
-                    <div class="flex justify-between text-sm">
+                    <div class="flex justify-between">
                         <span>Discount:</span>
                         <span id="summaryDiscount">Rp. 0</span>
                     </div>
-                    <div class="flex justify-between text-sm">
+                    <div class="flex justify-between">
                         <span>Tax:</span>
                         <span id="summaryTax">Rp. 0</span>
                     </div>
-                    <div class="flex justify-between text-lg font-bold border-t pt-2">
+                    <div class="flex justify-between font-bold border-t pt-1">
                         <span>Total:</span>
                         <span id="summaryTotal">Rp. 0</span>
                     </div>
                 </div>
 
                 <!-- Payment Section -->
-                <div id="paymentSection" class="hidden space-y-4">
+                <div id="paymentSection" class="hidden space-y-2">
                     <!-- Discount and Tax -->
-                    <div class="grid grid-cols-2 gap-2">
+                    <div class="grid grid-cols-2 gap-1">
                         <div>
-                            <label for="discountAmount" class="block text-xs font-medium text-gray-700 mb-1">Discount (Rp)</label>
+                            <label for="discountAmount" class="block text-xs font-medium text-gray-700 mb-1">Discount</label>
                             <input type="number" id="discountAmount" min="0" step="0.01"
-                                class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                class="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         </div>
                         <div>
-                            <label for="taxAmount" class="block text-xs font-medium text-gray-700 mb-1">Tax (Rp)</label>
+                            <label for="taxAmount" class="block text-xs font-medium text-gray-700 mb-1">Tax</label>
                             <input type="number" id="taxAmount" min="0" step="0.01"
-                                class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                class="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         </div>
                     </div>
 
                     <!-- Payment Method -->
                     <div>
-                        <label for="paymentMethod" class="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
-                        <select id="paymentMethod" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <label for="paymentMethod" class="block text-xs font-medium text-gray-700 mb-1">Payment</label>
+                        <select id="paymentMethod" class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                             <option value="cash">Cash</option>
                             <option value="bank_transfer">Bank Transfer</option>
                             <option value="e_wallet">E-Wallet</option>
@@ -261,22 +268,23 @@
 
                     <!-- Cash Received (shown only for cash) -->
                     <div id="cashReceivedSection">
-                        <label for="cashReceived" class="block text-sm font-medium text-gray-700 mb-1">Cash Received</label>
-                        <input type="number" id="cashReceived" min="0" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <div class="mt-1 text-sm text-gray-600">
+                        <label for="cashReceived" class="block text-xs font-medium text-gray-700 mb-1">Cash Received</label>
+                        <input type="number" id="cashReceived" min="0" step="0.01"
+                            class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <div class="mt-1 text-xs text-gray-600">
                             Change: <span id="changeAmount">Rp. 0</span>
                         </div>
                     </div>
 
                     <!-- Action Buttons -->
-                    <div class="space-y-2">
+                    <div class="space-y-1">
                         <button id="processPaymentBtn"
-                            class="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 font-medium transition-colors">
+                            class="w-full bg-green-600 text-white py-2 px-3 rounded hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 text-sm font-medium transition-colors">
                             Process Payment
                         </button>
                         <button id="cancelTransactionBtn"
-                            class="w-full bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 text-sm transition-colors">
-                            Cancel Transaction
+                            class="w-full bg-gray-500 text-white py-1 px-3 rounded hover:bg-gray-600 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 text-xs transition-colors">
+                            Cancel
                         </button>
                     </div>
                 </div>
@@ -284,7 +292,7 @@
                 <!-- Start Transaction Button -->
                 <div id="startTransactionSection">
                     <button id="startTransactionBtn"
-                        class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 font-medium transition-colors">
+                        class="w-full bg-blue-600 text-white py-2 px-3 rounded hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-sm font-medium transition-colors">
                         Start Transaction
                     </button>
                 </div>
