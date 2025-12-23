@@ -652,10 +652,10 @@
         }
 
         const customerName = transaction.customer_name || 'Walk-in Customer';
-        const statusClass = transaction.status_value === 'lunas' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+        const statusClass = transaction.status_value === 'padi' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
 
         let cardTotalAmount = `
-                <div class="border p-4 rounded-lg ${statusClass}">
+                <div class="border p-2 rounded-lg ${statusClass}">
                     <div class="flex items-center justify-between">
                         <span class="text-xs md:text-lg font-semibold">Total Amount</span>
                         <span class="text-sm md:text-xl font-bold">Rp. ${transaction.total_price}</span>
@@ -666,8 +666,8 @@
             <!-- Transaction Header -->
             <div class="mb-6">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xl md:text-2xl font-bold text-gray-800">#${transaction.id}</h3>
-                    <span class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full ${statusClass}">
+                    <h3 class="text-sm md:text-xl font-bold text-gray-800">#${transaction.id}</h3>
+                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">
                         ${transaction.status}
                     </span>
                 </div>
@@ -675,19 +675,19 @@
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div class="bg-gray-50 p-4 rounded-lg">
                         <div class="flex items-center mb-2">
-                            <svg class="w-4 h-4 text-gray-500 mr-2 text-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-3 h-3 text-gray-500 mr-1 text-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                             </svg>
-                            <span class="text-xs font-medium text-gray-700">Customer</span>
+                            <span class="text-[.7rem] font-medium text-gray-700">Customer</span>
                         </div>
                         <p class="text-gray-900 font-medium text-[0.80rem] md:text-base">${customerName}</p>
                     </div>
                     <div class="bg-gray-50 p-4 rounded-lg">
                         <div class="flex items-center mb-2">
-                            <svg class="w-4 h-4 text-gray-500 mr-2 text-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-3 h-3 text-gray-500 mr-1 text-xs" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                             </svg>
-                            <span class="text-xs font-medium text-gray-700">Datetime</span>
+                            <span class="text-[.7rem] font-medium text-gray-700">Datetime</span>
                         </div>
                         <p class="text-gray-900 font-medium text-[0.70rem] md:text-base">${transaction.transaction_date}</p>
                     </div>
@@ -699,7 +699,7 @@
             <!-- Items List -->
             <div class="border-t border-gray-200 pt-3 md:pt-6">
                 <div class="flex items-center justify-between mb-4">
-                    <h4 class="text-sm md:text-lg font-semibold text-gray-800">Items (${transaction.items_count})</h4>
+                    <h4 class="text-xs md:text-sm font-semibold text-gray-800">Items (${transaction.items_count})</h4>
                     <span class="text-xs md:text-sm text-gray-500">${transaction.items_count} item${transaction.items_count !== 1 ? 's' : ''}</span>
                 </div>
 
@@ -708,7 +708,7 @@
 
         transaction.items.forEach((item, index) => {
             detailsHTML += `
-                <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-200">
+                <div class="bg-white border border-gray-200 rounded-lg p-2 md:p-3 hover:shadow-md transition-shadow duration-200">
                     <div class="flex items-center justify-between">
                         <div class="flex-1">
                             <div class="flex items-center">
@@ -743,8 +743,8 @@
         modal.id = 'transaction-detail-modal';
         modal.innerHTML = `
             <div class="modal-content w-full max-w-4xl mx-2 md:mx-4">
-                <div class="flex items-center justify-between p-4 md:p-6 border-b border-gray-200">
-                    <h2 class="text-sm md:text-xl font-semibold text-gray-800">Transaction Details</h2>
+                <div class="flex items-center justify-between p-2 md:p-3 border-b border-gray-200">
+                    <h2 class="text-sm md:text-lg font-semibold text-gray-800">Transaction Details</h2>
                     <button onclick="this.closest('.modal-overlay').remove()"
                             class="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-100 transition-colors">
                         <svg class="w-4 md:w-6 h-4 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -757,13 +757,13 @@
                     ${detailsHTML}
                 </div>
                 
-                <div class="flex justify-end gap-3 p-4 md:p-6 border-t border-gray-200 bg-gray-50">
+                <div class="flex justify-end gap-3 p-2 md:p-3 border-t border-gray-200 bg-gray-50">
                     <button onclick="changeStatus(${transaction.id})"
-                            class="px-4 py-2 text-xs md:text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200">
+                            class="px-3 py-1 md:px-4 md:py-2 text-xs md:text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200">
                         Change Status
                     </button>
                     <button onclick="this.closest('.modal-overlay').remove()"
-                            class="px-4 py-2 text-xs md:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200">
+                            class="px-3 py-1 md:px-4 md:py-2 text-xs md:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200">
                         Close
                     </button>
                 </div>
