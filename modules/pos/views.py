@@ -27,18 +27,6 @@ class PoSAPIView(View):
     """
     API view for PoS operations
     """
-    def get(self, request):
-        """
-        Handle GET requests
-        """
-        try:
-            json_request = json.loads(request.body.decode('utf-8'))
-            return PoSService.process_get(request, json_request)
-        except json.JSONDecodeError:
-            return JsonResponse({'success': False, 'message': 'Invalid JSON data'}, status=400)
-        except Exception as e:
-            return JsonResponse({'success': False, 'message': str(e)}, status=500)
-
     def post(self, request):
         """
         Handle POST requests
