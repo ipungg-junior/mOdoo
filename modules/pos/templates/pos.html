@@ -125,23 +125,16 @@
             border-top: 1px solid #e5e7eb;
             max-height: 50vh;
             z-index: 40;
+            overflow-y: auto;
+        }
+
+        .cart-section .bg-white {
+            border: none;
+            box-shadow: none;
         }
 
         .main-content {
             padding-bottom: 50vh;
-        }
-    }
-
-    @media (max-width: 640px) {
-        .product-grid {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.5rem;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .product-grid {
-            grid-template-columns: repeat(1, 1fr);
         }
     }
 </style>
@@ -196,114 +189,125 @@
 
     <div class="flex flex-col lg:flex-row gap-4 h-[calc(80vh-8rem)]">
         <!-- Product List Section -->
-        <div class="flex flex-col lg:w-[70%]">
-            <h2 class="text-lg font-semibold mb-3 text-gray-800">Products</h2>
-            <div id="productGrid" class="product-grid grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 flex-1 overflow-y-auto border rounded-lg p-3 bg-white shadow-sm">
+        <div class="flex flex-col lg:w-[70%] h-full lg:h-auto">
+            <div id="productGrid"
+                class="product-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2 md:gap-3 h-[calc(100%)] overflow-y-auto border rounded-lg p-2 md:p-3 bg-white shadow-sm">
                 <!-- Products will be loaded here -->
             </div>
         </div>
 
         <!-- Cart and Payment Section -->
-        <div class="cart-section flex flex-col lg:w-[30%]">
-            <div class="bg-white rounded-lg shadow-sm border p-3 flex-1 flex flex-col min-h-0">
+        <div class="cart-section flex flex-col lg:w-[30%] h-full lg:h-auto">
+            <div class="bg-white rounded-lg shadow-sm border p-2 md:p-3 flex-1 flex flex-col min-h-0">
                 <!-- Cart Header -->
                 <div class="flex items-center justify-between mb-2">
-                    <h2 class="text-lg font-semibold text-gray-800">Cart</h2>
-                    <button id="clearCartBtn" class="text-red-600 hover:text-red-800 text-xs">
+                    <h2 class="text-sm md:text-base lg:text-lg font-semibold text-gray-800">Cart</h2>
+                    <button id="clearCartBtn" class="text-red-600 hover:text-red-800 text-xs md:text-sm">
                         Clear
                     </button>
                 </div>
 
                 <!-- Cart Items -->
-                <div id="cartItems" class="flex-1 overflow-y-auto mb-3 min-h-0">
-                    <div class="text-center text-gray-500 py-4 text-sm">
+                <div id="cartItems" class="flex-1 overflow-y-auto min-h-0">
+                    <div class="text-center text-gray-500 py-4 text-xs md:text-sm">
                         Cart is empty
                     </div>
                 </div>
 
+                <!-- Cart Total -->
+                <div id="cartTotal" class="hidden border-t pt-2 mt-2">
+                    <div class="text-center">
+                        <div class="text-xs md:text-sm text-gray-600 mb-1">Total</div>
+                        <div class="text-lg md:text-xl font-bold text-gray-900" id="cartTotalAmount">Rp. 0</div>
+                    </div>
+                </div>
+
                 <!-- Customer Name -->
-                <div class="mb-2">
+                <div class="mt-2">
                     <label for="customerName" class="block text-xs font-medium text-gray-700 mb-1">Customer (Optional)</label>
-                    <input type="text" id="customerName" class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <input type="text" id="customerName" class="w-full px-2 py-1 text-xs md:text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                 </div>
 
-                <!-- Transaction Summary -->
-                <div id="transactionSummary" class="hidden space-y-1 mb-2 text-xs">
-                    <div class="flex justify-between">
-                        <span>Subtotal:</span>
-                        <span id="summarySubtotal" class="font-medium">Rp. 0</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span>Discount:</span>
-                        <span id="summaryDiscount">Rp. 0</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span>Tax:</span>
-                        <span id="summaryTax">Rp. 0</span>
-                    </div>
-                    <div class="flex justify-between font-bold border-t pt-1">
-                        <span>Total:</span>
-                        <span id="summaryTotal">Rp. 0</span>
-                    </div>
-                </div>
-
-                <!-- Payment Section -->
-                <div id="paymentSection" class="hidden space-y-2">
-                    <!-- Discount and Tax -->
-                    <div class="grid grid-cols-2 gap-1">
-                        <div>
-                            <label for="discountAmount" class="block text-xs font-medium text-gray-700 mb-1">Discount</label>
-                            <input type="number" id="discountAmount" min="0" step="0.01"
-                                class="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        </div>
-                        <div>
-                            <label for="taxAmount" class="block text-xs font-medium text-gray-700 mb-1">Tax</label>
-                            <input type="number" id="taxAmount" min="0" step="0.01"
-                                class="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        </div>
-                    </div>
-
-                    <!-- Payment Method -->
-                    <div>
-                        <label for="paymentMethod" class="block text-xs font-medium text-gray-700 mb-1">Payment</label>
-                        <select id="paymentMethod" class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <option value="cash">Cash</option>
-                            <option value="bank_transfer">Bank Transfer</option>
-                            <option value="e_wallet">E-Wallet</option>
-                        </select>
-                    </div>
-
-                    <!-- Cash Received (shown only for cash) -->
-                    <div id="cashReceivedSection">
-                        <label for="cashReceived" class="block text-xs font-medium text-gray-700 mb-1">Cash Received</label>
-                        <input type="number" id="cashReceived" min="0" step="0.01"
-                            class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <div class="mt-1 text-xs text-gray-600">
-                            Change: <span id="changeAmount">Rp. 0</span>
-                        </div>
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div class="space-y-1">
-                        <button id="processPaymentBtn"
-                            class="w-full bg-green-600 text-white py-2 px-3 rounded hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 text-sm font-medium transition-colors">
-                            Process Payment
-                        </button>
-                        <button id="cancelTransactionBtn"
-                            class="w-full bg-gray-500 text-white py-1 px-3 rounded hover:bg-gray-600 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 text-xs transition-colors">
-                            Cancel
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Start Transaction Button -->
-                <div id="startTransactionSection">
+                <!-- Action Buttons -->
+                <div class="mt-3 space-y-2">
+                    <button id="payBtn"
+                        class="w-full bg-green-600 text-white py-2 px-3 rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 text-sm font-medium transition-colors hidden">
+                        Pay
+                    </button>
                     <button id="startTransactionBtn"
-                        class="w-full bg-blue-600 text-white py-2 px-3 rounded hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-sm font-medium transition-colors">
+                        class="w-full bg-blue-600 text-white py-2 px-3 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-sm font-medium transition-colors">
                         Start Transaction
                     </button>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Modal -->
+<div id="paymentModal" class="modal-overlay hidden">
+    <div class="modal-content w-full max-w-md mx-4">
+        <div class="flex items-center justify-between p-4 border-b">
+            <h3 class="text-lg font-semibold">Payment</h3>
+            <button id="closePaymentModal" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="p-4 space-y-4">
+            <!-- Order Summary -->
+            <div class="bg-gray-50 p-3 rounded-lg">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-sm font-medium">Items: <span id="paymentItemCount">0</span></span>
+                    <span class="text-sm text-gray-600" id="paymentSubtotal">Rp. 0</span>
+                </div>
+                <div class="border-t pt-2">
+                    <div class="flex justify-between items-center text-lg font-bold">
+                        <span>Total:</span>
+                        <span id="paymentTotal">Rp. 0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Discount and Tax -->
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label for="discountAmount" class="block text-sm font-medium text-gray-700 mb-2">Discount (Rp)</label>
+                    <input type="number" id="discountAmount" min="0" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label for="taxAmount" class="block text-sm font-medium text-gray-700 mb-2">Tax (Rp)</label>
+                    <input type="number" id="taxAmount" min="0" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+            </div>
+
+            <!-- Payment Method -->
+            <div>
+                <label for="paymentMethod" class="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
+                <select id="paymentMethod" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="cash">Cash</option>
+                    <option value="bank_transfer">Bank Transfer</option>
+                    <option value="e_wallet">E-Wallet</option>
+                </select>
+            </div>
+
+            <!-- Cash Received (shown only for cash) -->
+            <div id="cashReceivedSection">
+                <label for="cashReceived" class="block text-sm font-medium text-gray-700 mb-2">Cash Received</label>
+                <input type="number" id="cashReceived" min="0" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <div class="mt-2 p-2 bg-blue-50 rounded text-sm">
+                    Change: <span id="changeAmount" class="font-medium">Rp. 0</span>
+                </div>
+            </div>
+        </div>
+        <div class="flex gap-2 p-4 border-t bg-gray-50">
+            <button id="cancelPaymentBtn" class="flex-1 bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600 text-sm font-medium">
+                Cancel
+            </button>
+            <button id="processPaymentBtn" class="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 text-sm font-medium">
+                Process Payment
+            </button>
         </div>
     </div>
 </div>
@@ -488,13 +492,15 @@
     // Render cart
     function renderCart() {
         const cartItems = document.getElementById('cartItems');
-        const transactionSummary = document.getElementById('transactionSummary');
+        const cartTotal = document.getElementById('cartTotal');
+        const payBtn = document.getElementById('payBtn');
+        const startTransactionBtn = document.getElementById('startTransactionBtn');
 
         if (cart.length === 0) {
-            cartItems.innerHTML = '<div class="text-center text-gray-500 py-8">Cart is empty</div>';
-            transactionSummary.classList.add('hidden');
-            document.getElementById('paymentSection').classList.add('hidden');
-            document.getElementById('startTransactionSection').classList.remove('hidden');
+            cartItems.innerHTML = '<div class="text-center text-gray-500 py-8 text-xs md:text-sm">Cart is empty</div>';
+            cartTotal.classList.add('hidden');
+            payBtn.classList.add('hidden');
+            startTransactionBtn.classList.remove('hidden');
             return;
         }
 
@@ -510,13 +516,13 @@
                 <div class="flex items-center justify-between">
                     <div class="flex-1">
                         <h4 class="font-medium text-sm text-gray-900">${item.product_name}</h4>
-                        <p class="text-xs text-gray-500">${formatCurrency(item.unit_price)}</p>
+                        <p class="text-xs text-gray-500">${formatCurrency(item.unit_price)} × ${item.quantity}</p>
                     </div>
                     <div class="flex items-center gap-2">
-                        <button onclick="updateQuantity(${index}, -1)" class="w-6 h-6 bg-gray-200 rounded text-xs">-</button>
+                        <button onclick="updateQuantity(${index}, -1)" class="w-6 h-6 bg-gray-200 rounded text-xs hover:bg-gray-300">-</button>
                         <span class="text-sm font-medium w-8 text-center">${item.quantity}</span>
-                        <button onclick="updateQuantity(${index}, 1)" class="w-6 h-6 bg-gray-200 rounded text-xs">+</button>
-                        <button onclick="removeFromCart(${index})" class="w-6 h-6 bg-red-500 text-white rounded text-xs ml-2">×</button>
+                        <button onclick="updateQuantity(${index}, 1)" class="w-6 h-6 bg-gray-200 rounded text-xs hover:bg-gray-300">+</button>
+                        <button onclick="removeFromCart(${index})" class="w-6 h-6 bg-red-500 text-white rounded text-xs ml-2 hover:bg-red-600">×</button>
                     </div>
                 </div>
                 <div class="text-right text-sm font-medium text-gray-900 mt-1">
@@ -527,19 +533,16 @@
             cartItems.appendChild(cartItem);
         });
 
-        // Update summary
+        // Update total
         const discount = parseFloat(document.getElementById('discountAmount').value) || 0;
         const tax = parseFloat(document.getElementById('taxAmount').value) || 0;
         const total = subtotal - discount + tax;
 
-        document.getElementById('summarySubtotal').textContent = formatCurrency(subtotal);
-        document.getElementById('summaryDiscount').textContent = formatCurrency(discount);
-        document.getElementById('summaryTax').textContent = formatCurrency(tax);
-        document.getElementById('summaryTotal').textContent = formatCurrency(total);
+        document.getElementById('cartTotalAmount').textContent = formatCurrency(total);
 
-        transactionSummary.classList.remove('hidden');
-        document.getElementById('paymentSection').classList.remove('hidden');
-        document.getElementById('startTransactionSection').classList.add('hidden');
+        cartTotal.classList.remove('hidden');
+        payBtn.classList.remove('hidden');
+        startTransactionBtn.classList.add('hidden');
     }
 
     // Update item quantity
@@ -613,6 +616,39 @@
         }
     }
 
+    // Open payment modal
+    function openPaymentModal() {
+        if (cart.length === 0) {
+            showMessage('Cart is empty', 'error');
+            return;
+        }
+
+        // Calculate totals
+        let subtotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
+        const discount = parseFloat(document.getElementById('discountAmount').value) || 0;
+        const tax = parseFloat(document.getElementById('taxAmount').value) || 0;
+        const total = subtotal - discount + tax;
+
+        // Update payment modal
+        document.getElementById('paymentItemCount').textContent = cart.length;
+        document.getElementById('paymentSubtotal').textContent = formatCurrency(subtotal);
+        document.getElementById('paymentTotal').textContent = formatCurrency(total);
+
+        // Reset form values
+        document.getElementById('discountAmount').value = discount;
+        document.getElementById('taxAmount').value = tax;
+        document.getElementById('cashReceived').value = '';
+
+        // Show modal
+        document.getElementById('paymentModal').classList.remove('hidden');
+        toggleCashReceived();
+    }
+
+    // Close payment modal
+    function closePaymentModal() {
+        document.getElementById('paymentModal').classList.add('hidden');
+    }
+
     // Process payment
     async function processPayment() {
         if (!currentTransaction) {
@@ -645,6 +681,7 @@
             const result = await response.json();
 
             if (result.success) {
+                closePaymentModal();
                 showReceipt(result.data.receipt_data);
                 resetPoS();
                 showMessage('Payment processed successfully');
@@ -774,12 +811,27 @@
         document.getElementById('cashReceived').value = '';
         document.getElementById('changeAmount').textContent = 'Rp. 0';
         renderCart();
+        closePaymentModal();
+    }
+
+    // Update payment total in modal
+    function updatePaymentTotal() {
+        const discount = parseFloat(document.getElementById('discountAmount').value) || 0;
+        const tax = parseFloat(document.getElementById('taxAmount').value) || 0;
+        let subtotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
+        const total = subtotal - discount + tax;
+
+        document.getElementById('paymentTotal').textContent = formatCurrency(total);
+        calculateChange();
     }
 
     // Calculate change
     function calculateChange() {
         const cashReceived = parseFloat(document.getElementById('cashReceived').value) || 0;
-        const total = parseFloat(document.getElementById('summaryTotal').textContent.replace(/[^\d]/g, '')) || 0;
+        const discount = parseFloat(document.getElementById('discountAmount').value) || 0;
+        const tax = parseFloat(document.getElementById('taxAmount').value) || 0;
+        let subtotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
+        const total = subtotal - discount + tax;
         const change = cashReceived - total;
         document.getElementById('changeAmount').textContent = formatCurrency(Math.max(0, change));
     }
@@ -801,12 +853,16 @@
     document.getElementById('categoryFilter').addEventListener('change', filterProducts);
     document.getElementById('clearCartBtn').addEventListener('click', clearCart);
     document.getElementById('startTransactionBtn').addEventListener('click', startTransaction);
+    document.getElementById('payBtn').addEventListener('click', openPaymentModal);
+
+    // Payment modal events
+    document.getElementById('closePaymentModal').addEventListener('click', closePaymentModal);
+    document.getElementById('cancelPaymentBtn').addEventListener('click', closePaymentModal);
     document.getElementById('processPaymentBtn').addEventListener('click', processPayment);
-    document.getElementById('cancelTransactionBtn').addEventListener('click', resetPoS);
     document.getElementById('cashReceived').addEventListener('input', calculateChange);
     document.getElementById('paymentMethod').addEventListener('change', toggleCashReceived);
-    document.getElementById('discountAmount').addEventListener('input', renderCart);
-    document.getElementById('taxAmount').addEventListener('input', renderCart);
+    document.getElementById('discountAmount').addEventListener('input', updatePaymentTotal);
+    document.getElementById('taxAmount').addEventListener('input', updatePaymentTotal);
 
     // Receipt modal
     document.getElementById('closeReceiptModal').addEventListener('click', () => {
