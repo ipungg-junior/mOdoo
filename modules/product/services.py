@@ -491,10 +491,12 @@ class ProductService:
                             'id': product.category.id if product.category else None,
                             'name': product.category.name if product.category else None
                         } if product.category else None,
-                        'price': str(format_rupiah(product.price)),
                         'raw_price': float(product.price),  # Add raw price for calculations
                         'is_active': product.is_active,
                         'image_url': signed_url_img['url'] if signed_url_img else None,
+                        'price': float(product.price),
+                        'formatted_price': str(format_rupiah(product.price)),
+                        'stock': product.qty,
                         'created_at': product.created_at.isoformat() if product.created_at else None,
                         'updated_at': product.updated_at.isoformat() if product.updated_at else None,
                     })
