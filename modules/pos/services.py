@@ -34,8 +34,13 @@ class PoSService:
         try:
             # Import here to avoid circular imports
             from modules.product.services import ProductService
-            products = ProductService.get_products()
-            
+            result = ProductService.get_products()
+
+            if result.get('success'):
+                products = result['data']['product_list']
+            else:
+                return JsonResponse({'success': False, 'message': 'Failed to fetch products'}, status=500)
+
             return JsonResponse({
                 'success': True,
                 'data': {
