@@ -33,29 +33,13 @@ class PoSService:
         """Get products for PoS interface"""
         try:
             # Import here to avoid circular imports
-            from modules.product.models import Product, Category
-
-            products = Product.objects.select_related('category').filter(is_active=True).order_by('name')
-
-            product_data = []
-            for product in products:
-                product_data.append({
-                    'id': product.id,
-                    'name': product.name,
-                    'price': float(product.price),
-                    'formatted_price': str(format_rupiah(product.price)),
-                    'stock': product.qty,
-                    'category': {
-                        'id': product.category.id if product.category else None,
-                        'name': product.category.name if product.category else 'No Category'
-                    } if product.category else None,
-                    'description': product.description or '',
-                })
-
+            from modules.product.services import ProductService
+            products = ProductService.get_products()
+            
             return JsonResponse({
                 'success': True,
                 'data': {
-                    'products': product_data
+                    'products': products
                 }
             })
 
