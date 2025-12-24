@@ -1,4 +1,5 @@
 import json
+from django.db import transaction as transaction_atomic
 from django.http import JsonResponse
 from django.core.exceptions import ValidationError
 from django.contrib import messages
@@ -464,6 +465,49 @@ class ProductService:
                 'message': f'Upload error: {str(e)}'
             }, status=500)
 
+    @classmethod
+    def get_products(cls):
+        try:
+            with transaction_atomic.atomic():
+                products = Product.objects.select_related('category').all()
+                product_data = []
+                for product in products:
+                    if product.image_url is None or product.image_url == '':
+                        signed_url_img = None
+                    else:
+                        signed_url_img = supabase_storage.get_signed_url(product.image_url, cached_url=product.signed_url, last_update=product.last_update_signed_url)
+                        if signed_url_img['is_new']:
+                            # Update signed URL and timestamp
+                            product.signed_url = signed_url_img['url']
+                            product.last_update_signed_url = timezone.now()
+                            product.save()
+                        
+                    product_data.append({
+                        'id': product.id,
+                        'name': product.name,
+                        'qty': product.qty,
+                        'description': product.description,
+                        'category': {
+                            'id': product.category.id if product.category else None,
+                            'name': product.category.name if product.category else None
+                        } if product.category else None,
+                        'price': str(format_rupiah(product.price)),
+                        'raw_price': float(product.price),  # Add raw price for calculations
+                        'is_active': product.is_active,
+                        'image_url': signed_url_img['url'] if signed_url_img else None,
+                        'created_at': product.created_at.isoformat() if product.created_at else None,
+                        'updated_at': product.updated_at.isoformat() if product.updated_at else None,
+                    })
+
+                return {
+                    'success': True,
+                    'data': {
+                        'product_list': product_data}
+                }
+                
+        except Exception as e:
+            print(f'Error fetching products: {e}')
+            return {'success': False, 'message': f'Error fetching products: {str(e)}'}
 
 class TransactionService:
 
