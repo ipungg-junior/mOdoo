@@ -18,7 +18,7 @@ class PoSService:
         if action == 'create_transaction':
             return PoSService.create_transaction(request, json_request)
         elif action == 'get_products':
-            return PoSService.get_products(request)
+            return PoSService.get_products(request, json_request)
         elif action == 'get_transaction':
             return PoSService.get_transaction(request, json_request)
         elif action == 'process_payment':
@@ -29,22 +29,26 @@ class PoSService:
             return JsonResponse({'success': False, 'message': f'Unknown POST action: {action}'}, status=400)
 
     @staticmethod
-    def get_products(request):
+    def get_products(request, json_request):
         """Get products for PoS interface"""
         try:
             # Import here to avoid circular imports
             from modules.product.services import ProductService
+            from django.core.paginator import Paginator
             result = ProductService.get_products()
 
-            if result.get('success'):
-                products = result['data']['product_list']
-            else:
-                return JsonResponse({'success': False, 'message': 'Failed to fetch products'}, status=500)
+            paging = int(json_request.get('paging', 1))
+            per_page = int(json_request.get('per_page', 6))
+
+            # Apply pagination
+            paginator = Paginator(result.get('data')['product_list'], per_page)
+            page_obj = paginator.get_page(paging)
 
             return JsonResponse({
                 'success': True,
+                'has_next': page_obj.has_next(),
                 'data': {
-                    'products': products
+                    'products': page_obj.object_list
                 }
             })
 
