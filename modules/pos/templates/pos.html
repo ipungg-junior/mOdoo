@@ -349,6 +349,11 @@
     let currentTransaction = null;
     let categories = new Set();
 
+    let paging = 1;
+    let per_load = 6;
+    let isLoading = false;
+    let hasNext = true;
+
     // Utility functions
     function showMessage(message, type = 'success') {
         const messagesDiv = document.getElementById('statusMessages');
@@ -366,8 +371,12 @@
         return 'Rp ' + amount.toLocaleString('id-ID');
     }
 
-    // Load products
+    // Load product function
     async function loadProducts() {
+        if (isLoading || !hasNext) return;
+
+        isLoading = true;
+
         try {
             const response = await fetch(POS_API_BASE, {
                 method: 'POST',
@@ -375,57 +384,91 @@
                     'Content-Type': 'application/json',
                     'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
                 },
-                body: JSON.stringify({ action: 'get_products' })
+                body: JSON.stringify({
+                    action: 'get_products',
+                    paging: paging,
+                    per_page: per_load
+                })
             });
 
             const result = await response.json();
 
             if (result.success) {
-                products = result.data.products;
-                renderProducts(products);
-                populateCategories(products);
-            } else {
-                showMessage(result.message || 'Failed to load products', 'error');
+                renderProducts(result.data.products);
+                hasNext = result.has_next;
+                paging++;
+                populateCategories(result.data.products);
+                // 👇 kunci solusi
+                requestAnimationFrame(checkNeedMore);
             }
-        } catch (error) {
-            showMessage('Error loading products: ' + error.message, 'error');
+        } catch (e) {
+            console.error(e);
+        } finally {
+            isLoading = false;
         }
     }
+
+    function checkNeedMore() {
+        const grid = document.getElementById('productGrid');
+
+        const canScroll = grid.scrollHeight > grid.clientHeight;
+
+        if (!canScroll && hasNext) {
+            loadProducts();
+        }
+    }
+
+
+    productGrid.addEventListener('scroll', () => {
+        const nearBottom =
+            productGrid.scrollTop + productGrid.clientHeight >=
+            productGrid.scrollHeight - 100;
+
+        if (nearBottom) {
+            loadProducts();
+        }
+    });
 
     // Render products
     function renderProducts(productList) {
         const productGrid = document.getElementById('productGrid');
-        productGrid.innerHTML = '';
 
-        if (productList.length === 0) {
-            productGrid.innerHTML = '<div class="col-span-full text-center text-gray-500 py-8">No products found</div>';
+        if (paging === 1) {
+            productGrid.innerHTML = '';
+        }
+
+        if (productList.length === 0 && paging === 1) {
+            productGrid.innerHTML =
+                '<div class="col-span-full text-center text-gray-500 py-8">No products found</div>';
             return;
         }
 
         productList.forEach(product => {
             const isOutOfStock = product.stock <= 0;
-            const cardClass = `product-card bg-white rounded-lg shadow-sm border p-4 ${isOutOfStock ? 'out-of-stock' : 'hover:shadow-md'}`;
-            const imageUrl = product.image_url ? `<img src="${product.image_url}" alt="${product.name}" class="w-full h-full object-cover">` : `<span class="text-2xl">📦</span>`;
 
             const productCard = document.createElement('div');
-            productCard.className = cardClass;
+            productCard.className = `product-card bg-white rounded-lg shadow-sm border p-4 
+                ${isOutOfStock ? 'out-of-stock' : 'hover:shadow-md'}`;
+
             productCard.onclick = () => !isOutOfStock && addToCart(product);
 
             productCard.innerHTML = `
                 <div class="text-center">
                     <div class="w-16 h-16 bg-gray-100 rounded-lg mx-auto mb-2 flex items-center justify-center">
-                        ${imageUrl}
+                        ${product.image_url
+                            ? `<img src="${product.image_url}" class="w-full h-full object-cover">`
+                            : '📦'}
                     </div>
-                    <h3 class="font-medium text-sm text-gray-900 mb-1 line-clamp-2">${product.name}</h3>
-                    <p class="text-lg font-bold text-green-600 mb-1">${product.formatted_price}</p>
+                    <h3 class="font-medium text-sm">${product.name}</h3>
+                    <p class="text-lg font-bold text-green-600">${product.formatted_price}</p>
                     <p class="text-xs text-gray-500">Stock: ${product.stock}</p>
-                    ${product.category ? `<p class="text-xs text-blue-600">${product.category.name}</p>` : ''}
                 </div>
             `;
 
             productGrid.appendChild(productCard);
         });
     }
+
 
     // Populate categories filter
     function populateCategories(productList) {
