@@ -1,4 +1,4 @@
-# mOdoo - Modular Django ERP System
+# ERP-mirror (Glemi Project)
 
 mOdoo is a comprehensive Django-based Enterprise Resource Planning (ERP) system featuring dynamic module loading, role-based access control, and modern web interfaces. Built with a modular architecture that allows seamless extension and customization.
 
