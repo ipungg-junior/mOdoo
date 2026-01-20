@@ -14,4 +14,6 @@ modules/product/migrations/
 modules/pos/migrations/
 modules/accounting/migrations/
 
+# settings and database files
+mOdoo/settings.py
 *.sqlite3
