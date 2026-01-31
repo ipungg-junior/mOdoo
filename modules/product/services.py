@@ -587,7 +587,7 @@ class TransactionService:
     # Get pending payment
     @staticmethod
     def _get_pending_payment():
-        unpaid = Transaction.objects.filter(tmp_status__name='unpaid').aggregate(total=Sum('total_price'))['total'] or None
+        unpaid = Transaction.objects.filter(tmp_status__name='unpaid').aggregate(total=Sum('total_price'))['total'] or 0
         return unpaid
     
     @staticmethod
