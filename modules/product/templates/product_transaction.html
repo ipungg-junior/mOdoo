@@ -452,7 +452,7 @@
                     'Content-Type': 'application/json',
                     'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
                 },
-                body: JSON.stringify({ action: 'list' })
+                body: JSON.stringify({ action: 'list', active: true })
             });
 
             const result = await response.json();

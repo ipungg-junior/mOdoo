@@ -184,7 +184,7 @@ class ProductService:
         action = json_request.get('action')
 
         if action == 'list':
-            return ProductService.list_products(request)
+            return ProductService.list_products(request, json_request)
         elif action == 'create':
             return ProductService.create_product(request, json_request)
         elif action == 'update':
@@ -209,9 +209,15 @@ class ProductService:
         return total_amount
 
     @staticmethod
-    def list_products(request):
+    def list_products(request, json_request=None):
         """List all products with category information"""
-        products = Product.objects.select_related('category').all()
+        if json_request.get('active') == False:
+            products = Product.objects.select_related('category').all().filter(is_active=False).order_by('name')
+        elif json_request.get('active') == True:
+            products = Product.objects.select_related('category').all().filter(is_active=True).order_by('name')
+        else:
+            products = Product.objects.select_related('category').all().order_by('name')
+            
         product_data = []
         for product in products:
             if product.image_url is None or product.image_url == '':
@@ -226,7 +232,7 @@ class ProductService:
                 
             product_data.append({
                 'id': product.id,
-                'name': product.name,
+                'name': product.name + f"\t\t({product.qty})",
                 'qty': product.qty,
                 'description': product.description,
                 'category': {
