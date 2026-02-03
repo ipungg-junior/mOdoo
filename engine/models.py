@@ -17,8 +17,8 @@ class TaxType(models.Model):
     
 class Tax(models.Model):
     name = models.CharField(max_length=100)
-    tax_type = models.ForeignKey(TaxType, on_delete=models.CASCADE)
-    rate = models.DecimalField(max_digits=3, decimal_places=2)
+    tax_type = models.ForeignKey(TaxType, on_delete=models.DO_NOTHING, null=True, blank=True)
+    rate = models.SmallIntegerField(default=0)
 
     def __str__(self):
         return f"{self.name}"
