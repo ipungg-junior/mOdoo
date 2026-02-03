@@ -140,7 +140,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                 <div>
                     <label for="productName" class="block text-sm font-medium text-gray-700 mb-2">
                         Product Name *
@@ -161,6 +161,14 @@
                     </label>
                     <input type="number" id="productQty" name="qty" required placeholder="0"
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="productQty" class="block text-sm font-medium text-gray-700 mb-2">
+                        Tax (optional)
+                    </label>
+                    <select id="productTax" name="tax_id" class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value=""> -- </option>
+                    </select>
                 </div>
             </div>
 
@@ -278,6 +286,7 @@
     // API Base URLs
     const PRODUCT_API_BASE = '{% url "product_api" %}';
     const CATEGORY_API_BASE = '{% url "category_api" %}';
+    const ENGINE_API_BASE = '{% url "engine_api" %}';
 
     // Image upload state
     let selectedImageFile = null;
@@ -380,6 +389,39 @@
             </div>
         `;
         setTimeout(() => messagesDiv.innerHTML = '', 5000);
+    }
+
+    // Load tax options (if applicable)
+    async function loadTaxes() {
+
+        try {
+            const response = await fetch(ENGINE_API_BASE, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+                },
+                body: JSON.stringify({ action: 'tax_list' })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                const taxSelect = document.getElementById('productTax');
+
+                result.data.forEach(tax => {
+                    const option = document.createElement('option');
+                    option.value = tax.id;
+                    option.textContent = tax.name;
+                    taxSelect.appendChild(option);
+                });
+            } else {
+                console.error('Failed to load categories:', result.error);
+            }
+        } catch (error) {
+            console.error('Error loading categories:', error);
+        }
+
     }
 
     // Load categories for dropdown
@@ -509,6 +551,7 @@
 
             // Load categories
             await loadCategories();
+            await loadTaxes();
 
             // Hide loading state and show form
             document.getElementById('loadingState').classList.add('hidden');
@@ -671,6 +714,7 @@
                 resetCategoryForm();
                 loadCategoriesForModal();
                 loadCategories(); // Refresh main dropdown
+                loadTaxes(); // Refresh tax options if needed
             } else {
                 showMessage('Failed to save category: ' + result.message, 'error');
             }
