@@ -6,10 +6,19 @@ class Module(models.Model):
 
     def __str__(self):
         return self.name
-
-class MasterDatabase(models.Model):
+    
+    
+class TaxType(models.Model):
     name = models.CharField(max_length=100, unique=True)
-    description = models.TextField(blank=True)
 
     def __str__(self):
-        return self.name
+        return f"{self.name}"
+    
+    
+class Tax(models.Model):
+    name = models.CharField(max_length=100)
+    tax_type = models.ForeignKey(TaxType, on_delete=models.CASCADE)
+    rate = models.DecimalField(max_digits=3, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.name}"
