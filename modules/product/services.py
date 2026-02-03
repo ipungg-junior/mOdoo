@@ -8,6 +8,7 @@ from django.utils import timezone
 from .models import Product, Category, Transaction, TransactionItem, PaymentTerm, PaymentStatus
 from django.contrib.auth.models import User
 from engine.utils import format_rupiah, supabase_storage
+from engine.models import Tax
 from datetime import datetime
 
 # Import accounting models for receivable creation
@@ -259,6 +260,7 @@ class ProductService:
             price = data.get('price')
             description = data.get('description', '')
             category_id = data.get('category_id')
+            tax_id = data.get('tax_id')
             is_active = data.get('is_active', True)
             if is_active in ['false', 'False', False, 0, '0']:
                 is_active = False
@@ -293,6 +295,15 @@ class ProductService:
                     return JsonResponse({'success': False, 'message': 'Category not found'}, status=400)
                 except ValueError:
                     return JsonResponse({'success': False, 'message': 'Invalid category ID'}, status=400)
+                
+            if tax_id:
+                try:
+                    tax = Tax.objects.get(id=tax_id)
+                    product.tax = tax
+                except Tax.DoesNotExist:
+                    return JsonResponse({'success': False, 'message': 'Tax not found'}, status=400)
+                except ValueError:
+                    return JsonResponse({'success': False, 'message': 'Invalid tax ID'}, status=400)
 
             product.full_clean()  # Validate
             product.save()
@@ -510,6 +521,7 @@ class ProductService:
         except Exception as e:
             print(f'Error fetching products: {e}')
             return {'success': False, 'message': f'Error fetching products: {str(e)}'}
+
 
 class TransactionService:
 
