@@ -3,10 +3,12 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.views import View
 from .models import Module
-import os
 from pathlib import Path
 from modules.updater import ModuleUpdater
 from django.core.exceptions import PermissionDenied
+import os, json
+from django.http import JsonResponse
+from .services import CoreService
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -77,3 +79,33 @@ class UpgradeModuleView(View):
     def get(self, request, module_name):
         success = ModuleUpdater.upgrade_module(module_name, request)
         return redirect('module_list')
+    
+class APIView(View):
+    
+    context = ''
+    
+    def post(self, request):
+        """
+        Handle POST requests - process JSON actions or file uploads
+        """
+        try:
+            # Check if this is a file upload request (multipart/form-data)
+            if request.FILES:
+                return JsonResponse({'success': False, 'message': 'Invalid file upload action'}, status=400)
+            else:
+                # Parse JSON data from request body for regular API calls
+                json_request = json.loads(request.body.decode('utf-8'))
+
+                if self.context == 'engine_api':
+                    # Category Service handling request
+                    return CoreService.process_post(request, json_request)
+                else:
+                    # Return 400 Bad request
+                    return JsonResponse({'success': False, 'message': 'Invalid API context'}, status=400)
+
+        except json.JSONDecodeError:
+            print("Invalid JSON data received in POST request")
+            return JsonResponse({'success': False, 'message': 'Invalid JSON data'}, status=400)
+        except Exception as e:
+            print(f"Error processing POST request: {e}")
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
