@@ -1,18 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-from engine.models import MasterDatabase
-
-class ChoosenDatabase(models.Model):
-    name = models.ForeignKey(MasterDatabase, on_delete=models.SET_NULL, null=True, blank=True)
-
-
-class ChoosenDatabaseConfig(models.Model):
-    db_name = models.ForeignKey(ChoosenDatabase, on_delete=models.SET_NULL, null=True, blank=True)
-    config_name = models.CharField(max_length=40)
-    config_value = models.TextField()
-
-    def __str__(self):
-        return f"{self.config_name} - {self.master_database.name}"
+from engine.models import Tax
 
 
 class Category(models.Model):
@@ -33,6 +21,13 @@ class Product(models.Model):
     category = models.ForeignKey(
         Category,
         on_delete=models.CASCADE,
+        related_name='products',
+        null=True,
+        blank=True
+    )
+    tax = models.ForeignKey(
+        Tax,
+        on_delete=models.DO_NOTHING,
         related_name='products',
         null=True,
         blank=True
@@ -78,10 +73,6 @@ class PaymentTerm(models.Model):
 class Transaction(models.Model):
     customer_name = models.CharField(max_length=200, null=True, blank=True)
     total_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    STATUS_CHOICES = [
-        ('lunas', 'Lunas'),
-        ('belum_lunas', 'Belum Lunas'),
-    ]
     paid_date = models.DateTimeField(null=True, blank=True)
     tmp_status = models.ForeignKey(PaymentStatus, on_delete=models.SET_NULL, null=True, blank=True)
     payment_term = models.ForeignKey(PaymentTerm, on_delete=models.SET_NULL, null=True, blank=True)
@@ -89,14 +80,16 @@ class Transaction(models.Model):
     transaction_date = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
-        return f"Transaction of {self.product.name} by {self.user.username} on {self.transaction_date}"
+        return f"Transaction {self.id} ({self.total_price}) - {self.transaction_date}"
     
     
 class TransactionItem(models.Model):
     transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE, related_name='items')
+    product_id = models.IntegerField(default=0)
     product_name = models.CharField(max_length=60)
     quantity = models.IntegerField()
-    price_per_item = models.DecimalField(max_digits=10, decimal_places=2)
+    price_per_item = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    subtotal_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
     def __str__(self):
         return f"{self.quantity} x {self.product.name} at {self.price_per_item} each"
@@ -108,7 +101,6 @@ class PaymentRecord(models.Model):
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     payment_date = models.DateTimeField(auto_now_add=True)
     payment_method = models.CharField(max_length=50, choices=[('cash', 'Cash'), ('transfer', 'Transfer')])
-    status = models.ForeignKey(PaymentStatus, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return f"Payment of {self.amount} for transaction {self.transaction.id} on {self.payment_date}"
