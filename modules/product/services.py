@@ -934,7 +934,7 @@ class TransactionService:
     def create_transaction_v2(request, data):
         """Create a new transaction - Version 2 (Placeholder)"""
         all_items = data.get('items', [])
-        name = data.get('name', '')
+        name = data.get('name', 'Anonymous')
         payment_term = data.get('payment_term', 'credit-three-day')
         transaction_date = data.get('datetime', None)
         
@@ -942,9 +942,7 @@ class TransactionService:
         schedule_time = datetime.strptime(
             transaction_date,
             '%Y-%m-%dT%H:%M'
-        )
-        
-        
+        )        
         
         print(f'Creating transaction (V2) for {name} with items: {all_items} and payment term: {payment_term}')
         
@@ -960,6 +958,8 @@ class TransactionService:
                 payment_term = PaymentTerm.objects.get(name='cash')
             else:
                 tmp_status = PaymentStatus.objects.get(name='unpaid')
+                if (payment_term == ''):
+                    return JsonResponse({'success': False, 'message': 'Please select payment terms'}, status=400)
                 payment_term = PaymentTerm.objects.get(name=payment_term)
                 
             transaction = Transaction(
@@ -967,7 +967,7 @@ class TransactionService:
                 tmp_status=tmp_status,
                 payment_term=payment_term
             )
-            
+                        
             # Setup due date if payment term is credit
             if payment_term.name.startswith('credit'):
                 days = payment_term.name.split('-')[-2]  # Extract number of days from name
@@ -991,7 +991,7 @@ class TransactionService:
             transaction.save()
 
             failed_items = []
-
+            
             for item in all_items:
                 product_id = item.get('product_id')
                 quantity = item.get('qty', 0)
@@ -1029,9 +1029,20 @@ class TransactionService:
                         'requested_qty': quantity
                     })
                     print(f'Product with ID {product_id} does not exist')
+                    
+            if failed_items:
+                print(f'Failed items due to insufficient stock: {failed_items}')
+                for item in TransactionItem.objects.filter(transaction=transaction):
+                    item.delete()
             
             if total_price == 0:
-                transaction.delete()  # Clean up the transaction if no items were added
+                for item in TransactionItem.objects.filter(transaction=transaction):
+                    product = Product.objects.get(id=item.product_id)
+                    product.qty += item.quantity
+                    product.save()
+                    item.delete()
+                transaction.delete()
+                print('Transaction canceled')
                 return JsonResponse({'success': False, 'message': 'No valid items to create transaction'}, status=400)
             else:
                 # Update total price of the transaction
@@ -1064,33 +1075,25 @@ class TransactionService:
                         print(f"Created receivable record {receivable.id} for transaction {transaction.id}")
 
                     except Exception as e:
+                        for item in TransactionItem.objects.filter(transaction=transaction):
+                            product = Product.objects.get(id=item.product_id)
+                            product.qty += item.quantity
+                            product.save()
+                            item.delete()
+                        transaction.delete()
                         print(f"Warning: Failed to create receivable record: {e}")
                         # Don't fail the transaction if receivable creation fails
                         
                 else:
                     # If AccountingReceivablePayment model does not exist, rollback transaction
                     for item in TransactionItem.objects.filter(transaction=transaction):
+                        product = Product.objects.get(id=item.product_id)
+                        product.qty += item.quantity
+                        product.save()
                         item.delete()
                     transaction.delete()
                     print("AccountingReceivablePayment service not available, rolling back transaction creation.")
-                    return JsonResponse({'success': False, 'message': "AccountingReceivablePayment service not available, transaction rejected!"}, status=500)
-            
-            if failed_items:
-                print(f'Failed items due to insufficient stock: {failed_items}')
-                return JsonResponse({
-                    'success': True,
-                    'message': 'Trasaction created with some failed items due to insufficient stock',
-                    'data': {
-                        'transaction': {
-                            'id': transaction.id,
-                            'customer_name': transaction.customer_name,
-                            'status': transaction.status,
-                            'total_price': str(format_rupiah(transaction.total_price)),
-                            'transaction_date': transaction.transaction_date.isoformat() if transaction.transaction_date else None,
-                        },
-                        'failed_items': failed_items
-                    }
-                }, status=200)
+                    return JsonResponse({'success': False, 'message': "AccountingReceivablePayment service not available, transaction rejected!"}, status=500)                
 
             return JsonResponse({
                 'success': True,
@@ -1098,7 +1101,7 @@ class TransactionService:
                 'data': {'transaction': {
                     'id': transaction.id,
                     'customer_name': transaction.customer_name,
-                    'status': transaction.status,
+                    'status': transaction.tmp_status.display_name,
                     'total_price': str(format_rupiah(transaction.total_price)),
                     'transaction_date': transaction.transaction_date.isoformat() if transaction.transaction_date else None,
                 }}
