@@ -1278,14 +1278,15 @@ class TransactionService:
             total = Transaction.objects.filter(
                 transaction_date__date=date
             ).aggregate(total=Sum('total_price'))['total'] or 0
-            daily_totals.append({
-                'date': date.strftime('%d-%m-%Y'),
-                'income': format_rupiah(total)
-            })
+            if total is not 0:
+                daily_totals.append({
+                    'date': date.strftime('%d-%m-%Y'),
+                    'income': format_rupiah(total)
+                })
 
         # Reverse sort (higher to lower)
         daily_totals.sort(key=lambda x: x['date'], reverse=True)
-
+        print(daily_totals)
         return JsonResponse({
             'success': True,
             'data': {
