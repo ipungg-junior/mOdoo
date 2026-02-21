@@ -9,6 +9,8 @@ from django.core.exceptions import PermissionDenied
 import os, json
 from django.http import JsonResponse
 from .services import CoreService
+from modules.product.services import TransactionService
+from .utils import format_rupiah
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -57,7 +59,13 @@ class ModuleListView(View):
                         # Jika tidak terotentikasi, tampilkan semua modul
                         modules.append(module_obj)
 
-        return render(request, 'module_list.html', {'modules': modules})
+        pending_payment = format_rupiah(TransactionService._get_pending_payment())
+
+        dashboard_info = {
+            'pending_payment': pending_payment,
+        }
+
+        return render(request, 'base_dashboard.html', context=dashboard_info)
 
 class InstallModuleView(View):
     def get(self, request, module_name):
