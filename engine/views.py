@@ -60,7 +60,7 @@ class ModuleListView(View):
                         modules.append(module_obj)
 
         pending_payment = format_rupiah(TransactionService._get_pending_payment())
-
+        
         dashboard_info = {
             'pending_payment': pending_payment,
         }

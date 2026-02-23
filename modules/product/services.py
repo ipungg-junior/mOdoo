@@ -5,11 +5,13 @@ from django.core.exceptions import ValidationError
 from django.contrib import messages
 from django.db.models import Sum, Count
 from django.utils import timezone
+from django.db.models.functions import TruncMonth
+from dateutil.relativedelta import relativedelta
 from .models import Product, Category, Transaction, TransactionItem, PaymentTerm, PaymentStatus
 from django.contrib.auth.models import User
 from engine.utils import format_rupiah, supabase_storage
 from engine.models import Tax
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # Import accounting models for receivable creation
 try:
@@ -570,6 +572,9 @@ class TransactionService:
             return TransactionService.get_transaction_chart(request)
         elif action == 'get_daily_totals':
             return TransactionService.get_daily_totals(request)
+        elif action == 'six_monthly':
+            print('Processing six_monthly transaction request')
+            return TransactionService.get_sixmonthly_transaction(request)
         else:
             return JsonResponse({'success': False, 'message': f'Unknown POST action: {action}'}, status=400)
 
@@ -1286,7 +1291,7 @@ class TransactionService:
 
         # Reverse sort (higher to lower)
         daily_totals.sort(key=lambda x: x['date'], reverse=True)
-        print(daily_totals)
+        
         return JsonResponse({
             'success': True,
             'data': {
@@ -1330,3 +1335,39 @@ class TransactionService:
         except Transaction.DoesNotExist:
             return JsonResponse({'success': False, 'message': 'Transaction not found'}, status=404)
         
+    @staticmethod
+    def get_sixmonthly_transaction(request):
+        try:
+            """Return transaction data for the last 6 months"""            
+            now = timezone.now()
+            start_date = (now - relativedelta(months=5)).replace(day=1)
+
+            sales = (
+                Transaction.objects
+                .filter(transaction_date__gte=start_date)
+                .annotate(month=TruncMonth('transaction_date'))
+                .values('month')
+                .annotate(total=Sum('total_price'))
+                .order_by('month')
+            )
+
+            result = {item['month'].date(): item['total'] for item in sales}
+
+            data = []
+            for i in range(6):
+                month = (start_date + relativedelta(months=i))
+                total = result.get(month.date(), 0)
+                data.append({
+                    'month': month.strftime('%b %Y'),
+                    'total': float(total or 0)
+                })
+                
+            return JsonResponse({
+                'success': True,
+                'data': {
+                    'six_monthly': data
+                }            
+            })
+        except Exception as e:
+            print(f"Error fetching six monthly transaction data: {e}")
+            return JsonResponse({'success': False, 'message': 'Error fetching data'}, status=500)
