@@ -161,10 +161,10 @@
                     <div class="page-header-title">
                         <h5 class="m-b-10">Dashboard</h5>
                     </div>
-                    <ul class="breadcrumb">
+                    <!-- <ul class="breadcrumb">
                         <li class="breadcrumb-item"><a href="index.html">Home</a></li>
                         <li class="breadcrumb-item">Dashboard</li>
-                    </ul>
+                    </ul> -->
                 </div>
                 <div class="page-header-right ms-auto">
                     <div class="page-header-right-items">
@@ -809,7 +809,7 @@
     <!--! END: Theme Customizer !-->
 
     <script>
-        const TRANSACTION_API_BASE = '{% url "product_transaction_api" %}';
+        const TRANSACTION_API_BASE = '{% url "product:product_transaction_api" %}';
 
         function renderChart(sixMonthlyData) {
 

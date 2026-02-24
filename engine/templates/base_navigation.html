@@ -17,26 +17,19 @@
                     <label>Navigation</label>
                 </li>
                 <li class="nxl-item nxl-hasmenu">
-                    <a href="javascript:void(0);" class="nxl-link">
+                    <a href="{% url 'engine:main_dashboard' %}" class="nxl-link">
                         <span class="nxl-micon"><i class="feather-airplay"></i></span>
-                        <span class="nxl-mtext">Dashboards</span><span class="nxl-arrow"><i class="feather-chevron-right"></i></span>
+                        <span class="nxl-mtext">Dashboards</span><span class="nxl-arrow"></span>
                     </a>
-                    <ul class="nxl-submenu">
-                        <li class="nxl-item"><a class="nxl-link" href="">General</a></li>
-                        <li class="nxl-item"><a class="nxl-link" href="">Marketing & Sales</a></li>
-                        <li class="nxl-item"><a class="nxl-link" href="">Accounting</a></li>
-                        <li class="nxl-item"><a class="nxl-link" href="">HR</a></li>
-                    </ul>
                 </li>
                 <li class="nxl-item nxl-hasmenu">
                     <a href="javascript:void(0);" class="nxl-link">
-                        <span class="nxl-micon"><i class="feather-dollar-sign"></i></span>
-                        <span class="nxl-mtext">Payment</span><span class="nxl-arrow"><i class="feather-chevron-right"></i></span>
+                        <span class="nxl-micon"><i class="feather-tag"></i></span>
+                        <span class="nxl-mtext">Product</span><span class="nxl-arrow"><i class="feather-chevron-right"></i></span>
                     </a>
                     <ul class="nxl-submenu">
-                        <li class="nxl-item"><a class="nxl-link" href="payment.html">Payment</a></li>
-                        <li class="nxl-item"><a class="nxl-link" href="invoice-view.html">Invoice View</a></li>
-                        <li class="nxl-item"><a class="nxl-link" href="invoice-create.html">Invoice Create</a></li>
+                        <li class="nxl-item"><a class="nxl-link" href="{% url 'product:product_list' %}">Product View</a></li>
+                        <li class="nxl-item"><a class="nxl-link" href="invoice-create.html">Product Create</a></li>
                     </ul>
                 </li>
                 <li class="nxl-item nxl-hasmenu">
