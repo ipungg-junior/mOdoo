@@ -8,7 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         .hero-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #2d4bd1 0%, #3370e0 100%);
             color: white;
             padding: 100px 0;
             min-height: 60vh;
@@ -30,14 +30,14 @@
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="{% url 'home' %}">mOdoo</a>
+            <a class="navbar-brand fw-bold" href="{% url 'engine:home' %}">mOdoo</a>
             <div class="navbar-nav ms-auto">
                 {% if user.is_authenticated %}
                 <span class="navbar-text me-3">Welcome, {{ user.username }}!</span>
-                <a href="{% url 'module_list' %}" class="btn btn-outline-light btn-sm me-2">Modules</a>
-                <a href="{% url 'logout' %}" class="btn btn-outline-light btn-sm">Logout</a>
+                <a href="{% url 'engine:main_dashboard' %}" class="btn btn-outline-light btn-sm me-2">Modules</a>
+                <a href="{% url 'engine:logout' %}" class="btn btn-outline-light btn-sm">Logout</a>
                 {% else %}
-                <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm">Login</a>
+                <a href="{% url 'engine:login' %}" class="btn btn-outline-light btn-sm">Login</a>
                 {% endif %}
             </div>
         </div>
@@ -49,10 +49,10 @@
             <h1 class="display-4 fw-bold mb-4">Welcome to mOdoo</h1>
             <p class="lead mb-4">A powerful, modular ERP system built with Django</p>
             {% if not user.is_authenticated %}
-            <a href="{% url 'login' %}" class="btn btn-light btn-lg me-3">Get Started</a>
-            <a href="{% url 'module_list' %}" class="btn btn-outline-light btn-lg">View Modules</a>
+            <a href="{% url 'engine:login' %}" class="btn btn-light btn-lg me-3">Get Started</a>
+            <a href="{% url 'engine:main_dashboard' %}" class="btn btn-outline-light btn-lg">View Modules</a>
             {% else %}
-            <a href="{% url 'module_list' %}" class="btn btn-light btn-lg">Manage Modules</a>
+            <a href="{% url 'engine:main_dashboard' %}" class="btn btn-light btn-lg">Manage Modules</a>
             {% endif %}
         </div>
     </section>
@@ -121,7 +121,7 @@
     <!-- Footer -->
     <footer class="bg-dark text-light py-4">
         <div class="container text-center">
-            <p class="mb-0">&copy; 2024 mOdoo (Django test).</p>
+            <p class="mb-0">&copy; 2024 mOdoo.</p>
         </div>
     </footer>
 
