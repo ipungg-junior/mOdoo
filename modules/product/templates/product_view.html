@@ -184,7 +184,114 @@
             <!-- [ Main Content ] start -->
             <div class="main-content">
                 <div class="row">
-
+                    <div class="col-lg-12">
+                        <div class="card stretch stretch-full">
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover" id="paymentList">
+                                        <thead>
+                                            <tr>
+                                                <th class="wd-30">
+                                                    <div class="btn-group mb-1">
+                                                        <div class="custom-control custom-checkbox ms-1">
+                                                            <input type="checkbox" class="custom-control-input" id="checkAllPayment">
+                                                            <label class="custom-control-label" for="checkAllPayment"></label>
+                                                        </div>
+                                                    </div>
+                                                </th>
+                                                <th>ID</th>
+                                                <th>Name</th>
+                                                <th>Price</th>
+                                                <th>Unit</th>
+                                                <th>Last Modified</th>
+                                                <th>Status</th>
+                                                <th class="text-end">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="single-item">
+                                                <td>
+                                                    <div class="item-checkbox ms-1">
+                                                        <div class="custom-control custom-checkbox">
+                                                            <input type="checkbox" class="custom-control-input checkbox" id="checkBox_1">
+                                                            <label class="custom-control-label" for="checkBox_1"></label>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td><a href="invoice-view.html" class="fw-bold">#P-212</a></td>
+                                                <td>
+                                                    <a href="" class="hstack gap-1">
+                                                        <div class="gap-1">
+                                                            <span class="text-truncate-1-line">Example Product</span>
+                                                            <small class="fs-12 fw-normal text-muted mt-1">Categories Stuff</small>
+                                                        </div>
+                                                    </a>
+                                                </td>
+                                                <td class="fw-bold text-dark">12.000,00</td>
+                                                <td>PCS</td>
+                                                <td>2023-04-25</td>
+                                                <td>
+                                                    <div class="badge bg-soft-success text-success">Selling</div>
+                                                </td>
+                                                <td>
+                                                    <div class="hstack gap-2 justify-content-end">
+                                                        <a href="invoice-view.html" class="avatar-text avatar-md">
+                                                            <i class="feather feather-eye"></i>
+                                                        </a>
+                                                        <div class="dropdown">
+                                                            <a href="javascript:void(0)" class="avatar-text avatar-md" data-bs-toggle="dropdown" data-bs-offset="0,21">
+                                                                <i class="feather feather-more-horizontal"></i>
+                                                            </a>
+                                                            <ul class="dropdown-menu">
+                                                                <li>
+                                                                    <a class="dropdown-item" href="javascript:void(0)">
+                                                                        <i class="feather feather-edit-3 me-3"></i>
+                                                                        <span>Edit</span>
+                                                                    </a>
+                                                                </li>
+                                                                <li>
+                                                                    <a class="dropdown-item printBTN" href="javascript:void(0)">
+                                                                        <i class="feather feather-printer me-3"></i>
+                                                                        <span>Print</span>
+                                                                    </a>
+                                                                </li>
+                                                                <li>
+                                                                    <a class="dropdown-item" href="javascript:void(0)">
+                                                                        <i class="feather feather-clock me-3"></i>
+                                                                        <span>Remind</span>
+                                                                    </a>
+                                                                </li>
+                                                                <li class="dropdown-divider"></li>
+                                                                <li>
+                                                                    <a class="dropdown-item" href="javascript:void(0)">
+                                                                        <i class="feather feather-archive me-3"></i>
+                                                                        <span>Archive</span>
+                                                                    </a>
+                                                                </li>
+                                                                <li>
+                                                                    <a class="dropdown-item" href="javascript:void(0)">
+                                                                        <i class="feather feather-alert-octagon me-3"></i>
+                                                                        <span>Report Spam</span>
+                                                                    </a>
+                                                                </li>
+                                                                <li class="dropdown-divider"></li>
+                                                                <li>
+                                                                    <a class="dropdown-item" href="javascript:void(0)">
+                                                                        <i class="feather feather-trash-2 me-3"></i>
+                                                                        <span>Delete</span>
+                                                                    </a>
+                                                                </li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <!-- [ Main Content ] end -->
