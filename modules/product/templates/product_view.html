@@ -14,7 +14,7 @@
     <title>Glemi</title>
     <!--! END:  Apps Title-->
     <!--! BEGIN: Favicon-->
-    <link rel="shortcut icon" type="image/x-icon" href="assets/images/favicon.ico" />
+    <link rel="shortcut icon" type="image/x-icon" href="{% static 'logo-glemi.webp' %}" />
     <!--! END: Favicon-->
     <!--! BEGIN: Bootstrap CSS-->
     <link rel="stylesheet" type="text/css" href="{% static 'mcss/bootstrap.min.css' %}" />
@@ -188,16 +188,10 @@
                         <div class="card stretch stretch-full">
                             <div class="card-body p-0">
                                 <div class="table-responsive">
-                                    <table class="table table-hover" id="paymentList">
+                                    <table class="table table-hover" id="productList">
                                         <thead>
                                             <tr>
                                                 <th class="wd-30">
-                                                    <div class="btn-group mb-1">
-                                                        <div class="custom-control custom-checkbox ms-1">
-                                                            <input type="checkbox" class="custom-control-input" id="checkAllPayment">
-                                                            <label class="custom-control-label" for="checkAllPayment"></label>
-                                                        </div>
-                                                    </div>
                                                 </th>
                                                 <th>ID</th>
                                                 <th>Name</th>
@@ -205,87 +199,10 @@
                                                 <th>Unit</th>
                                                 <th>Last Modified</th>
                                                 <th>Status</th>
-                                                <th class="text-end">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr class="single-item">
-                                                <td>
-                                                    <div class="item-checkbox ms-1">
-                                                        <div class="custom-control custom-checkbox">
-                                                            <input type="checkbox" class="custom-control-input checkbox" id="checkBox_1">
-                                                            <label class="custom-control-label" for="checkBox_1"></label>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td><a href="invoice-view.html" class="fw-bold">#P-212</a></td>
-                                                <td>
-                                                    <a href="" class="hstack gap-1">
-                                                        <div class="gap-1">
-                                                            <span class="text-truncate-1-line">Example Product</span>
-                                                            <small class="fs-12 fw-normal text-muted mt-1">Categories Stuff</small>
-                                                        </div>
-                                                    </a>
-                                                </td>
-                                                <td class="fw-bold text-dark">12.000,00</td>
-                                                <td>PCS</td>
-                                                <td>2023-04-25</td>
-                                                <td>
-                                                    <div class="badge bg-soft-success text-success">Selling</div>
-                                                </td>
-                                                <td>
-                                                    <div class="hstack gap-2 justify-content-end">
-                                                        <a href="invoice-view.html" class="avatar-text avatar-md">
-                                                            <i class="feather feather-eye"></i>
-                                                        </a>
-                                                        <div class="dropdown">
-                                                            <a href="javascript:void(0)" class="avatar-text avatar-md" data-bs-toggle="dropdown" data-bs-offset="0,21">
-                                                                <i class="feather feather-more-horizontal"></i>
-                                                            </a>
-                                                            <ul class="dropdown-menu">
-                                                                <li>
-                                                                    <a class="dropdown-item" href="javascript:void(0)">
-                                                                        <i class="feather feather-edit-3 me-3"></i>
-                                                                        <span>Edit</span>
-                                                                    </a>
-                                                                </li>
-                                                                <li>
-                                                                    <a class="dropdown-item printBTN" href="javascript:void(0)">
-                                                                        <i class="feather feather-printer me-3"></i>
-                                                                        <span>Print</span>
-                                                                    </a>
-                                                                </li>
-                                                                <li>
-                                                                    <a class="dropdown-item" href="javascript:void(0)">
-                                                                        <i class="feather feather-clock me-3"></i>
-                                                                        <span>Remind</span>
-                                                                    </a>
-                                                                </li>
-                                                                <li class="dropdown-divider"></li>
-                                                                <li>
-                                                                    <a class="dropdown-item" href="javascript:void(0)">
-                                                                        <i class="feather feather-archive me-3"></i>
-                                                                        <span>Archive</span>
-                                                                    </a>
-                                                                </li>
-                                                                <li>
-                                                                    <a class="dropdown-item" href="javascript:void(0)">
-                                                                        <i class="feather feather-alert-octagon me-3"></i>
-                                                                        <span>Report Spam</span>
-                                                                    </a>
-                                                                </li>
-                                                                <li class="dropdown-divider"></li>
-                                                                <li>
-                                                                    <a class="dropdown-item" href="javascript:void(0)">
-                                                                        <i class="feather feather-trash-2 me-3"></i>
-                                                                        <span>Delete</span>
-                                                                    </a>
-                                                                </li>
-                                                            </ul>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                            </tr>
+
                                         </tbody>
                                     </table>
                                 </div>
@@ -319,148 +236,89 @@
     <!--! BEGIN: Vendors JS !-->
     <script src="{% static 'vendors/js/vendors.min.js' %}"></script>
     <!-- vendors.min.js {always must need to be top} -->
-    <script src="{% static 'vendors/js/apexcharts.min.js' %}"></script>
     <script src="{% static 'vendors/js/circle-progress.min.js' %}"></script>
     <!--! END: Vendors JS !-->
     <!--! BEGIN: Apps Init  !-->
     <script src="{% static 'mjs/common-init.min.js' %}"></script>
-    <script src="{% static 'mjs/dashboard-init.min.js' %}"></script>
     <!--! END: Apps Init !-->
-    <!--! BEGIN: Theme Customizer  !-->
-    <script src="{% static 'mjs/theme-customizer-init.min.js' %}"></script>
-    <!--! END: Theme Customizer !-->
 
     <script>
-        const TRANSACTION_API_BASE = '{% url "product:product_transaction_api" %}';
+        const PRODUCT_API_BASE = '{% url "product:product_api" %}';
+        var defaultMaxData = 10;
+        // Load Products
+        async function loadProducts() {
 
-        function renderChart(sixMonthlyData) {
-
-            var xAx = [];
-            var yAx = [];
-
-            for (const record of sixMonthlyData) {
-                xAx.push(record.month);
-                yAx.push(record.total);
-            }
-
-            console.log('Data untuk chart:', { xAx, yAx });
-            new ApexCharts(document.querySelector('#payment-records-chart'), {
-                chart: {
-                    height: 380,
-                    width: '100%',
-                    stacked: false,
-                    toolbar: { show: false },
-                },
-                stroke: {
-                    width: [2, 3, 4],
-                    curve: 'smooth',
-                    lineCap: 'round',
-                },
-                plotOptions: {
-                    bar: {
-                        endingShape: 'rounded',
-                        columnWidth: '30%',
-                    },
-                },
-                colors: ['#3454d1', '#a2acc7'],
-                series: [
-                    {
-                        name: 'Total Income',
-                        type: 'line',
-                        data: yAx,
-                    },
-                ],
-                fill: {
-                    opacity: [0.85, 0.25, 1, 1],
-                    gradient: {
-                        inverseColors: false,
-                        shade: 'light',
-                        type: 'vertical',
-                        opacityFrom: 0.5,
-                        opacityTo: 0.1,
-                        stops: [0, 100, 100, 100],
-                    },
-                },
-                markers: { size: 0 },
-                xaxis: {
-                    categories: xAx,
-                    axisBorder: { show: false },
-                    axisTicks: { show: true },
-                    labels: {
-                        style: {
-                            fontSize: '10px',
-                            fontWeight: 800,
-                            colors: '#2d2e30',
-                        },
-                    },
-                },
-                yaxis: {
-                    labels: {
-                        formatter: function (e) {
-                            return +e
-                        },
-                        offsetX: -5,
-                        offsetY: 0,
-                        style: { color: '#2d2e30' },
-                    },
-                },
-                grid: {
-                    xaxis: { lines: { show: false } },
-                    yaxis: { lines: { show: false } },
-                },
-                dataLabels: { enabled: false },
-                tooltip: {
-                    y: {
-                        formatter: function (e) {
-                            return +e
-                        },
-                    },
-                    style: {
-                        fontSize: '12px',
-                        fontFamily: 'Inter',
-                    },
-                },
-                legend: {
-                    show: false,
-                    labels: {
-                        fontSize: '12px',
-                        colors: '#A0ACBB',
-                    },
-                    fontSize: '12px',
-                    fontFamily: 'Inter',
-                },
-            }).render()
-            console.log('Chart berhasil dirender');
-        }
-
-        async function loadSixMonthly() {
-            const requestData = {
-                action: 'six_monthly',
-            };
             try {
-                const response = await fetch(TRANSACTION_API_BASE, {
+                const response = await fetch(PRODUCT_API_BASE, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
                     },
-                    body: JSON.stringify(requestData)
+                    body: JSON.stringify({ action: 'list', max_data: defaultMaxData })
                 });
 
                 const result = await response.json();
 
                 if (result.success) {
-                    renderChart(result.data.six_monthly);
+                    // Add products to the table
+                    const tbody = document.querySelector('#productList tbody');
+                    tbody.innerHTML = ''; // Clear existing rows
+                    console.log('Loaded products:', result.data.product_list);
+                    result.data.product_list.forEach(product => {
+                        const row = document.createElement('tr');
+                        const statusBadge = product.is_active ?
+                            '<div class="badge bg-soft-success text-success">Active</div>' :
+                            '<div class="badge bg-soft-danger text-danger">Disable</div>';
+                        row.classList.add('single-item');
+                        row.innerHTML = `
+                            <td>
+                                <div class="item-checkbox ms-1">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input checkbox" id="checkBox_${product.id}">
+                                        <label class="custom-control-label" for="checkBox_${product.id}"></label>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><a href="invoice-view.html" class="fw-bold">#P-${product.id}</a></td>
+                            <td>
+                                <a href="" class="hstack gap-1">
+                                    <div class="gap-1">
+                                        <span class="text-truncate-1-line">${product.name}</span>
+                                        <small class="fs-12 fw-normal text-muted mt-1">${product.category.name}</small>
+                                    </div>
+                                </a>
+                            </td>
+                            <td class="fw-bold text-dark">${product.price.toLocaleString()}</td>
+                            <td>${product.qty}</td>
+                            <td>
+                            ${new Date(product.updated_at).toLocaleString('id-ID', {
+                            timeZone: 'Asia/Jakarta',
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        })}
+                            </td>
+                            <td>
+                                ${statusBadge}
+                            </td>
+                           `;
+                        tbody.appendChild(row);
+                    });
+
                 } else {
-                    showMessage(result.error || result.message, 'error');
+                    console.error('Failed to load products:', result.message);
+                    showMessage(result.message, 'error');
                 }
             } catch (error) {
-                showMessage('Gagal memuat transaksi', 'error');
+                console.error('Error loading products:', error);
+                showMessage(error);
             }
         }
-
         document.addEventListener('DOMContentLoaded', function () {
-            loadSixMonthly();
+            loadProducts();
         });
     </script>
 </body>
