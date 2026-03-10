@@ -37,7 +37,7 @@ class Product(models.Model):
     signed_url = models.CharField(max_length=750, blank=True, null=True, help_text="Cached signed URL for secure access")
     last_update_signed_url = models.DateTimeField(null=True, blank=True, help_text="Last time signed URL was updated")
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
-    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=False, null=True, blank=True)
 
     def __str__(self):
         return self.name
