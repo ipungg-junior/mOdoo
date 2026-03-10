@@ -206,6 +206,7 @@
                                         </tbody>
                                     </table>
                                 </div>
+                                <!-- Pagination -->
                             </div>
                         </div>
                     </div>
@@ -280,9 +281,9 @@
                                     </div>
                                 </div>
                             </td>
-                            <td><a href="invoice-view.html" class="fw-bold">#P-${product.id}</a></td>
+                            <td><a href="/product/edit/${product.id}/" class="fw-bold">#P-${product.id}</a></td>
                             <td>
-                                <a href="" class="hstack gap-1">
+                                <a href="/product/edit/${product.id}/" class="hstack gap-1">
                                     <div class="gap-1">
                                         <span class="text-truncate-1-line">${product.name}</span>
                                         <small class="fs-12 fw-normal text-muted mt-1">${product.category.name}</small>
