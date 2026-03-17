@@ -17,7 +17,7 @@ from datetime import datetime, timedelta
 try:
     from modules.accounting.models import AccountingReceivablePayment, AccountingPaymentStatus, AccountingPaymentTerm
 except ImportError:
-    # Handle case where accounting module is not available
+    # Handle case where accounting module != available
     AccountingReceivablePayment = None
     AccountingPaymentStatus = None
     AccountingPaymentTerm = None
@@ -116,9 +116,9 @@ class CategoryService:
         try:
             category = Category.objects.get(id=category_id)
 
-            if name is not None:
+            if name != None:
                 category.name = name
-            if description is not None:
+            if description != None:
                 category.description = description
 
             category.full_clean()  # Validate
@@ -186,6 +186,8 @@ class ProductService:
         action = json_request.get('action')
 
         if action == 'list':
+            page = int(json_request.get('page', 1))
+            per_page = int(json_request.get('per_page', 10))
             return ProductService.list_products(request, json_request)
         elif action == 'create':
             return ProductService.create_product(request, json_request)
@@ -234,7 +236,7 @@ class ProductService:
                 
             product_data.append({
                 'id': product.id,
-                'name': product.name + f"\t\t({product.qty})",
+                'name': product.name,
                 'qty': product.qty,
                 'description': product.description,
                 'category': {
@@ -248,7 +250,8 @@ class ProductService:
                 'created_at': product.created_at.isoformat() if product.created_at else None,
                 'updated_at': product.updated_at.isoformat() if product.updated_at else None,
             })
-
+            
+            
         return JsonResponse({
             'success': True,
             'data': {
@@ -359,19 +362,19 @@ class ProductService:
             product = Product.objects.get(id=product_id)
 
             # Update fields if provided
-            if name is not None:
+            if name != None:
                 product.name = name
-            if price is not None:
+            if price != None:
                 product.price = price
-            if qty is not None:
+            if qty != None:
                 product.qty = qty
-            if description is not None:
+            if description != None:
                 product.description = description
-            if is_active is not None:
+            if is_active != None:
                 product.is_active = is_active
 
             # Handle category
-            if category_id is not None:
+            if category_id != None:
                 if category_id:
                     try:
                         category = Category.objects.get(id=category_id)
@@ -529,6 +532,47 @@ class ProductService:
         except Exception as e:
             print(f'Error fetching products: {e}')
             return {'success': False, 'message': f'Error fetching products: {str(e)}'}
+        
+    @classmethod
+    def get_product_by_id(cls, request, product_id):
+        try:
+            product = Product.objects.select_related('category').get(id=product_id)
+            if product.image_url is None or product.image_url == '':
+                signed_url_img = None
+            else:
+                signed_url_img = supabase_storage.get_signed_url(product.image_url, cached_url=product.signed_url, last_update=product.last_update_signed_url)
+                if signed_url_img['is_new']:
+                    # Update signed URL and timestamp
+                    product.signed_url = signed_url_img['url']
+                    product.last_update_signed_url = timezone.now()
+                    product.save()
+                
+            return {
+                'success': True,
+                'data': {
+                    'id': product.id,
+                    'name': product.name,
+                    'qty': product.qty,
+                    'description': product.description,
+                    'category': {
+                        'id': product.category.id if product.category else None,
+                        'name': product.category.name if product.category else None
+                    } if product.category else None,
+                    'raw_price': float(product.price),  # Add raw price for calculations
+                    'is_active': product.is_active,
+                    'image_url': signed_url_img['url'] if signed_url_img else None,
+                    'price': float(product.price),
+                    'formatted_price': str(format_rupiah(product.price)),
+                    'stock': product.qty,
+                    'created_at': product.created_at.isoformat() if product.created_at else None,
+                    'updated_at': product.updated_at.isoformat() if product.updated_at else None,
+                }
+            }
+        except Product.DoesNotExist:
+            return {'success': False, 'message': 'Product not found'}
+        except Exception as e:
+            print(f'Error fetching product by ID: {e}')
+            return {'success': False, 'message': f'Error fetching product: {str(e)}'}
 
 
 class TransactionService:
@@ -1053,7 +1097,7 @@ class TransactionService:
                 # Update total price of the transaction
                 transaction.total_price = total_price
                 # Save date transaction
-                if transaction_date is not None:
+                if transaction_date != None:
                     transaction.transaction_date = schedule_time
                     if schedule_time > datetime.now():
                         return JsonResponse({'success': False, 'message': 'Waktu transaksi melebihi batas hari ini'}, status=400)
@@ -1138,10 +1182,10 @@ class TransactionService:
             old_items_dict = {item.product_name: {'quantity': item.quantity, 'price': item.price_per_item} for item in existing_items}
 
             # Update fields if provided
-            if customer_name is not None:
+            if customer_name != None:
                 transaction.customer_name = customer_name
 
-            if payment_status is not None:
+            if payment_status != None:
                 # convert payment status to boolean
                 if payment_status in ['true', 'True', True, 1, '1']:
                     transaction.status = 'lunas'
@@ -1283,7 +1327,7 @@ class TransactionService:
             total = Transaction.objects.filter(
                 transaction_date__date=date
             ).aggregate(total=Sum('total_price'))['total'] or 0
-            if total is not 0:
+            if total != 0:
                 daily_totals.append({
                     'date': date.strftime('%d-%m-%Y'),
                     'income': format_rupiah(total)
