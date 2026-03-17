@@ -202,7 +202,42 @@
                                             </tr>
                                         </thead>
                                         <tbody>
+                                            <style>
+                                                .spinner {
+                                                    width: 40px;
+                                                    height: 40px;
+                                                    border: 4px solid #eee;
+                                                    border-top: 4px solid #1a1394;
+                                                    border-radius: 50%;
+                                                    animation: spin 0.3s linear infinite;
+                                                }
 
+                                                #loading {
+                                                    position: fixed;
+                                                    top: 0;
+                                                    left: 0;
+                                                    width: 100%;
+                                                    height: 100%;
+                                                    display: flex;
+                                                    justify-content: center;
+                                                    align-items: center;
+                                                    background: rgba(255, 255, 255, 0.2);
+                                                    /* transparan */
+                                                    backdrop-filter: blur(8px);
+                                                    /* efek blur kaca */
+                                                    -webkit-backdrop-filter: blur(8px);
+                                                    /* safari support */
+                                                }
+
+                                                @keyframes spin {
+                                                    100% {
+                                                        transform: rotate(360deg);
+                                                    }
+                                                }
+                                            </style>
+                                            <div id="loading" style="display:none;">
+                                                <div class="spinner"></div>
+                                            </div>
                                         </tbody>
                                     </table>
                                 </div>
@@ -246,6 +281,17 @@
     <script>
         const PRODUCT_API_BASE = '{% url "product:product_api" %}';
         var defaultMaxData = 10;
+
+        const loading = document.getElementById("loading");
+
+        function showLoading() {
+            loading.style.display = "flex";
+        }
+
+        function hideLoading() {
+            loading.style.display = "none";
+        }
+
         // Load Products
         async function loadProducts() {
 
@@ -262,6 +308,7 @@
                 const result = await response.json();
 
                 if (result.success) {
+                    hideLoading();
                     // Add products to the table
                     const tbody = document.querySelector('#productList tbody');
                     tbody.innerHTML = ''; // Clear existing rows
@@ -319,6 +366,7 @@
             }
         }
         document.addEventListener('DOMContentLoaded', function () {
+            showLoading();
             loadProducts();
         });
     </script>
