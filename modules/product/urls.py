@@ -6,6 +6,7 @@ app_name = 'product'
 urlpatterns = [
     # Main product management page
     path('', views.ProductPageView.as_view(), name='product_list'),
+    path('edit/<int:id>/', views.ProductPageEdit.as_view(context='product_edit'), name='product_edit'),
     # Create product page
     path('create-product/', views.ProductCreatePageView.as_view(), name='product_create_page'),
     path('transaction/', views.ProductTransactionPageView.as_view(), name='product_transaction_page'),

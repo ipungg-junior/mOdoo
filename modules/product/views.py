@@ -94,6 +94,24 @@ class ProductPageView(PermissionRequiredMixin, View):
         return render(request, 'product_view.html', context={'total_amount': total_amount, 'income_today': income_today})
 
 
+class ProductPageEdit(PermissionRequiredMixin, View):
+    """
+    View for rendering product management pages
+    """
+    group_required = 'group_access_product'
+    permission_required = 'product.edit_product'
+    context = ''
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.groups.filter(name__icontains=self.group_required).exists():
+            raise PermissionDenied
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request, id):
+        product = ProductService.get_product_by_id(request, id)  # Ensure product exists and user has access
+        return render(request, 'product_edit.html', context={'product': product})
+
+
 class ProductCreatePageView(PermissionRequiredMixin, View):
     """
     View for creating new products
