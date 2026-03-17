@@ -9,6 +9,8 @@ from django.core.exceptions import PermissionDenied
 import os, json
 from django.http import JsonResponse
 from .services import CoreService
+from modules.product.services import TransactionService
+from .utils import format_rupiah
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -19,7 +21,7 @@ class HomeView(View):
 class LoginView(View):
     def get(self, request):
         if request.user.is_authenticated:
-            return redirect('module_list')
+            return redirect('engine:main_dashboard')
         return render(request, 'login.html')
 
     def post(self, request):
@@ -28,7 +30,7 @@ class LoginView(View):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            return redirect('module_list')
+            return redirect('engine:main_dashboard')
         else:
             messages.error(request, 'Invalid username or password.')
             return self.get(request)
@@ -57,13 +59,19 @@ class ModuleListView(View):
                         # Jika tidak terotentikasi, tampilkan semua modul
                         modules.append(module_obj)
 
-        return render(request, 'module_list.html', {'modules': modules})
+        pending_payment = format_rupiah(TransactionService._get_pending_payment())
+        
+        dashboard_info = {
+            'pending_payment': pending_payment,
+        }
+
+        return render(request, 'base_dashboard.html', context=dashboard_info)
 
 class InstallModuleView(View):
     def get(self, request, module_name):
         if request.user.is_superuser:
             success = ModuleUpdater.install_module(module_name, request)
-            return redirect('module_list')
+            return redirect('engine:main_dashboard')
         else:
             raise PermissionDenied
 
@@ -71,14 +79,14 @@ class UninstallModuleView(View):
     def get(self, request, module_name):
         if request.user.is_superuser:
             success = ModuleUpdater.uninstall_module(module_name, request)
-            return redirect('module_list')
+            return redirect('engine:main_dashboard')
         else:
             raise PermissionDenied
 
 class UpgradeModuleView(View):
     def get(self, request, module_name):
         success = ModuleUpdater.upgrade_module(module_name, request)
-        return redirect('module_list')
+        return redirect('engine:main_dashboard')
     
 class APIView(View):
     

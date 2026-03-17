@@ -1,0 +1,909 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zxx">
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="" />
+    <meta name="keyword" content="" />
+    <meta name="author" content="flexilecode" />
+    <!--! The above 6 meta tags *must* come first in the head; any other head content must come *after* these tags !-->
+    <!--! BEGIN: Apps Title-->
+    <title>Glemi</title>
+    <!--! END:  Apps Title-->
+    <!--! BEGIN: Favicon-->
+    <link rel="shortcut icon" type="image/x-icon" href="{% static 'logo-glemi.webp' %}" />
+    <!--! END: Favicon-->
+    <!--! BEGIN: Bootstrap CSS-->
+    <link rel="stylesheet" type="text/css" href="{% static 'mcss/bootstrap.min.css' %}" />
+    <!--! END: Bootstrap CSS-->
+    <!--! BEGIN: Vendors CSS-->
+    <link rel="stylesheet" type="text/css" href="{% static 'vendors/css/vendors.min.css' %}" />
+    <!--! END: Vendors CSS-->
+    <!--! BEGIN: Custom CSS-->
+    <link rel="stylesheet" type="text/css" href="{% static 'mcss/theme.min.css' %}" />
+    <!--! END: Custom CSS-->
+</head>
+
+<body>
+    {% csrf_token %}
+    {% include 'base_navigation.html' %}
+    <!--! ================================================================ !-->
+    <!--! [Start] Header !-->
+    <!--! ================================================================ !-->
+    <header class="nxl-header">
+        <div class="header-wrapper">
+            <!--! [Start] Header Left !-->
+            <div class="header-left d-flex align-items-center gap-4">
+                <!--! [Start] nxl-head-mobile-toggler !-->
+                <a href="javascript:void(0);" class="nxl-head-mobile-toggler" id="mobile-collapse">
+                    <div class="hamburger hamburger--arrowturn">
+                        <div class="hamburger-box">
+                            <div class="hamburger-inner"></div>
+                        </div>
+                    </div>
+                </a>
+                <!--! [Start] nxl-head-mobile-toggler !-->
+                <!--! [Start] nxl-navigation-toggle !-->
+                <div class="nxl-navigation-toggle">
+                    <a href="javascript:void(0);" id="menu-mini-button">
+                        <i class="feather-align-left"></i>
+                    </a>
+                    <a href="javascript:void(0);" id="menu-expend-button" style="display: none">
+                        <i class="feather-arrow-right"></i>
+                    </a>
+                </div>
+                <!--! [End] nxl-navigation-toggle !-->
+
+
+            </div>
+            <!--! [End] Header Left !-->
+            <!--! [Start] Header Right !-->
+            <div class="header-right ms-auto">
+                <div class="d-flex align-items-center">
+
+                    <div class="nxl-h-item d-none d-sm-flex">
+                        <div class="full-screen-switcher">
+                            <a href="javascript:void(0);" class="nxl-head-link me-0" onclick="$('body').fullScreenHelper('toggle');">
+                                <i class="feather-maximize maximize"></i>
+                                <i class="feather-minimize minimize"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="dropdown nxl-h-item">
+                        <a class="nxl-head-link me-3" data-bs-toggle="dropdown" href="#" role="button" data-bs-auto-close="outside">
+                            <i class="feather-bell"></i>
+                            <span class="badge bg-danger nxl-h-badge">3</span>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end nxl-h-dropdown nxl-notifications-menu">
+                            <div class="d-flex justify-content-between align-items-center notifications-head">
+                                <h6 class="fw-bold text-dark mb-0">Notifications</h6>
+                                <a href="javascript:void(0);" class="fs-11 text-end ms-auto" data-bs-toggle="tooltip" title="Make as Read">
+                                    <span>Make as Read</span>
+                                </a>
+                            </div>
+                            <div class="notifications-item">
+                                <img src="assets/images/avatar/2.png" alt="" class="rounded me-3 border" />
+                                <div class="notifications-desc">
+                                    <a href="javascript:void(0);" class="font-body text-truncate-2-line"> <span class="fw-semibold text-dark">Malanie Hanvey</span> We should talk about that at
+                                        lunch!</a>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="notifications-date text-muted border-bottom border-bottom-dashed">2 minutes ago</div>
+                                        <div class="d-flex align-items-center float-end gap-2">
+                                            <a href="javascript:void(0);" class="d-block wd-8 ht-8 rounded-circle bg-gray-300" data-bs-toggle="tooltip" title="Make as Read"></a>
+                                            <a href="javascript:void(0);" class="text-danger" data-bs-toggle="tooltip" title="Remove">
+                                                <i class="feather-x fs-12"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="dropdown nxl-h-item">
+                        <a href="javascript:void(0);" data-bs-toggle="dropdown" role="button" data-bs-auto-close="outside">
+                            <img src="{% static 'default-ava.webp' %}" alt="user-image" class="img-fluid user-avtar me-0" />
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end nxl-h-dropdown nxl-user-dropdown">
+                            <div class="dropdown-header">
+                                <div class="d-flex align-items-center">
+                                    <img src="{% static 'default-ava.webp' %}" alt="user-image" class="img-fluid user-avtar" />
+                                    <div>
+                                        <h6 class="text-dark mb-0">Alexandra Della <span class="badge bg-soft-success text-success ms-1">PRO</span></h6>
+                                        <span class="fs-12 fw-medium text-muted">alex@example.com</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="dropdown">
+                                <a href="javascript:void(0);" class="dropdown-item" data-bs-toggle="dropdown">
+                                    <span class="hstack">
+                                        <i class="wd-10 ht-10 border border-2 border-gray-1 bg-success rounded-circle me-2"></i>
+                                        <span>Active</span>
+                                    </span>
+                                    <i class="feather-chevron-right ms-auto me-0"></i>
+                                </a>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <a href="javascript:void(0);" class="dropdown-item">
+                                <i class="feather-user"></i>
+                                <span>Profile Details</span>
+                            </a>
+                            <a href="javascript:void(0);" class="dropdown-item">
+                                <i class="feather-settings"></i>
+                                <span>Account Settings</span>
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="./auth-login-minimal.html" class="dropdown-item">
+                                <i class="feather-log-out"></i>
+                                <span>Logout</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--! [End] Header Right !-->
+        </div>
+    </header>
+    <!--! ================================================================ !-->
+    <!--! [End] Header !-->
+    <!--! ================================================================ !-->
+    <!--! ================================================================ !-->
+    <!--! [Start] Main Content !-->
+    <!--! ================================================================ !-->
+    <main class="nxl-container">
+        <div class="nxl-content">
+            <!-- [ page-header ] start -->
+            <div class="page-header">
+                <div class="page-header-left d-flex align-items-center">
+                    <div class="page-header-title">
+                        <h5 class="m-b-10">Product</h5>
+                    </div>
+                    <ul class="breadcrumb">
+                        <li class="breadcrumb-item">Edit</li>
+                        <li class="breadcrumb-item">{{ data.name }}</li>
+                    </ul>
+                </div>
+                <div class="page-header-right ms-auto">
+                    <div class="page-header-right-items">
+                        <div class="d-flex d-md-none">
+                            <a href="javascript:void(0)" class="page-header-right-close-toggle">
+                                <i class="feather-arrow-left me-2"></i>
+                                <span>Back</span>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="d-md-none d-flex align-items-center">
+                        <a href="javascript:void(0)" class="page-header-right-open-toggle">
+                            <i class="feather-align-right fs-20"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <!-- [ page-header ] end -->
+            <!-- [ Main Content ] start -->
+            <div class="main-content">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="card border-top-0">
+                            <div class="card-header p-0">
+                                <!-- Nav tabs -->
+                                <ul class="nav nav-tabs flex-wrap w-100 text-center customers-nav-tabs" id="myTab" role="tablist">
+                                    <li class="nav-item flex-fill border-top" role="presentation">
+                                        <a href="javascript:void(0);" class="nav-link active" data-bs-toggle="tab" data-bs-target="#profileTab" role="tab">General</a>
+                                    </li>
+                                    <li class="nav-item flex-fill border-top" role="presentation">
+                                        <a href="javascript:void(0);" class="nav-link" data-bs-toggle="tab" data-bs-target="#configurationTab" role="tab">Configuration</a>
+                                    </li>
+                                    <li class="nav-item flex-fill border-top" role="presentation">
+                                        <a href="javascript:void(0);" class="nav-link" data-bs-toggle="tab" data-bs-target="#analyticsTab" role="tab">Analytics</a>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="tab-content">
+                                <div class="tab-pane fade show active" id="profileTab" role="tabpanel">
+                                    <div class="card-body personal-info">
+                                        <div class="mb-4 d-flex align-items-center justify-content-between">
+                                            <h5 class="fw-bold mb-0 me-4">
+                                                <span class="d-block mb-2">Product Information:</span>
+                                                <span class="fs-12 fw-normal text-muted text-truncate-1-line">Following information is publicly displayed, be careful! </span>
+                                            </h5>
+                                        </div>
+                                        <div class="row mb-4 align-items-center">
+                                            <div class="col-lg-4">
+                                                <label class="fw-semibold">Image: </label>
+
+                                            </div>
+                                            <div class="col-lg-8">
+                                                <div class="mb-4 mb-md-0 d-flex gap-4 your-brand">
+                                                    <div class="wd-100 ht-100 position-relative overflow-hidden border border-gray-2 rounded">
+                                                        <img src="{{ product.data.image_url }}" class="upload-pic img-fluid rounded h-100 w-100" alt="">
+                                                        <div
+                                                            class="position-absolute start-50 end-0 top-50 translate-middle h-100 w-100 hstack align-items-center justify-content-center c-pointer upload-button">
+                                                            <i class="feather feather-camera" aria-hidden="true"></i>
+                                                        </div>
+                                                    </div>
+                                                    <div class="wd-100 ht-100 position-relative overflow-hidden border border-gray-2 rounded">
+                                                        <img src="{{ product.data.image_url }}" class="upload-pic img-fluid rounded h-100 w-100" alt="">
+                                                        <div
+                                                            class="position-absolute start-50 end-0 top-50 translate-middle h-100 w-100 hstack align-items-center justify-content-center c-pointer upload-button">
+                                                            <i class="feather feather-camera" aria-hidden="true"></i>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="d-flex flex-column gap-1">
+                                                    <input class="file-upload" type="file" accept="image/*">
+                                                    <div class="fs-12 fw-normal text-muted">Allowed JPG, GIF or PNG. Max size of 800K</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row mb-4 align-items-center">
+                                            <div class="col-lg-4">
+                                                <label for="fullnameInput" class="fw-semibold">Name: </label>
+                                            </div>
+                                            <div class="col-lg-8">
+                                                <div class="input-group">
+                                                    <div class="input-group-text"><i class="feather-tag"></i></div>
+                                                    <input type="text" class="form-control" id="fullnameInput" placeholder="Name" value="{{ product.data.name }}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row mb-4 align-items-center">
+                                            <div class="col-lg-4">
+                                                <label for="priceInput" class="fw-semibold">Base Price: </label>
+                                                <span class="fs-12 fw-normal text-muted text-truncate-1-line">Base price without tax</span>
+                                            </div>
+                                            <div class="col-lg-8">
+                                                <div class="input-group">
+                                                    <div class="input-group-text"><i class="feather-dollar-sign"></i></div>
+                                                    <input type="text" class="form-control" id="priceInput" placeholder="Price" value="{{ product.data.raw_price }}">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row mb-4 align-items-center">
+                                            <div class="col-lg-4">
+                                                <label for="qtyLabel" class="fw-semibold">Qty: </label>
+                                            </div>
+                                            <div class="col-lg-8">
+                                                <div class="input-group">
+                                                    <div class="input-group-text"><i class="feather-tag"></i></div>
+                                                    <input type="url" class="form-control" id="qtyInput" placeholder="Qty" value="{{ product.data.stock }}" disabled>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row mb-4 align-items-center">
+                                            <div class="col-lg-4">
+                                                <label for="aboutInput" class="fw-semibold">About: </label>
+                                            </div>
+                                            <div class="col-lg-8">
+                                                <div class="input-group">
+                                                    <div class="input-group-text"><i class="feather-type"></i></div>
+                                                    <textarea class="form-control" id="aboutInput" cols="30" rows="5" placeholder="About"></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row mb-4 align-items-center">
+                                            <div class="col-lg-4">
+                                                <label class="fw-semibold">Status: </label>
+                                            </div>
+                                            <div class="col-lg-8">
+                                                <select class="form-control" data-select2-selector="status">
+                                                    {% if product.data.is_active %}
+                                                    <option value="active" data-bg="bg-success" selected>
+                                                        Active
+                                                    </option>
+                                                    <option value="inactive" data-bg="bg-warning">
+                                                        Deactivate
+                                                    </option>
+                                                    {% else %}
+                                                    <option value="inactive" data-bg="bg-warning" selected>
+                                                        Deactivate
+                                                    </option>
+                                                    <option value="active" data-bg="bg-success">
+                                                        Active
+                                                    </option>
+                                                    {% endif %}
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <span class="fs-12 fw-normal text-muted text-truncate-1-line">Last Update : {{ product.data.updated_at }} </span>
+                                        <span class="fs-12 fw-normal text-muted text-truncate-1-line">Created at : {{ product.data.created_at }} </span>
+                                    </div>
+                                    <hr class="my-0">
+                                </div>
+                                <div class="tab-pane fade" id="configurationTab" role="tabpanel">
+                                    <div class="alert alert-dismissible m-4 p-4 d-flex alert-soft-teal-message" role="alert">
+                                        <div class="me-4 d-none d-md-block">
+                                            <i class="feather feather-alert-octagon fs-1"></i>
+                                        </div>
+                                        <div>
+                                            <p class="fw-bold mb-1 text-truncate-1-line">We need your attention!</p>
+                                            <p class="fs-12 fw-medium text-truncate-1-line">Your payment was declined. To start using tools, please <strong>Add Payment Method</strong></p>
+                                            <a href="javascript:void(0);" class="btn btn-sm bg-soft-teal text-teal d-inline-block">Add Payment Method</a>
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                        </div>
+                                    </div>
+                                    <div class="card-body choose-plan">
+                                        <div class="mb-4 d-flex align-items-center justify-content-between">
+                                            <h5 class="fw-bold mb-0">Subscription & Plan:</h5>
+                                            <a href="javascript:void(0);" class="btn btn-sm btn-light-brand">4 days remaining</a>
+                                        </div>
+                                        <div class="p-4 mb-4 d-xxl-flex d-xl-block d-md-flex align-items-center justify-content-between gap-4 border border-dashed border-gray-5 rounded-1">
+                                            <div>
+                                                <div class="fs-14 fw-bold text-dark mb-1">Your current plan is <a href="javascript:void(0);" class="badge bg-primary text-white ms-2">Team Plan</a>
+                                                </div>
+                                                <div class="fs-12 text-muted">A simple start for everyone</div>
+                                            </div>
+                                            <div class="my-3 my-xxl-0 my-md-3 my-md-0">
+                                                <div class="fs-20 text-dark"><span class="fw-bold">$29.99</span> / <em class="fs-11 fw-medium">Month</em></div>
+                                                <div class="fs-12 text-muted mt-1">Billed Monthly / Next payment on 12/10/2023 for <strong class="text-dark">$62.48</strong></div>
+                                            </div>
+                                            <div class="hstack gap-3">
+                                                <a href="javascript:void(0);" class="text-danger">Cancel Plan</a>
+                                                <a href="javascript:void(0);" class="btn btn-light-brand">Update Plan</a>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <a href="javascript:void(0);" class="p-4 mb-4 d-block bg-soft-100 border border-dashed border-gray-5 rounded-1">
+                                                    <h6 class="fs-13 fw-bold">BASIC</h6>
+                                                    <p class="fs-12 fw-normal text-muted">Starter plan for individuals.</p>
+                                                    <p class="fs-12 fw-normal text-muted text-truncate-2-line">Lorem, ipsum dolor sit amet consectetur adipisicing elit. Quod ipsa id corrupti modi,
+                                                        impedit exercitationem harum voluptates reiciendis.</p>
+                                                    <div class="mt-4"><span class="fs-16 fw-bold text-dark">$12.99</span> / <em class="fs-11 fw-medium">Month</em></div>
+                                                </a>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <a href="javascript:void(0);" class="p-4 mb-4 d-block bg-soft-200 border border-dashed border-gray-5 rounded-1 position-relative">
+                                                    <h6 class="fs-13 fw-bold">TEAM</h6>
+                                                    <p class="fs-12 fw-normal text-muted">Collaborate up to 10 people.</p>
+                                                    <p class="fs-12 fw-normal text-muted text-truncate-2-line">Lorem, ipsum dolor sit amet consectetur adipisicing elit. Quod ipsa id corrupti modi,
+                                                        impedit exercitationem harum voluptates reiciendis.</p>
+                                                    <div class="mt-4"><span class="fs-16 fw-bold text-dark">$29.99</span> / <em class="fs-11 fw-medium">Month</em></div>
+                                                    <div class="position-absolute top-0 start-50 translate-middle">
+                                                        <i class="feather-check fs-12 bg-primary text-white p-1 rounded-circle"></i>
+                                                    </div>
+                                                </a>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <a href="javascript:void(0);" class="p-4 mb-4 d-block bg-soft-100 border border-dashed border-gray-5 rounded-1">
+                                                    <h6 class="fs-13 fw-bold">ENTERPRISE</h6>
+                                                    <p class="fs-12 fw-normal text-muted">For bigger businesses.</p>
+                                                    <p class="fs-12 fw-normal text-muted text-truncate-2-line">Lorem, ipsum dolor sit amet consectetur adipisicing elit. Quod ipsa id corrupti modi,
+                                                        impedit exercitationem harum voluptates reiciendis.</p>
+                                                    <div class="mt-4"><span class="fs-16 fw-bold text-dark">$49.99</span> / <em class="fs-11 fw-medium">Month</em></div>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <hr class="my-0">
+                                    <div class="card-body payment-methord">
+                                        <div class="mb-4 d-flex align-items-center justify-content-between">
+                                            <h5 class="fw-bold mb-0">Payment Methords:</h5>
+                                            <a href="javascript:void(0);" class="btn btn-sm btn-light-brand">Add Methord</a>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-lg-6">
+                                                <div class="px-4 py-2 mb-4 d-sm-flex justify-content-between border border-dashed border-gray-3 rounded-1 position-relative">
+                                                    <div class="d-sm-flex align-items-center">
+                                                        <div class="wd-100">
+                                                            <img src="assets/images/payment/mastercard.svg" class="img-fluid" alt="">
+                                                        </div>
+                                                        <div class="ms-0 ms-sm-3">
+                                                            <div class="text-dark fw-bold mb-2">Alexandra Della</div>
+                                                            <div class="mb-0 text-truncate-1-line">5155 **** **** ****</div>
+                                                            <small class="fs-10 fw-medium text-uppercase text-muted text-truncate-1-line">Card expires at 12/24</small>
+                                                        </div>
+                                                    </div>
+                                                    <div class="hstack gap-3 mt-3 mt-sm-0">
+                                                        <a href="javascript:void(0);" class="text-danger">Delete</a>
+                                                        <a href="javascript:void(0);" class="btn btn-sm btn-light">Edit</a>
+                                                    </div>
+                                                    <div class="position-absolute top-50 start-0 translate-middle">
+                                                        <i class="feather-check fs-12 bg-primary text-white p-1 rounded-circle"></i>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-6">
+                                                <div class="px-4 py-2 mb-4 d-sm-flex justify-content-between border border-dashed border-gray-3 rounded-1">
+                                                    <div class="d-sm-flex align-items-center">
+                                                        <div class="wd-100">
+                                                            <img src="assets/images/payment/visa.svg" class="img-fluid" alt="">
+                                                        </div>
+                                                        <div class="ms-0 ms-sm-3">
+                                                            <div class="text-dark fw-bold mb-2">Alexandra Della</div>
+                                                            <div class="mb-0 text-truncate-1-line">4236 **** **** ****</div>
+                                                            <small class="fs-10 fw-medium text-uppercase text-muted text-truncate-1-line">Card expires at 11/23</small>
+                                                        </div>
+                                                    </div>
+                                                    <div class="hstack gap-3 mt-3 mt-sm-0">
+                                                        <a href="javascript:void(0);" class="text-danger">Delete</a>
+                                                        <a href="javascript:void(0);" class="btn btn-sm btn-light">Edit</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-6">
+                                                <div class="px-4 py-2 mb-4 d-sm-flex justify-content-between border border-dashed border-gray-3 rounded-1">
+                                                    <div class="d-sm-flex align-items-center">
+                                                        <div class="wd-100">
+                                                            <img src="assets/images/payment/american-express.svg" class="img-fluid" alt="">
+                                                        </div>
+                                                        <div class="ms-0 ms-sm-3">
+                                                            <div class="text-dark fw-bold mb-2">Alexandra Della</div>
+                                                            <div class="mb-0 text-truncate-1-line">3437 **** **** ****</div>
+                                                            <small class="fs-10 fw-medium text-uppercase text-muted text-truncate-1-line">Card expires at 11/24</small>
+                                                        </div>
+                                                    </div>
+                                                    <div class="hstack gap-3 mt-3 mt-sm-0">
+                                                        <a href="javascript:void(0);" class="text-danger">Delete</a>
+                                                        <a href="javascript:void(0);" class="btn btn-sm btn-light">Edit</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-6">
+                                                <div class="px-4 py-2 mb-4 d-sm-flex justify-content-between border border-dashed border-gray-3 rounded-1">
+                                                    <div class="d-sm-flex align-items-center">
+                                                        <div class="wd-100">
+                                                            <img src="assets/images/payment/discover.svg" class="img-fluid" alt="">
+                                                        </div>
+                                                        <div class="ms-0 ms-sm-3">
+                                                            <div class="text-dark fw-bold mb-2">Alexandra Della</div>
+                                                            <div class="mb-0 text-truncate-1-line">6011 **** **** ****</div>
+                                                            <small class="fs-10 fw-medium text-uppercase text-muted text-truncate-1-line">Card expires at 11/25</small>
+                                                        </div>
+                                                    </div>
+                                                    <div class="hstack gap-3 mt-3 mt-sm-0">
+                                                        <a href="javascript:void(0);" class="text-danger">Delete</a>
+                                                        <a href="javascript:void(0);" class="btn btn-sm btn-light">Edit</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="analyticsTab" role="tabpanel">
+                                    <div class="table-responsive">
+                                        <table class="table mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Description</th>
+                                                    <th class="wd-250 text-end">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>
+                                                        <div class="fw-bold text-dark">Successful payments</div>
+                                                        <small class="fs-12 text-muted">Receive a notification for every successful payment.</small>
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <div class="form-group select-wd-lg">
+                                                            <select class="form-control" data-select2-selector="icon">
+                                                                <option value="SMS" data-icon="feather-smartphone">SMS</option>
+                                                                <option value="Push" data-icon="feather-bell">Push</option>
+                                                                <option value="Email" data-icon="feather-mail" selected>Email</option>
+                                                                <option value="Repeat" data-icon="feather-repeat">Repeat</option>
+                                                                <option value="Deactivate" data-icon="feather-bell-off">Deactivate</option>
+                                                                <option value="SMS+Push" data-icon="feather-smartphone">SMS + Push</option>
+                                                                <option value="Email+Push" data-icon="feather-mail">Email + Push</option>
+                                                                <option value="SMS+Email" data-icon="feather-smartphone">SMS + Email</option>
+                                                                <option value="SMS+Push+Email" data-icon="feather-smartphone">SMS + Push + Email</option>
+                                                            </select>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <div class="fw-bold text-dark">Customer payment dispute</div>
+                                                        <small class="fs-12 text-muted">Receive a notification if a payment is disputed by a customer and for dispute purposes. </small>
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <div class="form-group select-wd-lg">
+                                                            <select class="form-control" data-select2-selector="icon">
+                                                                <option value="SMS" data-icon="feather-smartphone">SMS</option>
+                                                                <option value="Push" data-icon="feather-bell">Push</option>
+                                                                <option value="Email" data-icon="feather-mail">Email</option>
+                                                                <option value="Repeat" data-icon="feather-repeat">Repeat</option>
+                                                                <option value="Deactivate" data-icon="feather-bell-off" selected>Deactivate</option>
+                                                                <option value="SMS+Push" data-icon="feather-smartphone">SMS + Push</option>
+                                                                <option value="Email+Push" data-icon="feather-mail">Email + Push</option>
+                                                                <option value="SMS+Email" data-icon="feather-smartphone">SMS + Email</option>
+                                                                <option value="SMS+Push+Email" data-icon="feather-smartphone">SMS + Push + Email</option>
+                                                            </select>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <div class="fw-bold text-dark">Refund alerts</div>
+                                                        <small class="fs-12 text-muted">Receive a notification if a payment is stated as risk by the Finance Department. </small>
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <div class="form-group select-wd-lg">
+                                                            <select class="form-control" data-select2-selector="icon">
+                                                                <option value="SMS" data-icon="feather-smartphone">SMS</option>
+                                                                <option value="Push" data-icon="feather-bell" selected>Push</option>
+                                                                <option value="Email" data-icon="feather-mail">Email</option>
+                                                                <option value="Repeat" data-icon="feather-repeat">Repeat</option>
+                                                                <option value="Deactivate" data-icon="feather-bell-off">Deactivate</option>
+                                                                <option value="SMS+Push" data-icon="feather-smartphone">SMS + Push</option>
+                                                                <option value="Email+Push" data-icon="feather-mail">Email + Push</option>
+                                                                <option value="SMS+Email" data-icon="feather-smartphone">SMS + Email</option>
+                                                                <option value="SMS+Push+Email" data-icon="feather-smartphone">SMS + Push + Email</option>
+                                                            </select>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <div class="fw-bold text-dark">Invoice payments</div>
+                                                        <small class="fs-12 text-muted">Receive a notification if a customer sends an incorrect amount to pay their invoice. </small>
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <div class="form-group select-wd-lg">
+                                                            <select class="form-control" data-select2-selector="icon">
+                                                                <option value="SMS" data-icon="feather-smartphone">SMS</option>
+                                                                <option value="Push" data-icon="feather-bell">Push</option>
+                                                                <option value="Email" data-icon="feather-mail" selected>Email</option>
+                                                                <option value="Repeat" data-icon="feather-repeat">Repeat</option>
+                                                                <option value="Deactivate" data-icon="feather-bell-off">Deactivate</option>
+                                                                <option value="SMS+Push" data-icon="feather-smartphone">SMS + Push</option>
+                                                                <option value="Email+Push" data-icon="feather-mail">Email + Push</option>
+                                                                <option value="SMS+Email" data-icon="feather-smartphone">SMS + Email</option>
+                                                                <option value="SMS+Push+Email" data-icon="feather-smartphone">SMS + Push + Email</option>
+                                                            </select>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <div class="fw-bold text-dark">Rating reminders</div>
+                                                        <small class="fs-12 text-muted">Send an email reminding me to rate an item a week after purchase </small>
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <div class="form-group select-wd-lg">
+                                                            <select class="form-control" data-select2-selector="icon">
+                                                                <option value="SMS" data-icon="feather-smartphone">SMS</option>
+                                                                <option value="Push" data-icon="feather-bell">Push</option>
+                                                                <option value="Email" data-icon="feather-mail">Email</option>
+                                                                <option value="Repeat" data-icon="feather-repeat">Repeat</option>
+                                                                <option value="Deactivate" data-icon="feather-bell-off" selected>Deactivate</option>
+                                                                <option value="SMS+Push" data-icon="feather-smartphone">SMS + Push</option>
+                                                                <option value="Email+Push" data-icon="feather-mail">Email + Push</option>
+                                                                <option value="SMS+Email" data-icon="feather-smartphone">SMS + Email</option>
+                                                                <option value="SMS+Push+Email" data-icon="feather-smartphone">SMS + Push + Email</option>
+                                                            </select>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <div class="fw-bold text-dark">Item update notifications</div>
+                                                        <small class="fs-12 text-muted">Send an email when an item I've purchased is updated </small>
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <div class="form-group select-wd-lg">
+                                                            <select class="form-control" data-select2-selector="icon">
+                                                                <option value="SMS" data-icon="feather-smartphone" selected>SMS</option>
+                                                                <option value="Push" data-icon="feather-bell">Push</option>
+                                                                <option value="Email" data-icon="feather-mail">Email</option>
+                                                                <option value="Repeat" data-icon="feather-repeat">Repeat</option>
+                                                                <option value="Deactivate" data-icon="feather-bell-off">Deactivate</option>
+                                                                <option value="SMS+Push" data-icon="feather-smartphone">SMS + Push</option>
+                                                                <option value="Email+Push" data-icon="feather-mail">Email + Push</option>
+                                                                <option value="SMS+Email" data-icon="feather-smartphone">SMS + Email</option>
+                                                                <option value="SMS+Push+Email" data-icon="feather-smartphone">SMS + Push + Email</option>
+                                                            </select>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <div class="fw-bold text-dark">Item comment notifications</div>
+                                                        <small class="fs-12 text-muted">Send me an email when someone comments on one of my items </small>
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <div class="form-group select-wd-lg">
+                                                            <select class="form-control" data-select2-selector="icon">
+                                                                <option value="SMS" data-icon="feather-smartphone">SMS</option>
+                                                                <option value="Push" data-icon="feather-bell" selected>Push</option>
+                                                                <option value="Email" data-icon="feather-mail">Email</option>
+                                                                <option value="Repeat" data-icon="feather-repeat">Repeat</option>
+                                                                <option value="Deactivate" data-icon="feather-bell-off">Deactivate</option>
+                                                                <option value="SMS+Push" data-icon="feather-smartphone">SMS + Push</option>
+                                                                <option value="Email+Push" data-icon="feather-mail">Email + Push</option>
+                                                                <option value="SMS+Email" data-icon="feather-smartphone">SMS + Email</option>
+                                                                <option value="SMS+Push+Email" data-icon="feather-smartphone">SMS + Push + Email</option>
+                                                            </select>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <div class="fw-bold text-dark">Team comment notifications</div>
+                                                        <small class="fs-12 text-muted">Send me an email when someone comments on one of my team items </small>
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <div class="form-group select-wd-lg">
+                                                            <select class="form-control" data-select2-selector="icon">
+                                                                <option value="SMS" data-icon="feather-smartphone">SMS</option>
+                                                                <option value="Push" data-icon="feather-bell">Push</option>
+                                                                <option value="Email" data-icon="feather-mail">Email</option>
+                                                                <option value="Repeat" data-icon="feather-repeat" selected>Repeat</option>
+                                                                <option value="Deactivate" data-icon="feather-bell-off">Deactivate</option>
+                                                                <option value="SMS+Push" data-icon="feather-smartphone">SMS + Push</option>
+                                                                <option value="Email+Push" data-icon="feather-mail">Email + Push</option>
+                                                                <option value="SMS+Email" data-icon="feather-smartphone">SMS + Email</option>
+                                                                <option value="SMS+Push+Email" data-icon="feather-smartphone">SMS + Push + Email</option>
+                                                            </select>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <div class="fw-bold text-dark">Item review notifications</div>
+                                                        <small class="fs-12 text-muted">Send me an email when my items are approved or rejected </small>
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <div class="form-group select-wd-lg">
+                                                            <select class="form-control" data-select2-selector="icon">
+                                                                <option value="SMS" data-icon="feather-smartphone">SMS</option>
+                                                                <option value="Push" data-icon="feather-bell">Push</option>
+                                                                <option value="Email" data-icon="feather-mail">Email</option>
+                                                                <option value="Repeat" data-icon="feather-repeat">Repeat</option>
+                                                                <option value="Deactivate" data-icon="feather-bell-off" selected>Deactivate</option>
+                                                                <option value="SMS+Push" data-icon="feather-smartphone">SMS + Push</option>
+                                                                <option value="Email+Push" data-icon="feather-mail">Email + Push</option>
+                                                                <option value="SMS+Email" data-icon="feather-smartphone">SMS + Email</option>
+                                                                <option value="SMS+Push+Email" data-icon="feather-smartphone">SMS + Push + Email</option>
+                                                            </select>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <div class="fw-bold text-dark">Buyer review notifications</div>
+                                                        <small class="fs-12 text-muted">Send me an email when someone leaves a review with their rating </small>
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <div class="form-group select-wd-lg">
+                                                            <select class="form-control" data-select2-selector="icon">
+                                                                <option value="SMS" data-icon="feather-smartphone">SMS</option>
+                                                                <option value="Push" data-icon="feather-bell">Push</option>
+                                                                <option value="Email" data-icon="feather-mail">Email</option>
+                                                                <option value="Repeat" data-icon="feather-repeat">Repeat</option>
+                                                                <option value="Deactivate" data-icon="feather-bell-off" selected>Deactivate</option>
+                                                                <option value="SMS+Push" data-icon="feather-smartphone">SMS + Push</option>
+                                                                <option value="Email+Push" data-icon="feather-mail">Email + Push</option>
+                                                                <option value="SMS+Email" data-icon="feather-smartphone">SMS + Email</option>
+                                                                <option value="SMS+Push+Email" data-icon="feather-smartphone">SMS + Push + Email</option>
+                                                            </select>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <div class="fw-bold text-dark">Expiring support notifications</div>
+                                                        <small class="fs-12 text-muted">Send me emails showing my soon to expire support entitlements </small>
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <div class="form-group select-wd-lg">
+                                                            <select class="form-control" data-select2-selector="icon">
+                                                                <option value="SMS" data-icon="feather-smartphone">SMS</option>
+                                                                <option value="Push" data-icon="feather-bell">Push</option>
+                                                                <option value="Email" data-icon="feather-mail" selected>Email</option>
+                                                                <option value="Repeat" data-icon="feather-repeat">Repeat</option>
+                                                                <option value="Deactivate" data-icon="feather-bell-off">Deactivate</option>
+                                                                <option value="SMS+Push" data-icon="feather-smartphone">SMS + Push</option>
+                                                                <option value="Email+Push" data-icon="feather-mail">Email + Push</option>
+                                                                <option value="SMS+Email" data-icon="feather-smartphone">SMS + Email</option>
+                                                                <option value="SMS+Push+Email" data-icon="feather-smartphone">SMS + Push + Email</option>
+                                                            </select>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>
+                                                        <div class="fw-bold text-dark">Daily summary emails</div>
+                                                        <small class="fs-12 text-muted">Send me a daily summary of all items approved or rejected </small>
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <div class="form-group select-wd-lg">
+                                                            <select class="form-control" data-select2-selector="icon">
+                                                                <option value="SMS" data-icon="feather-smartphone">SMS</option>
+                                                                <option value="Push" data-icon="feather-bell" selected>Push</option>
+                                                                <option value="Email" data-icon="feather-mail">Email</option>
+                                                                <option value="Repeat" data-icon="feather-repeat">Repeat</option>
+                                                                <option value="Deactivate" data-icon="feather-bell-off">Deactivate</option>
+                                                                <option value="SMS+Push" data-icon="feather-smartphone">SMS + Push</option>
+                                                                <option value="Email+Push" data-icon="feather-mail">Email + Push</option>
+                                                                <option value="SMS+Email" data-icon="feather-smartphone">SMS + Email</option>
+                                                                <option value="SMS+Push+Email" data-icon="feather-smartphone">SMS + Push + Email</option>
+                                                            </select>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <hr class="my-0">
+                                    <div class="card-body notify-activity-section">
+                                        <div class="mb-4 d-flex align-items-center justify-content-between">
+                                            <h5 class="fw-bold mb-0 me-4">
+                                                <span class="d-block mb-2">Account Activity:</span>
+                                                <span class="fs-12 fw-normal text-muted text-truncate-1-line">Lookup you account activity checkup.</span>
+                                            </h5>
+                                            <a href="javascript:void(0);" class="btn btn-sm btn-light-brand">View Activity</a>
+                                        </div>
+                                        <div class="hstack justify-content-between p-4 mb-3 border border-dashed border-gray-3 rounded-1">
+                                            <div class="hstack me-4">
+                                                <div class="avatar-text">
+                                                    <i class="feather-message-square"></i>
+                                                </div>
+                                                <div class="ms-4">
+                                                    <a href="javascript:void(0);" class="fw-bold mb-1 text-truncate-1-line">Someone comments on one of my items</a>
+                                                    <div class="fs-12 text-muted text-truncate-1-line">If someone comments on one of your items, it's important to respond in a timely and appropriate
+                                                        manner.</div>
+                                                </div>
+                                            </div>
+                                            <div class="form-check form-switch form-switch-sm">
+                                                <label class="form-check-label fw-500 text-dark c-pointer" for="formSwitchComment"></label>
+                                                <input class="form-check-input c-pointer" type="checkbox" id="formSwitchComment">
+                                            </div>
+                                        </div>
+                                        <div class="hstack justify-content-between p-4 mb-3 border border-dashed border-gray-3 rounded-1">
+                                            <div class="hstack me-4">
+                                                <div class="avatar-text">
+                                                    <i class="feather-briefcase"></i>
+                                                </div>
+                                                <div class="ms-4">
+                                                    <a href="javascript:void(0);" class="fw-bold mb-1 text-truncate-1-line">Someone replies to my job posting</a>
+                                                    <div class="fs-12 text-muted text-truncate-1-line">Great! It's always exciting to hear from someone who's interested in a job posting you've put
+                                                        out.</div>
+                                                </div>
+                                            </div>
+                                            <div class="form-check form-switch form-switch-sm">
+                                                <label class="form-check-label fw-500 text-dark c-pointer" for="formSwitchReplie"></label>
+                                                <input class="form-check-input c-pointer" type="checkbox" id="formSwitchReplie">
+                                            </div>
+                                        </div>
+                                        <div class="hstack justify-content-between p-4 mb-3 border border-dashed border-gray-3 rounded-1">
+                                            <div class="hstack me-4">
+                                                <div class="avatar-text">
+                                                    <i class="feather-briefcase"></i>
+                                                </div>
+                                                <div class="ms-4">
+                                                    <a href="javascript:void(0);" class="fw-bold mb-1 text-truncate-1-line">Someone mentions or follows me</a>
+                                                    <div class="fs-12 text-muted text-truncate-1-line">If you received a notification that someone mentioned or followed you, take a moment to read it
+                                                        and understand what it means.</div>
+                                                </div>
+                                            </div>
+                                            <div class="form-check form-switch form-switch-sm">
+                                                <label class="form-check-label fw-500 text-dark c-pointer" for="formSwitchFollow"></label>
+                                                <input class="form-check-input c-pointer" type="checkbox" id="formSwitchFollow">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- [ Main Content ] end -->
+        </div>
+        <!-- [ Footer ] start -->
+        <footer class="footer">
+            <p class="fs-11 text-muted fw-medium text-uppercase mb-0 copyright">
+                <span>Copyright ©</span>
+                <script>
+                    document.write(new Date().getFullYear());
+                </script>
+                <span>theme_ocean</span>
+            </p>
+
+        </footer>
+        <!-- [ Footer ] end -->
+    </main>
+    <!--! ================================================================ !-->
+    <!--! [End] Main Content !-->
+    <!--! ================================================================ !-->
+
+    <!--! ================================================================ !-->
+    <!--! Footer Script !-->
+    <!--! ================================================================ !-->
+    <!--! BEGIN: Vendors JS !-->
+    <script src="{% static 'vendors/js/vendors.min.js' %}"></script>
+    <!-- vendors.min.js {always must need to be top} -->
+    <script src="{% static 'vendors/js/circle-progress.min.js' %}"></script>
+    <!--! END: Vendors JS !-->
+    <!--! BEGIN: Apps Init  !-->
+    <script src="{% static 'mjs/common-init.min.js' %}"></script>
+    <!--! END: Apps Init !-->
+
+    <script>
+        const PRODUCT_API_BASE = '{% url "product:product_api" %}';
+
+        // Load Products
+        async function loadProducts() {
+
+            // try {
+            //     const response = await fetch(PRODUCT_API_BASE, {
+            //         method: 'POST',
+            //         headers: {
+            //             'Content-Type': 'application/json',
+            //             'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+            //         },
+            //         body: JSON.stringify({ action: 'list', max_data: defaultMaxData })
+            //     });
+
+            //     const result = await response.json();
+
+            //     if (result.success) {
+            //         // Add products to the table
+            //         const tbody = document.querySelector('#productList tbody');
+            //         tbody.innerHTML = ''; // Clear existing rows
+            //         console.log('Loaded products:', result.data.product_list);
+            //         result.data.product_list.forEach(product => {
+            //             const row = document.createElement('tr');
+            //             const statusBadge = product.is_active ?
+            //                 '<div class="badge bg-soft-success text-success">Active</div>' :
+            //                 '<div class="badge bg-soft-danger text-danger">Disable</div>';
+            //             row.classList.add('single-item');
+            //             row.innerHTML = `
+            //                 <td>
+            //                     <div class="item-checkbox ms-1">
+            //                         <div class="custom-control custom-checkbox">
+            //                             <input type="checkbox" class="custom-control-input checkbox" id="checkBox_${product.id}">
+            //                             <label class="custom-control-label" for="checkBox_${product.id}"></label>
+            //                         </div>
+            //                     </div>
+            //                 </td>
+            //                 <td><a href="invoice-view.html" class="fw-bold">#P-${product.id}</a></td>
+            //                 <td>
+            //                     <a href="" class="hstack gap-1">
+            //                         <div class="gap-1">
+            //                             <span class="text-truncate-1-line">${product.name}</span>
+            //                             <small class="fs-12 fw-normal text-muted mt-1">${product.category.name}</small>
+            //                         </div>
+            //                     </a>
+            //                 </td>
+            //                 <td class="fw-bold text-dark">${product.price.toLocaleString()}</td>
+            //                 <td>${product.qty}</td>
+            //                 <td>
+            //                 ${new Date(product.updated_at).toLocaleString('id-ID', {
+            //                 timeZone: 'Asia/Jakarta',
+            //                 day: '2-digit',
+            //                 month: 'short',
+            //                 year: 'numeric',
+            //                 hour: '2-digit',
+            //                 minute: '2-digit'
+            //             })}
+            //                 </td>
+            //                 <td>
+            //                     ${statusBadge}
+            //                 </td>
+            //                `;
+            //             tbody.appendChild(row);
+            //         });
+
+            //     } else {
+            //         console.error('Failed to load products:', result.message);
+            //         showMessage(result.message, 'error');
+            //     }
+            // } catch (error) {
+            //     console.error('Error loading products:', error);
+            //     showMessage(error);
+            // }
+        }
+        document.addEventListener('DOMContentLoaded', function () {
+            loadProducts();
+        });
+    </script>
+</body>
+
+</html>
