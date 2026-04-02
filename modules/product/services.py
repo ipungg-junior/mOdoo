@@ -197,6 +197,8 @@ class ProductService:
             return ProductService.delete_product(request, json_request)
         elif action == 'upload_image':
             return ProductService.upload_product_image(request, json_request)
+        elif action == 'upload_images_base64':
+            return ProductService.upload_images_from_base64(request, json_request)
         else:
             return JsonResponse({'success': False, 'message': f'Unknown POST action: {action}'}, status=400)
 
@@ -503,6 +505,116 @@ class ProductService:
                 'success': False,
                 'message': f'Upload error: {str(e)}'
             }, status=500)
+
+    @staticmethod
+    def upload_images_from_base64(request, data):
+        """Handle multiple image upload from base64 data"""
+        product_id = data.get('product_id')
+        images = data.get('images', [])
+
+        if not product_id:
+            return JsonResponse({'success': False, 'message': 'Product ID is required'}, status=400)
+
+        if not images or len(images) == 0:
+            return JsonResponse({'success': False, 'message': 'No images provided'}, status=400)
+
+        try:
+            product = Product.objects.get(id=product_id)
+        except Product.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Product not found'}, status=404)
+
+        import base64
+        from io import BytesIO
+        from django.core.files.uploadedfile import InMemoryUploadedFile
+
+        allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+        max_size = 5 * 1024 * 1024  # 5MB
+
+        uploaded_results = []
+        failed_results = []
+
+        for idx, img_data in enumerate(images):
+            try:
+                base64_str = img_data.get('base64', '')
+                filename = img_data.get('filename', f'image_{idx}.jpg')
+
+                if not base64_str:
+                    failed_results.append({'index': idx, 'filename': filename, 'error': 'No base64 data'})
+                    continue
+
+                if 'base64,' in base64_str:
+                    header, base64_data = base64_str.split('base64,', 1)
+                    content_type = header.split(':')[1].split(';')[0]
+                else:
+                    content_type = 'image/jpeg'
+                    base64_data = base64_str
+
+                if content_type not in allowed_types:
+                    failed_results.append({'index': idx, 'filename': filename, 'error': f'Invalid file type: {content_type}'})
+                    continue
+
+                image_bytes = base64.b64decode(base64_data)
+
+                if len(image_bytes) > max_size:
+                    failed_results.append({'index': idx, 'filename': filename, 'error': 'File too large (max 5MB)'})
+                    continue
+
+                image_file = InMemoryUploadedFile(
+                    BytesIO(image_bytes),
+                    field_name='image',
+                    name=filename,
+                    content_type=content_type,
+                    size=len(image_bytes),
+                    charset=None
+                )
+
+                upload_result = supabase_storage.upload_product_image(image_file, product_id)
+
+                if not upload_result['success']:
+                    failed_results.append({'index': idx, 'filename': filename, 'error': upload_result.get('error', 'Upload failed')})
+                    continue
+
+                product_image = ProductImage(
+                    product=product,
+                    image_path=upload_result['filename'],
+                    signed_url=upload_result['url'],
+                    last_update_signed_url=timezone.now()
+                )
+                product_image.save()
+
+                product.last_update_signed_url = timezone.now()
+                product.save()
+
+                uploaded_results.append({
+                    'index': idx,
+                    'filename': filename,
+                    'image_path': upload_result['filename'],
+                    'signed_url': upload_result['url']
+                })
+
+            except Exception as e:
+                print(f"Error processing image {idx}: {e}")
+                failed_results.append({'index': idx, 'filename': filename, 'error': str(e)})
+
+        response_data = {
+            'uploaded': uploaded_results,
+            'failed': failed_results,
+            'total_uploaded': len(uploaded_results),
+            'total_failed': len(failed_results)
+        }
+
+        if len(uploaded_results) == 0:
+            return JsonResponse({
+                'success': False,
+                'message': 'All uploads failed',
+                'data': response_data
+            }, status=500)
+
+        return JsonResponse({
+            'success': True,
+            'message': f'{len(uploaded_results)} image(s) uploaded successfully',
+            'data': response_data
+        })
 
     @classmethod
     def get_products(cls):

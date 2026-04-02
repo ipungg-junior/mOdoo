@@ -15,4 +15,5 @@ urlpatterns = [
     path('api/product/', views.APIView.as_view(context='product_api'), name='product_api'),
     path('api/category/', views.APIView.as_view(context='category_api'), name='category_api'),
     path('api/transaction/', views.APIView.as_view(context='product_transaction_api'), name='product_transaction_api'),
+    path('api/edit/<int:id>/', views.APIView.as_view(context='product_edit_api'), name='product_edit_api'),
 ]
