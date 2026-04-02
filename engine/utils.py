@@ -329,17 +329,22 @@ class SupabaseStorageService:
 
         if needs_refresh:
             try:
+                print(f" - Generating signed URL for file: '{file_path}' in bucket {self.bucket_name}")
                 signed_url_data = self.supabase.storage.from_(self.bucket_name).create_signed_url(
                     path=file_path,
                     expires_in=3600  # 1 hour
                 )
+                print(f" - Signed URL generated")
                 return {
                     'is_new': True,
                     'url': signed_url_data['signedUrl']
                 }
             except Exception as e:
-                print(f"Warning: Could not generate signed URL: {e}")
-                return None
+                print(f" - Warning: Could not generate signed URL for {file_path}: {e}")
+                return {
+                    'is_new': False,
+                    'url': None  # Return cached URL if generation fails
+                }
         else:
             return {
                 'is_new': False,

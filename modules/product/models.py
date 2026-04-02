@@ -43,6 +43,19 @@ class Product(models.Model):
         return self.name
     
 
+# Product image model to store multiple images for a product
+class ProductImage(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
+    image_path = models.CharField(max_length=260, blank=True, null=True, help_text="Storage URL for product image (supabase path)")
+    signed_url = models.CharField(max_length=750, blank=True, null=True, help_text="Cached signed URL for secure access")
+    last_update_signed_url = models.DateTimeField(null=True, blank=True, help_text="Last time signed URL was updated")
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=False, null=True, blank=True)
+
+    def __str__(self):
+        return f"Image for {self.product.name}"
+    
+
 # Base model for payment status
 class PaymentStatus(models.Model):
     name = models.CharField(max_length=20, unique=True)

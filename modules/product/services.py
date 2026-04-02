@@ -7,7 +7,7 @@ from django.db.models import Sum, Count
 from django.utils import timezone
 from django.db.models.functions import TruncMonth
 from dateutil.relativedelta import relativedelta
-from .models import Product, Category, Transaction, TransactionItem, PaymentTerm, PaymentStatus
+from .models import Product, Category, Transaction, TransactionItem, PaymentTerm, PaymentStatus, ProductImage
 from django.contrib.auth.models import User
 from engine.utils import format_rupiah, supabase_storage
 from engine.models import Tax
@@ -224,18 +224,8 @@ class ProductService:
             
         product_data = []
         for product in products:
-            if product.image_url is None or product.image_url == '':
-                signed_url_img = None
-            else:
-                signed_url_img = supabase_storage.get_signed_url(product.image_url, cached_url=product.signed_url, last_update=product.last_update_signed_url)
-                if signed_url_img['is_new']:
-                    # Update signed URL and timestamp
-                    product.signed_url = signed_url_img['url']
-                    product.last_update_signed_url = timezone.now()
-                    product.save()
-                
-            product_data.append({
-                'id': product.id,
+            
+            tmp_data = {'id': product.id,
                 'name': product.name,
                 'qty': product.qty,
                 'description': product.description,
@@ -244,12 +234,37 @@ class ProductService:
                     'name': product.category.name if product.category else None
                 } if product.category else None,
                 'price': str(format_rupiah(product.price)),
-                'raw_price': float(product.price),  # Add raw price for calculations
+                'raw_price': product.price,
                 'is_active': product.is_active,
-                'image_url': signed_url_img['url'] if signed_url_img else None,
                 'created_at': product.created_at.isoformat() if product.created_at else None,
                 'updated_at': product.updated_at.isoformat() if product.updated_at else None,
-            })
+            }
+            
+            # get all product image history for this product, and get the latest one
+            product_img = ProductImage.objects.filter(product=product).order_by('id')
+            if product_img:            
+                print(f'Found {len(product_img)} images for product {product.name}')
+                p_img = []
+                for img in product_img:        
+                    if img.image_path is None or img.image_path == '':
+                        signed_url_img = None
+                        p_img.append({'image_path': None, 'signed_url': None})
+                    else:
+                        signed_url_img = supabase_storage.get_signed_url(img.image_path, cached_url=img.signed_url, last_update=img.last_update_signed_url)
+                        if signed_url_img['is_new']:
+                            # Update signed URL and timestamp
+                            img.signed_url = signed_url_img['url']
+                            img.last_update_signed_url = timezone.now()
+                            img.save()
+                        p_img.append({'image_path': img.image_path, 'signed_url': signed_url_img['url']})
+                            
+                img = {'total_images': len(product_img), 'images': p_img}
+                tmp_data['images'] = img
+            
+            else:
+                print(f'No image found for product {product.name}')
+                                       
+            product_data.append(tmp_data)
             
             
         return JsonResponse({
@@ -462,10 +477,12 @@ class ProductService:
             # Update product with image URL
             try:
                 product = Product.objects.get(id=product_id)
-                product.image_url = upload_result['filename']
-                product.signed_url = upload_result['url']
                 product.last_update_signed_url = timezone.now()
                 product.save()
+                
+                # Create product image history record
+                img = ProductImage(product=product, image_url=upload_result['filename'], signed_url=upload_result['url'], last_update_signed_url=timezone.now())
+                img.save()
                 
                 return JsonResponse({
                     'success': True,
@@ -536,38 +553,53 @@ class ProductService:
     @classmethod
     def get_product_by_id(cls, request, product_id):
         try:
+            
+            # get product object
             product = Product.objects.select_related('category').get(id=product_id)
-            if product.image_url is None or product.image_url == '':
-                signed_url_img = None
+            tmp_data = {'id': product.id,
+                'name': product.name,
+                'qty': product.qty,
+                'description': product.description,
+                'category': {
+                    'id': product.category.id if product.category else None,
+                    'name': product.category.name if product.category else None
+                } if product.category else None,
+                'price': str(format_rupiah(product.price)),
+                'raw_price': product.price,
+                'is_active': product.is_active,
+                'created_at': product.created_at.isoformat() if product.created_at else None,
+                'updated_at': product.updated_at.isoformat() if product.updated_at else None,
+            }
+            
+            # get all product image history for this product, and get the latest one
+            product_img = ProductImage.objects.filter(product=product).order_by('id')
+            if product_img:                
+                p_img = []
+                for img in product_img:        
+                    if img.image_path is None or img.image_path == '':
+                        signed_url_img = None
+                        p_img.append({'image_path': None, 'signed_url': None})
+                    else:
+                        signed_url_img = supabase_storage.get_signed_url(img.image_path, cached_url=img.signed_url, last_update=img.last_update_signed_url)
+                        if signed_url_img['is_new']:
+                            # Update signed URL and timestamp
+                            img.signed_url = signed_url_img['url']
+                            img.last_update_signed_url = timezone.now()
+                            img.save()
+                        p_img.append({'image_path': img.image_path, 'signed_url': signed_url_img['url']})
+                            
+                img = {'total_images': len(product_img), 'images': p_img}
+                tmp_data['images'] = img
+            
             else:
-                signed_url_img = supabase_storage.get_signed_url(product.image_url, cached_url=product.signed_url, last_update=product.last_update_signed_url)
-                if signed_url_img['is_new']:
-                    # Update signed URL and timestamp
-                    product.signed_url = signed_url_img['url']
-                    product.last_update_signed_url = timezone.now()
-                    product.save()
+                tmp_data['images'] = {'total_images': 0, 'images': []}
+                print(f'No image found for product {product.name}')                                       
                 
             return {
                 'success': True,
-                'data': {
-                    'id': product.id,
-                    'name': product.name,
-                    'qty': product.qty,
-                    'description': product.description,
-                    'category': {
-                        'id': product.category.id if product.category else None,
-                        'name': product.category.name if product.category else None
-                    } if product.category else None,
-                    'raw_price': float(product.price),  # Add raw price for calculations
-                    'is_active': product.is_active,
-                    'image_url': signed_url_img['url'] if signed_url_img else None,
-                    'price': float(product.price),
-                    'formatted_price': str(format_rupiah(product.price)),
-                    'stock': product.qty,
-                    'created_at': product.created_at.isoformat() if product.created_at else None,
-                    'updated_at': product.updated_at.isoformat() if product.updated_at else None,
-                }
+                'data': tmp_data
             }
+            
         except Product.DoesNotExist:
             return {'success': False, 'message': 'Product not found'}
         except Exception as e:
