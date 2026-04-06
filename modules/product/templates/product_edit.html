@@ -289,7 +289,7 @@
                                                 <label class="fw-semibold">Status: </label>
                                             </div>
                                             <div class="col-lg-8">
-                                                <select class="form-control" data-select2-selector="status">
+                                                <select class="form-control" data-select2-selector="status" id="statusInput">
                                                     {% if product.data.is_active %}
                                                     <option value="active" data-bg="bg-success" selected>
                                                         Active
@@ -978,6 +978,39 @@
                 saveBtn.disabled = false;
                 saveBtn.innerHTML = originalText;
             }
+
+            // Save changes to other product details here if needed (e.g., name, description, price)
+            try {
+                const detailsData = {
+                    action: 'update',
+                    product_id: PRODUCT_ID,
+                    name: document.getElementById('fullnameInput').value,
+                    price: document.getElementById('priceInput').value,
+                    qty: document.getElementById('qtyInput').value,
+                    status: document.getElementById('statusInput').value,
+                };
+
+                const response = await fetch(PRODUCT_API_BASE, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+                    },
+                    body: JSON.stringify(detailsData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showMessage('Product details updated successfully', 'success');
+                } else {
+                    showMessage('Failed to update product details: ' + (result.message || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error updating product details:', error);
+                showMessage('Error updating product details: ' + error.message, 'error');
+            }
+
         }
 
         document.getElementById('saveProductBtn').addEventListener('click', saveProduct);
