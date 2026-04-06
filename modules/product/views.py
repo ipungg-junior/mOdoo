@@ -62,9 +62,6 @@ class APIView(View):
                 elif self.context == 'product_transaction_api':
                     # Transaction Service handling request
                     return TransactionService.process_post(request, json_request)
-                elif self.context == 'product_edit_api':
-                    # Product Edit Service handling request (includes image upload)
-                    return ProductService.process_post(request, json_request)
                 else:
                     # Return 400 Bad request
                     return JsonResponse({'success': False, 'message': 'Invalid API context'}, status=400)
