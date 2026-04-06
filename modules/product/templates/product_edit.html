@@ -212,49 +212,27 @@
                                         </div>
                                         <div class="row mb-4 align-items-center">
                                             <div class="col-lg-4">
-                                                <label class="fw-semibold">Images: </label>
+                                                <label class="fw-semibold">Image: </label>
                                             </div>
                                             <div class="col-lg-8">
-                                                <div id="imagePreviewContainer" class="mb-3 d-flex flex-wrap gap-3">
+                                                <div class="mb-4 mb-md-0 d-flex gap-4 your-brand" id="imagePreviewContainer">
                                                     {% for img in product.data.images.images %}
                                                     {% if img.signed_url != None %}
-                                                    <div class="image-item wd-100 ht-100 position-relative overflow-hidden border border-gray-2 rounded" data-existing="true">
-                                                        <img src="{{ img.signed_url }}" class="img-fluid rounded h-100 w-100" alt="">
-                                                        <button type="button" class="btn-remove-image position-absolute top-0 end-0 btn btn-sm btn-danger" style="font-size: 10px; padding: 2px 6px;">
-                                                            <i class="feather-x"></i>
-                                                        </button>
+                                                    <div class="wd-100 ht-100 position-relative overflow-hidden border border-gray-2 rounded" id="existing_img_{{ img.image_path }}">
+                                                        <img src="{{ img.signed_url }}" class="upload-pic img-fluid rounded h-100 w-100" alt="">
+                                                        <div class="position-absolute start-50 end-0 top-50 translate-middle h-100 w-100 hstack align-items-center justify-content-center c-pointer upload-button">
+                                                            <i class="feather feather-camera" aria-hidden="true"></i>
+                                                        </div>
                                                     </div>
                                                     {% endif %}
                                                     {% endfor %}
                                                 </div>
-                                                <div class="d-flex flex-wrap gap-2 align-items-center">
-                                                    <button type="button" id="addImageBtn" class="btn btn-sm btn-outline-primary">
+                                                <div class="d-flex flex-column gap-1">
+                                                    <button type="button" id="addImageBtn" class="btn btn-sm btn-outline-primary" style="width:fit-content;">
                                                         <i class="feather-plus me-1"></i> Add Image
                                                     </button>
-                                                    <input type="file" id="imageFileInput" accept="image/jpeg,image/png,image/webp" multiple class="d-none">
-                                                    <span class="fs-12 fw-normal text-muted">JPG, PNG, WebP. Max 5MB each.</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                            <div class="col-lg-8">
-                                                <div id="imagePreviewContainer" class="mb-3 d-flex flex-wrap gap-3">
-                                                    {% for img in product.data.images.images %}
-                                                    {% if img.signed_url != None %}
-                                                    <div class="image-item wd-100 ht-100 position-relative overflow-hidden border border-gray-2 rounded" data-existing="true">
-                                                        <img src="{{ img.signed_url }}" class="img-fluid rounded h-100 w-100" alt="">
-                                                        <button type="button" class="btn-remove-image position-absolute top-0 end-0 btn btn-sm btn-danger" style="font-size: 10px; padding: 2px 6px;">
-                                                            <i class="feather-x"></i>
-                                                        </button>
-                                                    </div>
-                                                    {% endif %}
-                                                    {% endfor %}
-                                                </div>
-                                                <div class="d-flex flex-wrap gap-2 align-items-center">
-                                                    <button type="button" id="addImageBtn" class="btn btn-sm btn-outline-primary">
-                                                        <i class="feather-plus me-1"></i> Add Image
-                                                    </button>
-                                                    <input type="file" id="imageFileInput" accept="image/jpeg,image/png,image/webp" multiple class="d-none">
-                                                    <span class="fs-12 fw-normal text-muted">JPG, PNG, WebP. Max 5MB each.</span>
+                                                    <input class="file-upload" type="file" id="imageFileInput" accept="image/jpeg,image/png,image/webp" multiple>
+                                                    <div class="fs-12 fw-normal text-muted">Allowed JPG, PNG, WebP. Max size of 5MB</div>
                                                 </div>
                                             </div>
                                         </div>
@@ -890,18 +868,16 @@
             });
         }
 
-        function addImagePreview(base64Data, filename, isNew) {
+        function addImagePreview(base64Data, filename) {
             const container = document.getElementById('imagePreviewContainer');
             const div = document.createElement('div');
-            div.className = 'image-item wd-100 ht-100 position-relative overflow-hidden border border-gray-2 rounded';
-            if (isNew) {
-                div.dataset.new = 'true';
-            }
+            div.className = 'wd-100 ht-100 position-relative overflow-hidden border border-gray-2 rounded';
+            div.id = 'pending_img_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
             div.innerHTML = `
-                <img src="${base64Data}" class="img-fluid rounded h-100 w-100" alt="">
-                <button type="button" class="btn-remove-image position-absolute top-0 end-0 btn btn-sm btn-danger" style="font-size: 10px; padding: 2px 6px;">
-                    <i class="feather-x"></i>
-                </button>
+                <img src="${base64Data}" class="upload-pic img-fluid rounded h-100 w-100" alt="">
+                <div class="position-absolute start-50 end-0 top-50 translate-middle h-100 w-100 hstack align-items-center justify-content-center c-pointer upload-button">
+                    <i class="feather feather-camera" aria-hidden="true"></i>
+                </div>
             `;
             container.appendChild(div);
         }
@@ -929,7 +905,7 @@
                         base64: result.base64,
                         filename: result.filename
                     });
-                    addImagePreview(result.base64, result.filename, true);
+                    addImagePreview(result.base64, result.filename);
                 } catch (error) {
                     console.error('Error reading file:', error);
                     showMessage('Error reading file: ' + file.name, 'error');
@@ -949,15 +925,15 @@
         });
 
         document.getElementById('imagePreviewContainer').addEventListener('click', function(e) {
-            const removeBtn = e.target.closest('.btn-remove-image');
-            if (removeBtn) {
-                const imageItem = removeBtn.closest('.image-item');
-                if (imageItem.dataset.new === 'true') {
+            const uploadBtn = e.target.closest('.upload-button');
+            if (uploadBtn) {
+                const imageItem = uploadBtn.closest('[id^="pending_img_"]');
+                if (imageItem) {
                     const imgElement = imageItem.querySelector('img');
                     const base64Src = imgElement.src;
                     pendingImages = pendingImages.filter(img => img.base64 !== base64Src);
+                    imageItem.remove();
                 }
-                imageItem.remove();
             }
         });
 
@@ -999,7 +975,7 @@
                         showMessage('Image upload failed: ' + (result.message || 'Unknown error'), 'error');
                     }
                 } else {
-                    showMessage('No changes to save', 'success');
+                    showMessage('No new images to upload', 'success');
                 }
             } catch (error) {
                 console.error('Error saving product:', error);
