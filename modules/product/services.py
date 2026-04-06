@@ -364,43 +364,60 @@ class ProductService:
     @staticmethod
     def update_product(request, data):
         """Update an existing product"""
-        product_id = data.get('id')
+        
+        print(f'\tproduct.services - Update product function called')
+        product_id = data.get('product_id')
         name = data.get('name')
         qty = data.get('qty')
         price = data.get('price')
         description = data.get('description')
         category_id = data.get('category_id')
-        is_active = data.get('is_active')
+        is_active = data.get('status')
 
         if not product_id:
+            print('\tproduct.services - Product ID is required for update')
             return JsonResponse({'success': False, 'message': 'Product ID is required'}, status=400)
 
         try:
             product = Product.objects.get(id=product_id)
-
+            print(f'\tproduct.services - Found product {product.name} for update')
             # Update fields if provided
             if name != None:
+                print(f'\tproduct.services - Updating name to {name}')
                 product.name = name
             if price != None:
+                print(f'\tproduct.services - Updating price to {price}')
                 product.price = price
             if qty != None:
+                print(f'\tproduct.services - Updating qty to {qty}')
                 product.qty = qty
             if description != None:
+                print(f'\tproduct.services - Updating description to {description}')
                 product.description = description
             if is_active != None:
-                product.is_active = is_active
+                if is_active == 'active':
+                    print(f'\tproduct.services - Updating status to active')
+                    product.is_active = True
+                if is_active == 'inactive':
+                    print(f'\tproduct.services - Updating status to inactive')
+                    product.is_active = False
+                
 
             # Handle category
             if category_id != None:
                 if category_id:
                     try:
                         category = Category.objects.get(id=category_id)
+                        print(f'\tproduct.services - Updating category to {category.name}')
                         product.category = category
                     except Category.DoesNotExist:
+                        print(f'\tproduct.services - Category with ID {category_id} not found')
                         return JsonResponse({'success': False, 'message': 'Category not found'}, status=400)
                 else:
+                    print(f'\tproduct.services - Removing category from product')
                     product.category = None
 
+            print(f'\tproduct.services - Validating and saving product "{product.name}"')
             product.full_clean()  # Validate
             product.save()
 
@@ -422,8 +439,10 @@ class ProductService:
             })
 
         except Product.DoesNotExist:
+            print(f'\tproduct.services - Product with ID {product_id} not found for update')
             return JsonResponse({'success': False, 'message': 'Product not found'}, status=404)
         except ValidationError as e:
+            print(f'\tproduct.services - Validation error while updating product: {e}')
             return JsonResponse({'success': False, 'message': str(e)}, status=400)
 
     @staticmethod
