@@ -516,21 +516,21 @@ class ProductService:
         """Handle multiple image upload from base64 data"""
         product_id = data.get('product_id')
         images = data.get('images', [])
-        print(f'\tUpload image function for product_id: {product_id}')
+        print(f'\tproduct.services - Upload image function for product_id: {product_id}')
         
         if not product_id:
-            print('\tProduct ID is required for image upload')
+            print('\tproduct.services - Product ID is required for image upload')
             return JsonResponse({'success': False, 'message': 'Product ID is required'}, status=400)
 
         if not images or len(images) == 0:
-            print('\tNo images provided in the request')
+            print('\tproduct.services - No images provided in the request')
             return JsonResponse({'success': False, 'message': 'No images provided'}, status=400)
 
         try:
             product = Product.objects.get(id=product_id)
-            print(f'\tFound product {product.name} for image upload')
+            print(f'\tproduct.services - Found product {product.name} for image upload')
         except Product.DoesNotExist:
-            print(f'\tProduct with ID {product_id} not found')
+            print(f'\tproduct.services - Product with ID {product_id} not found')
             return JsonResponse({'success': False, 'message': 'Product not found'}, status=404)
 
         import base64
@@ -603,7 +603,7 @@ class ProductService:
                 })
 
             except Exception as e:
-                print(f"\tError processing image {idx}: {e}")
+                print(f"\tproduct.services - Error processing image {idx}: {e}")
                 failed_results.append({'index': idx, 'filename': filename, 'error': str(e)})
 
         response_data = {
@@ -614,14 +614,14 @@ class ProductService:
         }
 
         if len(uploaded_results) == 0:
-            print('\tAll image uploads failed')
+            print('\tproduct.services - All image uploads failed')
             return JsonResponse({
                 'success': False,
                 'message': 'All uploads failed',
                 'data': response_data
             }, status=500)
 
-        print(f'\t{len(uploaded_results)} image(s) uploaded successfully, {len(failed_results)} failed')
+        print(f'product.services - \t{len(uploaded_results)} image(s) uploaded successfully, {len(failed_results)} failed')
         return JsonResponse({
             'success': True,
             'message': f'{len(uploaded_results)} image(s) uploaded successfully',
