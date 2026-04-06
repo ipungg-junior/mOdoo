@@ -220,7 +220,8 @@
                                                     {% if img.signed_url != None %}
                                                     <div class="wd-100 ht-100 position-relative overflow-hidden border border-gray-2 rounded" id="existing_img_{{ img.image_path }}">
                                                         <img src="{{ img.signed_url }}" class="upload-pic img-fluid rounded h-100 w-100" alt="">
-                                                        <div class="position-absolute start-50 end-0 top-50 translate-middle h-100 w-100 hstack align-items-center justify-content-center c-pointer upload-button">
+                                                        <div
+                                                            class="position-absolute start-50 end-0 top-50 translate-middle h-100 w-100 hstack align-items-center justify-content-center c-pointer upload-button">
                                                             <i class="feather feather-camera" aria-hidden="true"></i>
                                                         </div>
                                                     </div>
@@ -231,7 +232,6 @@
                                                     <button type="button" id="addImageBtn" class="btn btn-sm btn-outline-primary" style="width:fit-content;">
                                                         <i class="feather-plus me-1"></i> Add Image
                                                     </button>
-                                                    <input class="file-upload" type="file" id="imageFileInput" accept="image/jpeg,image/png,image/webp" multiple>
                                                     <div class="fs-12 fw-normal text-muted">Allowed JPG, PNG, WebP. Max size of 5MB</div>
                                                 </div>
                                             </div>
@@ -310,17 +310,6 @@
 
                                         <span class="fs-12 fw-normal text-muted text-truncate-1-line">Last Update : {{ product.data.updated_at }} </span>
                                         <span class="fs-12 fw-normal text-muted text-truncate-1-line">Created at : {{ product.data.created_at }} </span>
-
-                                        <div class="row mt-4">
-                                            <div class="col-lg-12 d-flex gap-2">
-                                                <button type="button" id="saveProductBtn" class="btn btn-primary">
-                                                    <i class="feather-save me-1"></i> Save Changes
-                                                </button>
-                                                <a href="{% url 'product:product_list' %}" class="btn btn-secondary">
-                                                    Cancel
-                                                </a>
-                                            </div>
-                                        </div>
 
                                         <div class="row mt-4">
                                             <div class="col-lg-12 d-flex gap-2">
@@ -853,16 +842,16 @@
         let pendingImages = [];
 
         function fileToBase64(file) {
-            return new Promise(function(resolve, reject) {
+            return new Promise(function (resolve, reject) {
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
-                reader.onload = function() {
+                reader.onload = function () {
                     resolve({
                         base64: reader.result,
                         filename: file.name
                     });
                 };
-                reader.onerror = function(error) {
+                reader.onerror = function (error) {
                     reject(error);
                 };
             });
@@ -913,18 +902,26 @@
             }
         }
 
-        document.getElementById('addImageBtn').addEventListener('click', function() {
-            document.getElementById('imageFileInput').click();
+        document.getElementById('addImageBtn').addEventListener('click', function () {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/jpeg,image/png,image/webp';
+            input.multiple = true;
+            input.style.display = 'none';
+            input.addEventListener('change', function (e) {
+                if (e.target.files.length > 0) {
+                    handleImageSelect(e.target.files);
+                }
+                input.remove();
+            });
+            document.body.appendChild(input);
+            input.click();
+        });
+        document.body.appendChild(input);
+        input.click();
         });
 
-        document.getElementById('imageFileInput').addEventListener('change', function(e) {
-            if (e.target.files.length > 0) {
-                handleImageSelect(e.target.files);
-                e.target.value = '';
-            }
-        });
-
-        document.getElementById('imagePreviewContainer').addEventListener('click', function(e) {
+        document.getElementById('imagePreviewContainer').addEventListener('click', function (e) {
             const uploadBtn = e.target.closest('.upload-button');
             if (uploadBtn) {
                 const imageItem = uploadBtn.closest('[id^="pending_img_"]');
@@ -968,7 +965,7 @@
                     if (result.success) {
                         showMessage(result.message, 'success');
                         pendingImages = [];
-                        setTimeout(function() {
+                        setTimeout(function () {
                             window.location.reload();
                         }, 1000);
                     } else {
@@ -1004,7 +1001,7 @@
                     <button type="button" class="ml-4 text-gray-400 hover:text-gray-600" onclick="this.parentElement.remove()">x</button>
                 </div>
             `;
-            setTimeout(function() {
+            setTimeout(function () {
                 container.innerHTML = '';
             }, 5000);
         }
