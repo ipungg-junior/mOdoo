@@ -232,7 +232,8 @@
                                                     <button type="button" id="addImageBtn" class="btn btn-sm btn-outline-primary" style="width:fit-content;">
                                                         <i class="feather-plus me-1"></i> Add Image
                                                     </button>
-                                                    <div class="fs-12 fw-normal text-muted">Allowed JPG, PNG, WebP. Max size of 5MB</div>
+                                                    <div class="fs-12 fw-normal text-muted">Allowed JPG, PNG, WebP. Max size of 5MB
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -836,7 +837,6 @@
 
     <script>
         const PRODUCT_API_BASE = '{% url "product:product_api" %}';
-        const PRODUCT_EDIT_API_BASE = '{% url "product:product_edit_api" id=product.data.id %}';
         const PRODUCT_ID = {{ product.data.id }};
 
         let pendingImages = [];
@@ -917,9 +917,6 @@
             document.body.appendChild(input);
             input.click();
         });
-        document.body.appendChild(input);
-        input.click();
-        });
 
         document.getElementById('imagePreviewContainer').addEventListener('click', function (e) {
             const uploadBtn = e.target.closest('.upload-button');
@@ -951,7 +948,7 @@
                         }))
                     };
 
-                    const response = await fetch(PRODUCT_EDIT_API_BASE, {
+                    const response = await fetch(PRODUCT_API_BASE, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
