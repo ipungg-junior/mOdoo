@@ -451,11 +451,13 @@ class ProductService:
         """Handle product image upload"""
         try:
             product_id = request.POST.get('product_id')
-            if not product_id:
+            
+            if not product_id:                
                 return JsonResponse({'success': False, 'message': 'Product ID is required'}, status=400)
 
             # Get the uploaded file
             if 'image' not in request.FILES:
+                print('\tNo image file provided in the request')
                 return JsonResponse({'success': False, 'message': 'No image file provided'}, status=400)
 
             image_file = request.FILES['image']
@@ -463,11 +465,13 @@ class ProductService:
             # Validate file type
             allowed_types = ['image/jpeg', 'image/jpg', 'image/png']
             if image_file.content_type not in allowed_types:
+                print(f'\tInvalid file type: {image_file.content_type}')
                 return JsonResponse({'success': False, 'message': 'Invalid file type. Only JPEG, and PNG are allowed'}, status=400)
 
             # Validate file size (5MB limit)
             max_size = 5 * 1024 * 1024  # 5MB
             if image_file.size > max_size:
+                print(f'\tFile too large: {image_file.size} bytes')
                 return JsonResponse({'success': False, 'message': 'File too large. Maximum size is 5MB'}, status=400)
 
             # Upload to Supabase
@@ -479,6 +483,7 @@ class ProductService:
             # Update product with image URL
             try:
                 product = Product.objects.get(id=product_id)
+                print(f'\tProduct updating {product.name} with image {image_file.name}')
                 product.last_update_signed_url = timezone.now()
                 product.save()
                 
@@ -511,16 +516,21 @@ class ProductService:
         """Handle multiple image upload from base64 data"""
         product_id = data.get('product_id')
         images = data.get('images', [])
-
+        print(f'\tUpload image function for product_id: {product_id}')
+        
         if not product_id:
+            print('\tProduct ID is required for image upload')
             return JsonResponse({'success': False, 'message': 'Product ID is required'}, status=400)
 
         if not images or len(images) == 0:
+            print('\tNo images provided in the request')
             return JsonResponse({'success': False, 'message': 'No images provided'}, status=400)
 
         try:
             product = Product.objects.get(id=product_id)
+            print(f'\tFound product {product.name} for image upload')
         except Product.DoesNotExist:
+            print(f'\tProduct with ID {product_id} not found')
             return JsonResponse({'success': False, 'message': 'Product not found'}, status=404)
 
         import base64
@@ -593,7 +603,7 @@ class ProductService:
                 })
 
             except Exception as e:
-                print(f"Error processing image {idx}: {e}")
+                print(f"\tError processing image {idx}: {e}")
                 failed_results.append({'index': idx, 'filename': filename, 'error': str(e)})
 
         response_data = {
@@ -604,12 +614,14 @@ class ProductService:
         }
 
         if len(uploaded_results) == 0:
+            print('\tAll image uploads failed')
             return JsonResponse({
                 'success': False,
                 'message': 'All uploads failed',
                 'data': response_data
             }, status=500)
 
+        print(f'\t{len(uploaded_results)} image(s) uploaded successfully, {len(failed_results)} failed')
         return JsonResponse({
             'success': True,
             'message': f'{len(uploaded_results)} image(s) uploaded successfully',
