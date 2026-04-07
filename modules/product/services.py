@@ -195,6 +195,8 @@ class ProductService:
             return ProductService.update_product(request, json_request)
         elif action == 'delete':
             return ProductService.delete_product(request, json_request)
+        elif action == 'delete_image':
+            return ProductService.delete_product_image(request, json_request)
         elif action == 'upload_image':
             return ProductService.upload_product_image(request, json_request)
         elif action == 'upload_images_base64':
@@ -536,7 +538,7 @@ class ProductService:
         product_id = data.get('product_id')
         images = data.get('images', [])
         print(f'\tproduct.services - Upload image function for product_id: {product_id}')
-        
+         
         if not product_id:
             print('\tproduct.services - Product ID is required for image upload')
             return JsonResponse({'success': False, 'message': 'Product ID is required'}, status=400)
@@ -551,6 +553,49 @@ class ProductService:
         except Product.DoesNotExist:
             print(f'\tproduct.services - Product with ID {product_id} not found')
             return JsonResponse({'success': False, 'message': 'Product not found'}, status=404)
+
+    @staticmethod
+    def delete_product_image(request, data):
+        """Delete a product image"""
+        image_id = data.get('image_id')
+        
+        if not image_id:
+            return JsonResponse({'success': False, 'message': 'Image ID is required'}, status=400)
+
+        try:
+            # Get the product image
+            product_image = ProductImage.objects.get(id=image_id)
+            product_id = product_image.product.id
+            
+            # Delete the image file from Supabase if it exists
+            if product_image.image_path:
+                try:
+                    supabase_storage.delete_file(product_image.image_path)
+                except Exception as e:
+                    print(f'Warning: Failed to delete file from Supabase: {e}')
+                    # Continue with database deletion even if file deletion fails
+            
+            # Delete the database record
+            product_image.delete()
+            
+            # Update the product's last_update_signed_url timestamp
+            try:
+                product = Product.objects.get(id=product_id)
+                product.last_update_signed_url = timezone.now()
+                product.save()
+            except Product.DoesNotExist:
+                pass  # Product was already deleted, which is fine
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Image deleted successfully'
+            })
+            
+        except ProductImage.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Image not found'}, status=404)
+        except Exception as e:
+            print(f'Error deleting product image: {e}')
+            return JsonResponse({'success': False, 'message': f'Failed to delete image: {str(e)}'}, status=500)
 
         import base64
         from io import BytesIO
