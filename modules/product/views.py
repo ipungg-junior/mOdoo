@@ -55,9 +55,11 @@ class APIView(View):
 
                 if self.context == 'category_api':
                     # Category Service handling request
+                    print("\tproduct.view - Processing category_api POST request with data:", json_request.get('action'))
                     return CategoryService.process_post(request, json_request)
                 elif self.context == 'product_api':
                     # Product Service handling request
+                    print("\tproduct.view - Processing product_api POST request with data:", json_request.get('action'))
                     return ProductService.process_post(request, json_request)
                 elif self.context == 'product_transaction_api':
                     # Transaction Service handling request

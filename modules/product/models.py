@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from engine.models import Tax
-
+from django.utils import timezone
 
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -51,9 +51,21 @@ class ProductImage(models.Model):
     last_update_signed_url = models.DateTimeField(null=True, blank=True, help_text="Last time signed URL was updated")
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=False, null=True, blank=True)
+    is_deleted = models.BooleanField(default=False, help_text="Soft delete flag")
+    deleted_at = models.DateTimeField(null=True, blank=True, help_text="Timestamp when the image was soft deleted")
+    is_active = models.BooleanField(default=True, help_text="Active flag to indicate if the image is exist")
 
     def __str__(self):
         return f"Image for {self.product.name}"
+    
+    def soft_delete(self):
+        self.is_deleted = True
+        self.deleted_at = timezone.now()
+        self.is_active = False
+        self.save()
+    
+    def save(self):
+        return super().save()
     
 
 # Base model for payment status
