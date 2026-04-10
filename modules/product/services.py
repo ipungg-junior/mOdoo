@@ -573,14 +573,14 @@ class ProductService:
             if product_image.image_path:
                 try:
                     print(f'\tproduct.services - Deleting file from Supabase: "{product_image.image_path}"')
-                    supabase_storage.delete_file(product_image.image_path)
+                    # supabase_storage.delete_file(product_image.image_path)
                     print(f'\tproduct.services - File deleted successfully from Supabase: "{product_image.image_path}"')
                 except Exception as e:
                     print(f'\product.services - Failed to delete file from Supabase: {e}')
                     # Continue with database deletion even if file deletion fails
             
-            # Delete the database record
-            # product_image.delete()            
+            # Soft delete the product image record (mark as deleted without actually removing data from the database)
+            product_image.soft_delete()
             
             return JsonResponse({
                 'success': True,
@@ -662,7 +662,7 @@ class ProductService:
             }
             
             # get all product image history for this product, and get the latest one
-            product_img = ProductImage.objects.filter(product=product).order_by('id')
+            product_img = ProductImage.objects.filter(product=product).order_by('id').exclude(is_deleted=True).exclude(is_active=False)  # Exclude soft-deleted images
             if product_img:                
                 p_img = []
                 for img in product_img:        

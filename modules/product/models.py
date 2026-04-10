@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from engine.models import Tax
-
+from django.utils import timezone
 
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -57,6 +57,15 @@ class ProductImage(models.Model):
 
     def __str__(self):
         return f"Image for {self.product.name}"
+    
+    def soft_delete(self):
+        self.is_deleted = True
+        self.deleted_at = timezone.now()
+        self.is_active = False
+        self.save()
+    
+    def save(self):
+        return super().save()
     
 
 # Base model for payment status
