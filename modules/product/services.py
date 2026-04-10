@@ -260,7 +260,7 @@ class ProductService:
                             img.signed_url = signed_url_img['url']
                             img.last_update_signed_url = timezone.now()
                             img.save()
-                        p_img.append({'image_path': img.image_path, 'signed_url': signed_url_img['url']})
+                        p_img.append({'image_id':img.id, 'image_path': img.image_path, 'signed_url': signed_url_img['url']})
                             
                 img = {'total_images': len(product_img), 'images': p_img}
                 tmp_data['images'] = img
@@ -558,33 +558,29 @@ class ProductService:
     def delete_product_image(request, data):
         """Delete a product image"""
         image_id = data.get('image_id')
+        print(f'\tproduct.services - Delete product image function called for image_id: {image_id}')
         
         if not image_id:
+            print('\tproduct.services - Image ID is required for deletion')
             return JsonResponse({'success': False, 'message': 'Image ID is required'}, status=400)
 
         try:
             # Get the product image
             product_image = ProductImage.objects.get(id=image_id)
-            product_id = product_image.product.id
+            print(f'\tproduct.services - Found product image with path "{product_image.image_path}" for deletion')
             
             # Delete the image file from Supabase if it exists
             if product_image.image_path:
                 try:
+                    print(f'\tproduct.services - Deleting file from Supabase: "{product_image.image_path}"')
                     supabase_storage.delete_file(product_image.image_path)
+                    print(f'\tproduct.services - File deleted successfully from Supabase: "{product_image.image_path}"')
                 except Exception as e:
-                    print(f'Warning: Failed to delete file from Supabase: {e}')
+                    print(f'\product.services - Failed to delete file from Supabase: {e}')
                     # Continue with database deletion even if file deletion fails
             
             # Delete the database record
-            product_image.delete()
-            
-            # Update the product's last_update_signed_url timestamp
-            try:
-                product = Product.objects.get(id=product_id)
-                product.last_update_signed_url = timezone.now()
-                product.save()
-            except Product.DoesNotExist:
-                pass  # Product was already deleted, which is fine
+            # product_image.delete()            
             
             return JsonResponse({
                 'success': True,
@@ -592,105 +588,11 @@ class ProductService:
             })
             
         except ProductImage.DoesNotExist:
+            print(f'\tproduct.services - Product image with ID {image_id} not found for deletion')
             return JsonResponse({'success': False, 'message': 'Image not found'}, status=404)
         except Exception as e:
-            print(f'Error deleting product image: {e}')
-            return JsonResponse({'success': False, 'message': f'Failed to delete image: {str(e)}'}, status=500)
-
-        import base64
-        from io import BytesIO
-        from django.core.files.uploadedfile import InMemoryUploadedFile
-
-        allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
-        max_size = 5 * 1024 * 1024  # 5MB
-
-        uploaded_results = []
-        failed_results = []
-
-        for idx, img_data in enumerate(images):
-            try:
-                base64_str = img_data.get('base64', '')
-                filename = img_data.get('filename', f'image_{idx}.jpg')
-
-                if not base64_str:
-                    failed_results.append({'index': idx, 'filename': filename, 'error': 'No base64 data'})
-                    continue
-
-                if 'base64,' in base64_str:
-                    header, base64_data = base64_str.split('base64,', 1)
-                    content_type = header.split(':')[1].split(';')[0]
-                else:
-                    content_type = 'image/jpeg'
-                    base64_data = base64_str
-
-                if content_type not in allowed_types:
-                    failed_results.append({'index': idx, 'filename': filename, 'error': f'Invalid file type: {content_type}'})
-                    continue
-
-                image_bytes = base64.b64decode(base64_data)
-
-                if len(image_bytes) > max_size:
-                    failed_results.append({'index': idx, 'filename': filename, 'error': 'File too large (max 5MB)'})
-                    continue
-
-                image_file = InMemoryUploadedFile(
-                    BytesIO(image_bytes),
-                    field_name='image',
-                    name=filename,
-                    content_type=content_type,
-                    size=len(image_bytes),
-                    charset=None
-                )
-
-                upload_result = supabase_storage.upload_product_image(image_file, product_id)
-
-                if not upload_result['success']:
-                    failed_results.append({'index': idx, 'filename': filename, 'error': upload_result.get('error', 'Upload failed')})
-                    continue
-
-                product_image = ProductImage(
-                    product=product,
-                    image_path=upload_result['filename'],
-                    signed_url=upload_result['url'],
-                    last_update_signed_url=timezone.now()
-                )
-                product_image.save()
-
-                product.last_update_signed_url = timezone.now()
-                product.save()
-
-                uploaded_results.append({
-                    'index': idx,
-                    'filename': filename,
-                    'image_path': upload_result['filename'],
-                    'signed_url': upload_result['url']
-                })
-
-            except Exception as e:
-                print(f"\tproduct.services - Error processing image {idx}: {e}")
-                failed_results.append({'index': idx, 'filename': filename, 'error': str(e)})
-
-        response_data = {
-            'uploaded': uploaded_results,
-            'failed': failed_results,
-            'total_uploaded': len(uploaded_results),
-            'total_failed': len(failed_results)
-        }
-
-        if len(uploaded_results) == 0:
-            print('\tproduct.services - All image uploads failed')
-            return JsonResponse({
-                'success': False,
-                'message': 'All uploads failed',
-                'data': response_data
-            }, status=500)
-
-        print(f'product.services - \t{len(uploaded_results)} image(s) uploaded successfully, {len(failed_results)} failed')
-        return JsonResponse({
-            'success': True,
-            'message': f'{len(uploaded_results)} image(s) uploaded successfully',
-            'data': response_data
-        })
+            print(f'\tproduct.services - Error deleting product image: {e}')
+            return JsonResponse({'success': False, 'message': f'{str(e)}'}, status=500)
 
     @classmethod
     def get_products(cls):
@@ -766,7 +668,7 @@ class ProductService:
                 for img in product_img:        
                     if img.image_path is None or img.image_path == '':
                         signed_url_img = None
-                        p_img.append({'image_path': None, 'signed_url': None})
+                        p_img.append({'image_id':None, 'image_path': None, 'signed_url': None})
                     else:
                         signed_url_img = supabase_storage.get_signed_url(img.image_path, cached_url=img.signed_url, last_update=img.last_update_signed_url)
                         if signed_url_img['is_new']:
@@ -774,7 +676,7 @@ class ProductService:
                             img.signed_url = signed_url_img['url']
                             img.last_update_signed_url = timezone.now()
                             img.save()
-                        p_img.append({'image_path': img.image_path, 'signed_url': signed_url_img['url']})
+                        p_img.append({'image_id':img.id, 'image_path': img.image_path, 'signed_url': signed_url_img['url']})
                             
                 img = {'total_images': len(product_img), 'images': p_img}
                 tmp_data['images'] = img
