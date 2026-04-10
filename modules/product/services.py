@@ -1,4 +1,4 @@
-import json
+import json, base64
 from django.db import transaction as transaction_atomic
 from django.http import JsonResponse
 from django.core.exceptions import ValidationError
@@ -12,6 +12,8 @@ from django.contrib.auth.models import User
 from engine.utils import format_rupiah, supabase_storage
 from engine.models import Tax
 from datetime import datetime, timedelta
+from io import BytesIO
+from django.core.files.uploadedfile import InMemoryUploadedFile
 
 # Import accounting models for receivable creation
 try:
@@ -553,6 +555,104 @@ class ProductService:
         except Product.DoesNotExist:
             print(f'\tproduct.services - Product with ID {product_id} not found')
             return JsonResponse({'success': False, 'message': 'Product not found'}, status=404)
+                
+
+        allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+        max_size = 5 * 1024 * 1024  # 5MB
+
+        uploaded_results = []
+        failed_results = []
+
+        for idx, img_data in enumerate(images):
+            try:
+                print(f'\tproduct.services - Processing image {idx} for product {product.name}')
+                base64_str = img_data.get('base64', '')
+                filename = img_data.get('filename', f'image_{product.name}_{idx}.jpg')
+
+                if not base64_str:
+                    print(f'\tproduct.services - No base64 data for image {idx}')
+                    failed_results.append({'index': idx, 'filename': filename, 'error': 'No base64 data'})
+                    continue
+
+                if 'base64,' in base64_str:
+                    header, base64_data = base64_str.split('base64,', 1)
+                    content_type = header.split(':')[1].split(';')[0]
+                else:
+                    content_type = 'image/jpeg'
+                    base64_data = base64_str
+
+                if content_type not in allowed_types:
+                    print(f'\tproduct.services - Invalid file type for image {idx}: {content_type}')
+                    failed_results.append({'index': idx, 'filename': filename, 'error': f'Invalid file type: {content_type}'})
+                    continue
+
+                image_bytes = base64.b64decode(base64_data)
+
+                if len(image_bytes) > max_size:
+                    failed_results.append({'index': idx, 'filename': filename, 'error': 'File too large (max 5MB)'})
+                    continue
+
+                print(f'\tproduct.services - Uploading image {idx} for product {product.name} to Supabase')
+                image_file = InMemoryUploadedFile(
+                    BytesIO(image_bytes),
+                    field_name='image',
+                    name=filename,
+                    content_type=content_type,
+                    size=len(image_bytes),
+                    charset=None
+                )
+
+                upload_result = supabase_storage.upload_product_image(image_file, product_id)
+                print(f'\tproduct.services - Upload result for image {idx}: {upload_result["success"]}')
+                
+                if not upload_result['success']:
+                    print(f'\tproduct.services - Upload failed for image {idx}: {upload_result.get("error", "Unknown error")}')
+                    failed_results.append({'index': idx, 'filename': filename, 'error': upload_result.get('error', 'Upload failed')})
+                    continue
+
+                print(f'\tproduct.services - Image {idx} uploaded successfully for product {product.name}, updating product record and creating image history')
+                product_image = ProductImage(
+                    product=product,
+                    image_path=upload_result['filename'],
+                    signed_url=upload_result['url'],
+                    last_update_signed_url=timezone.now()
+                )
+                product_image.save()
+                product.save()
+
+                uploaded_results.append({
+                    'index': idx,
+                    'filename': filename,
+                    'image_path': upload_result['filename'],
+                    'signed_url': upload_result['url']
+                })
+                print(f'\tproduct.services - Image {idx} processed successfully for product {product.name}')
+
+            except Exception as e:
+                print(f"\tproduct.services - Error processing image {idx}: {e}")
+                failed_results.append({'index': idx, 'filename': filename, 'error': str(e)})
+
+        response_data = {
+            'uploaded': uploaded_results,
+            'failed': failed_results,
+            'total_uploaded': len(uploaded_results),
+            'total_failed': len(failed_results)
+        }
+
+        if len(uploaded_results) == 0:
+            print('\tproduct.services - All image uploads failed')
+            return JsonResponse({
+                'success': False,
+                'message': 'All uploads failed',
+                'data': response_data
+            }, status=500)
+
+        print(f'\tproduct.services - {len(uploaded_results)} image(s) uploaded successfully, {len(failed_results)} failed')
+        return JsonResponse({
+            'success': True,
+            'message': f'{len(uploaded_results)} image(s) uploaded successfully',
+            'data': response_data
+        })
 
     @staticmethod
     def delete_product_image(request, data):
