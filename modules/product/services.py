@@ -222,11 +222,11 @@ class ProductService:
     def list_products(request, json_request=None):
         """List all products with category information"""
         if json_request.get('active') == False:
-            products = Product.objects.select_related('category').all().filter(is_active=False).order_by('name')
+            products = Product.objects.select_related('category').all().filter(is_active=False).order_by('id')
         elif json_request.get('active') == True:
-            products = Product.objects.select_related('category').all().filter(is_active=True).order_by('name')
+            products = Product.objects.select_related('category').all().filter(is_active=True).order_by('id')
         else:
-            products = Product.objects.select_related('category').all().order_by('name')
+            products = Product.objects.select_related('category').all().order_by('id')
             
         product_data = []
         for product in products:
@@ -245,33 +245,8 @@ class ProductService:
                 'created_at': product.created_at.isoformat() if product.created_at else None,
                 'updated_at': product.updated_at.isoformat() if product.updated_at else None,
             }
-            
-            # get all product image history for this product, and get the latest one
-            product_img = ProductImage.objects.filter(product=product).order_by('id')
-            if product_img:            
-                print(f'Found {len(product_img)} images for product {product.name}')
-                p_img = []
-                for img in product_img:        
-                    if img.image_path is None or img.image_path == '':
-                        signed_url_img = None
-                        p_img.append({'image_path': None, 'signed_url': None})
-                    else:
-                        signed_url_img = supabase_storage.get_signed_url(img.image_path, cached_url=img.signed_url, last_update=img.last_update_signed_url)
-                        if signed_url_img['is_new']:
-                            # Update signed URL and timestamp
-                            img.signed_url = signed_url_img['url']
-                            img.last_update_signed_url = timezone.now()
-                            img.save()
-                        p_img.append({'image_id':img.id, 'image_path': img.image_path, 'signed_url': signed_url_img['url']})
-                            
-                img = {'total_images': len(product_img), 'images': p_img}
-                tmp_data['images'] = img
-            
-            else:
-                print(f'No image found for product {product.name}')
-                                       
-            product_data.append(tmp_data)
-            
+                        
+            product_data.append(tmp_data)            
             
         return JsonResponse({
             'success': True,
