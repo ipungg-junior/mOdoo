@@ -395,6 +395,144 @@ class SupabaseStorageService:
             print(f"Warning: File deletion failed: {e}")
             return False
 
-
 # Global instance for easy import
 supabase_storage = SupabaseStorageService()
+
+
+# Logger class for consistent logging
+from django.conf import settings
+import logging, os, pytz
+from datetime import datetime
+class Log:
+    # Atribut kelas untuk menyimpan logger dan handler
+    _logger = None
+    _file_handler = None
+    _last_log_date = None
+    _app_name = getattr(settings, 'APP_NAME', 'mOdoo').lower() #
+
+    @classmethod
+    def _initialize_logger(cls):
+        """
+        Menginisialisasi logger dan file handler.
+        Dipanggil hanya sekali atau saat rotasi file log harian.
+        """
+        # Dapatkan instance logger, jika belum ada
+        if cls._logger is None:
+            cls._logger = logging.getLogger(cls._app_name)
+            cls._logger.setLevel(logging.DEBUG)
+            # Penting: Hindari menambahkan handler jika sudah ada (misal setelah rotasi)
+            # Jika _file_handler sudah ada, itu akan dihapus dan ditutup di _setup_file_handler
+            # Jadi kita tidak perlu clear() di sini, cukup pastikan levelnya sudah set.
+
+        cls._setup_file_handler()
+
+    @classmethod
+    def _setup_file_handler(cls):
+        """
+        Menyiapkan atau memperbarui FileHandler untuk logger,
+        memastikan menunjuk ke file log harian yang benar.
+        """
+
+        # Jika handler sudah ada dan tanggalnya sama, tidak perlu melakukan apa-apa
+        if cls._file_handler:
+            return
+
+        # Hapus handler yang sudah ada jika ada, untuk menghindari duplikasi
+        # dan menutup file sebelumnya
+        if cls._file_handler:
+            cls._logger.removeHandler(cls._file_handler)
+            cls._file_handler.close()
+
+        # Buat path file untuk hari ini
+        pathnameFile = cls._create_file_current_day()
+
+        # Buat FileHandler baru
+        cls._file_handler = logging.FileHandler(pathnameFile)
+
+        # Buat format logging
+        formatter = cls.CustomFormatter('%(asctime)s [%(levelname)s]: %(message)s')
+        cls._file_handler.setFormatter(formatter)
+
+        # Tambahkan handler baru ke logger
+        cls._logger.addHandler(cls._file_handler)
+
+    @classmethod
+    def _create_file_current_day(cls):
+        """
+        Membuat path file log harian baru dan memastikan direktori ada.
+        Path: /var/log/{app}/{tahun}/{bulan}/{hari}.log
+        """
+        now = datetime.now()
+        year = now.year
+        month_name = now.strftime("%B").lower() # Nama bulan (contoh: "june")
+        day = now.strftime("%d") # Hari dalam bulan (contoh: "18")
+        date_filename = now.strftime("%m-%d") # Untuk nama file (contoh: "2025-06-18")
+
+        # Path dasar: /var/log/{app_name}/
+        base_folder = os.path.join("/var/log/", cls._app_name)
+        # Path tahun: /var/log/{app_name}/{tahun}/
+        year_folder = os.path.join(base_folder, str(year))
+        # Path bulan: /var/log/{app_name}/{tahun}/{bulan}/
+        month_folder = os.path.join(year_folder, month_name)
+
+        # Pastikan direktori bulan ada
+        if not os.path.exists(month_folder):
+            os.makedirs(month_folder, exist_ok=True)
+            # Setel izin folder ke drwxrwxrwx (0777)
+            os.chmod(month_folder, 0o777)
+
+        filename = f"{date_filename}.log"
+        path = os.path.join(month_folder, filename)
+
+        # Buat file jika belum ada
+        if not os.path.exists(path):
+            open(path, 'a+').close()
+            # Setel izin file ke -rw-rw-rw- (0777)
+            os.chmod(path, 0o777)
+        return path
+
+    class CustomFormatter(logging.Formatter):
+        """Formatter kustom untuk menambahkan zona waktu Asia/Jakarta."""
+        def formatTime(self, record, datefmt=None):
+            dt = datetime.fromtimestamp(record.created)
+            local_timezone = pytz.timezone("Asia/Jakarta")
+            local_time = dt.astimezone(local_timezone)
+            # Format hingga milidetik, lalu potong 3 digit terakhir (mikrodetik)
+            return local_time.strftime('%Y-%m-%d %H:%M:%S,%f')[:-3]
+
+
+    # --- Class Methods untuk Menulis Log ---
+    @classmethod
+    def debug(cls, message: str):
+        """Menulis pesan log level DEBUG."""
+        if cls._logger is None:
+            cls._initialize_logger()
+        cls._logger.debug(f"{message}")
+
+    @classmethod
+    def info(cls, message: str):
+        """Menulis pesan log level INFO."""
+        if cls._logger is None:
+            cls._initialize_logger()
+        cls._logger.info(f"{message}")
+
+    @classmethod
+    def warning(cls, message: str):
+        """Menulis pesan log level WARNING."""
+        if cls._logger is None:
+            cls._initialize_logger()
+        cls._logger.warning(f"{message}")
+
+    @classmethod
+    def error(cls, message: str):
+        """Menulis pesan log level ERROR."""
+        if cls._logger is None:
+            cls._initialize_logger()
+        cls._logger.error(f"{message}")
+
+    @classmethod
+    def critical(cls, message: str):
+        """Menulis pesan log level CRITICAL."""
+        if cls._logger is None:
+            cls._initialize_logger()
+        cls._logger.critical(f"{message}")

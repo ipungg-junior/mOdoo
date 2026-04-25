@@ -7,7 +7,7 @@ from django.db.models import Sum, Count
 from django.utils import timezone
 from django.db.models.functions import TruncMonth
 from dateutil.relativedelta import relativedelta
-from .models import Product, Category, Transaction, TransactionItem, PaymentTerm, PaymentStatus, ProductImage
+from .models import Product, Category, Transaction, TransactionItem, PaymentTerm, PaymentStatus, ProductImage, ProductVariant, ProductAttribute, ProductAttributeValue
 from django.contrib.auth.models import User
 from engine.utils import format_rupiah, supabase_storage
 from engine.models import Tax
@@ -203,8 +203,484 @@ class ProductService:
             return ProductService.upload_product_image(request, json_request)
         elif action == 'upload_images_base64':
             return ProductService.upload_images_from_base64(request, json_request)
+        elif action == 'attribute_list':
+            return ProductService.list_attributes(request, json_request)
+        elif action == 'attribute_create':
+            return ProductService.create_attribute(request, json_request)
+        elif action == 'attribute_update':
+            return ProductService.update_attribute(request, json_request)
+        elif action == 'attribute_delete':
+            return ProductService.delete_attribute(request, json_request)
+        elif action == 'attribute_value_list':
+            return ProductService.list_attribute_values(request, json_request)
+        elif action == 'attribute_value_create':
+            return ProductService.create_attribute_value(request, json_request)
+        elif action == 'attribute_value_update':
+            return ProductService.update_attribute_value(request, json_request)
+        elif action == 'attribute_value_delete':
+            return ProductService.delete_attribute_value(request, json_request)
+        elif action == 'variant_list':
+            return ProductService.list_variants(request, json_request)
+        elif action == 'variant_create':
+            return ProductService.create_variant(request, json_request)
+        elif action == 'variant_update':
+            return ProductService.update_variant(request, json_request)
+        elif action == 'variant_delete':
+            return ProductService.delete_variant(request, json_request)
+        elif action == 'variant_create_multiple':
+            return ProductService.create_variant_multiple(request, json_request)
         else:
             return JsonResponse({'success': False, 'message': f'Unknown POST action: {action}'}, status=400)
+
+    @staticmethod
+    def list_attributes(request, json_request):
+        """List all product attributes"""
+        attributes = ProductAttribute.objects.all().order_by('name')
+        attribute_data = []
+
+        for attr in attributes:
+            attribute_data.append({
+                'id': attr.id,
+                'name': attr.name,
+                'created_at': attr.created_at.isoformat() if attr.created_at else None,
+                'updated_at': attr.updated_at.isoformat() if attr.updated_at else None,
+            })
+
+        return JsonResponse({
+            'success': True,
+            'data': attribute_data
+        })
+    
+    @staticmethod
+    def create_attribute(request, json_request):
+        """Create a new product attribute"""
+        name = json_request.get('name')
+
+        if not name:
+            return JsonResponse({'success': False, 'message': 'Attribute name is required'}, status=400)
+
+        try:
+            attribute = ProductAttribute(name=name)
+            attribute.full_clean()  # Validate
+            attribute.save()
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Attribute created successfully',
+                'data': {
+                    'id': attribute.id,
+                    'name': attribute.name
+                }
+            })
+
+        except ValidationError as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+        
+    @staticmethod
+    def update_attribute(request, json_request):
+        """Update an existing product attribute"""
+        attribute_id = json_request.get('id')
+        name = json_request.get('name')
+
+        if not attribute_id:
+            return JsonResponse({'success': False, 'message': 'Attribute ID is required'}, status=400)
+
+        try:
+            attribute = ProductAttribute.objects.get(id=attribute_id)
+
+            if name != None:
+                attribute.name = name
+
+            attribute.full_clean()  # Validate
+            attribute.save()
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Attribute updated successfully',
+                'data': {
+                    'id': attribute.id,
+                    'name': attribute.name
+                }
+            })
+
+        except ProductAttribute.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Attribute not found'}, status=404)
+        except ValidationError as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+        
+    @staticmethod
+    def delete_attribute(request, json_request):
+        """Delete a product attribute"""
+        attribute_id = json_request.get('id')
+
+        if not attribute_id:
+            return JsonResponse({'success': False, 'message': 'Attribute ID is required'}, status=400)
+
+        try:
+            attribute = ProductAttribute.objects.get(id=attribute_id)
+
+            # Check if attribute is being used by any variant
+            if ProductVariant.objects.filter(attributes=attribute).exists():
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Cannot delete attribute that is being used by variants'
+                }, status=400)
+
+            attribute.delete()
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Attribute deleted successfully'
+            })
+
+        except ProductAttribute.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Attribute not found'}, status=404)
+
+    @staticmethod
+    def list_attribute_values(request, json_request):
+        """List all attribute values for a specific attribute"""
+        attribute_id = json_request.get('attribute_id')
+
+        if not attribute_id:
+            return JsonResponse({'success': False, 'message': 'Attribute ID is required'}, status=400)
+
+        try:
+            attribute = ProductAttribute.objects.get(id=attribute_id)
+            values = attribute.values.all().order_by('value')
+            value_data = []
+
+            for val in values:
+                value_data.append({
+                    'id': val.id,
+                    'value': val.value,
+                    'created_at': val.created_at.isoformat() if val.created_at else None,
+                    'updated_at': val.updated_at.isoformat() if val.updated_at else None,
+                })
+
+            return JsonResponse({
+                'success': True,
+                'data': value_data
+            })
+
+        except ProductAttribute.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Attribute not found'}, status=404)
+
+    @staticmethod
+    def create_attribute_value(request, json_request):
+        """Create a new attribute value for a specific attribute"""
+        attribute_id = json_request.get('attribute_id')
+        value = json_request.get('value')
+
+        if not attribute_id or not value:
+            return JsonResponse({'success': False, 'message': 'Attribute ID and value are required'}, status=400)
+
+        try:
+            attribute = ProductAttribute.objects.get(id=attribute_id)
+            attr_value = ProductAttributeValue(attribute=attribute, value=value)
+            attr_value.full_clean()  # Validate
+            attr_value.save()
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Attribute value created successfully',
+                'data': {
+                    'id': attr_value.id,
+                    'value': attr_value.value
+                }
+            })
+
+        except ProductAttribute.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Attribute not found'}, status=404)
+        except ValidationError as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+    @staticmethod
+    def update_attribute_value(request, json_request):
+        """Update an existing attribute value"""
+        value_id = json_request.get('id')
+        value = json_request.get('value')
+
+        if not value_id:
+            return JsonResponse({'success': False, 'message': 'Attribute value ID is required'}, status=400)
+
+        try:
+            attr_value = ProductAttributeValue.objects.get(id=value_id)
+
+            if value != None:
+                attr_value.value = value
+
+            attr_value.full_clean()  # Validate
+            attr_value.save()
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Attribute value updated successfully',
+                'data': {
+                    'id': attr_value.id,
+                    'value': attr_value.value
+                }
+            })
+
+        except ProductAttributeValue.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Attribute value not found'}, status=404)
+        except ValidationError as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+
+    @staticmethod
+    def delete_attribute_value(request, json_request):
+        """Delete an existing attribute value"""
+        value_id = json_request.get('id')
+
+        if not value_id:
+            return JsonResponse({'success': False, 'message': 'Attribute value ID is required'}, status=400)
+
+        try:
+            attr_value = ProductAttributeValue.objects.get(id=value_id)
+            attr_value.delete()
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Attribute value deleted successfully'
+            })
+
+        except ProductAttributeValue.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Attribute value not found'}, status=404)
+
+    @staticmethod
+    def list_variants(request, json_request):
+        """List all variants for a product"""
+        product_id = json_request.get('product_id')
+        
+        if not product_id:
+            return JsonResponse({'success': False, 'message': 'Product ID is required'}, status=400)
+        
+        try:
+            variants = ProductVariant.objects.filter(product_id=product_id).select_related('product').prefetch_related('attributes')
+            variant_data = []
+            
+            for variant in variants:
+                attributes = []
+                for attr in variant.attributes.all():
+                    attributes.append({
+                        'id': attr.id,
+                        'name': attr.attribute.name,
+                        'value': attr.value
+                    })
+                
+                variant_data.append({
+                    'id': variant.id,
+                    'product_id': variant.product.id,
+                    'product_name': variant.product.name,
+                    'price': str(variant.price),
+                    'stock_qty': variant.stock_qty,
+                    'attributes': attributes
+                })
+            
+            return JsonResponse({
+                'success': True,
+                'data': {
+                    'variants': variant_data
+                }
+            })
+            
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+    @staticmethod
+    def create_variant(request, json_request):
+        """Create a new variant for a product"""
+        product_id = json_request.get('product_id')
+        price = json_request.get('price')
+        stock_qty = json_request.get('stock_qty', 0)
+        attribute_ids = json_request.get('attribute_ids', [])
+        
+        if not product_id or price is None:
+            return JsonResponse({'success': False, 'message': 'Product ID and price are required'}, status=400)
+        
+        try:
+            # Convert price to float if it's a string
+            if isinstance(price, str):
+                price = float(price)
+            
+            # Convert stock_qty to int if it's a string
+            if isinstance(stock_qty, str):
+                stock_qty = int(stock_qty)
+            
+            product = Product.objects.get(id=product_id)
+            
+            variant = ProductVariant(
+                product=product,
+                price=price,
+                stock_qty=stock_qty
+            )
+            
+            variant.full_clean()  # Validate
+            variant.save()
+            
+            # Add attributes if provided
+            if attribute_ids:
+                attributes = ProductAttributeValue.objects.filter(id__in=attribute_ids)
+                variant.attributes.set(attributes)
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Variant created successfully',
+                'data': {
+                    'id': variant.id,
+                    'price': str(variant.price),
+                    'stock_qty': variant.stock_qty
+                }
+            })
+            
+        except Product.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Product not found'}, status=404)
+        except ValidationError as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+        except ValueError as e:
+            return JsonResponse({'success': False, 'message': f'Invalid format: {str(e)}'}, status=400)
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+    @staticmethod
+    def update_variant(request, json_request):
+        """Update an existing variant"""
+        variant_id = json_request.get('variant_id')
+        price = json_request.get('price')
+        stock_qty = json_request.get('stock_qty')
+        attribute_ids = json_request.get('attribute_ids')
+        
+        if not variant_id:
+            return JsonResponse({'success': False, 'message': 'Variant ID is required'}, status=400)
+        
+        try:
+            variant = ProductVariant.objects.get(id=variant_id)
+            
+            # Update fields if provided
+            if price is not None:
+                # Convert price to float if it's a string
+                if isinstance(price, str):
+                    price = float(price)
+                variant.price = price
+            if stock_qty is not None:
+                # Convert stock_qty to int if it's a string
+                if isinstance(stock_qty, str):
+                    stock_qty = int(stock_qty)
+                variant.stock_qty = stock_qty
+            
+            # Update attributes if provided
+            if attribute_ids is not None:
+                attributes = ProductAttributeValue.objects.filter(id__in=attribute_ids)
+                variant.attributes.set(attributes)
+            
+            variant.full_clean()  # Validate
+            variant.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Variant updated successfully',
+                'data': {
+                    'id': variant.id,
+                    'price': str(variant.price),
+                    'stock_qty': variant.stock_qty
+                }
+            })
+            
+        except ProductVariant.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Variant not found'}, status=404)
+        except ValidationError as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400)
+        except ValueError as e:
+            return JsonResponse({'success': False, 'message': f'Invalid format: {str(e)}'}, status=400)
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+    @staticmethod
+    def delete_variant(request, json_request):
+        """Delete a variant"""
+        variant_id = json_request.get('variant_id')
+        
+        if not variant_id:
+            return JsonResponse({'success': False, 'message': 'Variant ID is required'}, status=400)
+        
+        try:
+            variant = ProductVariant.objects.get(id=variant_id)
+            variant.delete()
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Variant deleted successfully'
+            })
+            
+        except ProductVariant.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Variant not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+    @staticmethod
+    def create_variant_multiple(request, json_request):
+        """Create multiple variants for a product"""
+        product_id = json_request.get('product_id')
+        variants_data = json_request.get('variants', [])
+        
+        if not product_id:
+            return JsonResponse({'success': False, 'message': 'Product ID is required'}, status=400)
+        
+        if not variants_data or len(variants_data) == 0:
+            return JsonResponse({'success': False, 'message': 'At least one variant is required'}, status=400)
+        
+        try:
+            product = Product.objects.get(id=product_id)
+            created_variants = []
+            
+            for variant_data in variants_data:
+                price = variant_data.get('price')
+                stock_qty = variant_data.get('stock_qty', 0)
+                attribute_ids = variant_data.get('attribute_ids', [])                
+                
+                # Convert price to float if it's a string
+                if isinstance(price, str):
+                    price = float(price)
+                
+                # Convert stock_qty to int if it's a string
+                if isinstance(stock_qty, str):
+                    stock_qty = int(stock_qty)
+                
+                variant = ProductVariant(
+                    product=product,
+                    price=price,
+                    stock_qty=stock_qty
+                )
+                
+                variant.full_clean()  # Validate
+                variant.save()
+                
+                # Add attributes if provided
+                if attribute_ids:
+                    attributes = ProductAttributeValue.objects.filter(id__in=attribute_ids)
+                    variant.attributes.set(attributes)
+                
+                created_variants.append({
+                    'id': variant.id,
+                    'price': str(variant.price),
+                    'stock_qty': variant.stock_qty
+                });
+            
+            return JsonResponse({
+                'success': True,
+                'message': str(len(created_variants)) + ' variants created successfully',
+                'data': {
+                    'variants': created_variants
+                }
+            })
+            
+        except Product.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Product not found'}, status=404);
+        except ValidationError as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=400);
+        except ValueError as e:
+            return JsonResponse({'success': False, 'message': f'Invalid format: {str(e)}'}, status=400);
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)}, status=500);
 
     @staticmethod
     def get_product_total_amount(request):
